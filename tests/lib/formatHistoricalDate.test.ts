@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatHistoricalDate } from "./formatHistoricalDate";
+import { formatHistoricalDate } from "@/lib/formatHistoricalDate";
 
 describe("formatHistoricalDate", () => {
   it("formatea un año antes de Cristo", () => {

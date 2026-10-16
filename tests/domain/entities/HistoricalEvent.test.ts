@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HistoricalEventSchema } from "./HistoricalEvent";
+import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 
 const validEvent = {
   title: "Batalla de Maratón",

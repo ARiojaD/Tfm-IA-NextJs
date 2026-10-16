@@ -1,7 +1,7 @@
 import { RagPreview } from "@/components/RagPreview";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Timeline } from "@/components/Timeline";
-import { HISTORICAL_ERAS } from "@/core/domain/HistoricalEvent";
+import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { formatHistoricalDate } from "@/lib/formatHistoricalDate";
 import { SAMPLE_EVENTS } from "@/lib/sampleEvents";
 

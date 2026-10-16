@@ -1,4 +1,4 @@
-import type { HistoricalEvent } from "@/core/domain/HistoricalEvent";
+import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
 import { formatHistoricalDate, MONTHS } from "@/lib/formatHistoricalDate";
 import { EraBadge, eraDotClass } from "./EraBadge";
 

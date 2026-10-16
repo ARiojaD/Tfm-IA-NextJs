@@ -93,13 +93,30 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 
 ## 4. Arquitectura
 
-El proyecto sigue una **Clean Architecture pragmática**, orientada al dominio:
+El proyecto sigue una **Clean Architecture pragmática**, orientada al dominio. Cada capa tiene su propia carpeta:
 
-- **`core/`**: dominio y casos de uso. Es TypeScript puro: no depende de Next.js, de la base de datos ni de la IA.
-- **`infrastructure/`**: detalles de implementación (base de datos, adaptadores de IA, repositorios).
-- **`app/`**: presentación y controladores (páginas y *Route Handlers* de Next.js).
+| Capa | Carpeta | Responsabilidad |
+| --- | --- | --- |
+| 🔴 Dominio | `domain/` | Reglas del negocio: entidades y *value objects*. TypeScript puro, sin dependencias de Next.js, base de datos ni IA |
+| 🟠 Aplicación | `application/` | Casos de uso que orquestan el dominio, y *ports* (interfaces) con lo que necesitan del exterior |
+| 🔵 Infraestructura | `infrastructure/` | Implementación de los *ports*: PostgreSQL + pgvector, Claude y embeddings |
+| 🟢 Composición | `composition/` | Conecta cada caso de uso con sus implementaciones reales y valida la configuración |
+| 🟤 Compartido | `shared/` | Utilidades transversales sin lógica de negocio |
+| ⚪ Presentación | `app/`, `components/`, `lib/` | Páginas, *Route Handlers* (entrada HTTP) y componentes de Next.js |
 
-**Regla de dependencias:** `core` nunca importa de `infrastructure` ni de `app`. La comunicación con el exterior se hace mediante interfaces e inyección de dependencias, lo que permite probar toda la lógica de negocio con mocks.
+```text
+   app/ (HTTP, páginas)
+        │ llama a
+        ▼
+   application/use-cases ──usa──► application/ports  (interfaces)
+        │                                ▲
+        ▼                                │ implementa
+      domain/                    infrastructure/  (PostgreSQL, Claude)
+
+   composition/ une cada caso de uso con su implementación real
+```
+
+**Regla de dependencias:** las dependencias solo apuntan hacia dentro (`infrastructure` → `application` → `domain`). `domain` y `application` nunca importan de `infrastructure` ni de Next.js, lo que permite probar toda la lógica de negocio con repositorios en memoria o mocks.
 
 Las normas completas de arquitectura, seguridad y metodología están en [`AGENTS.md`](AGENTS.md).
 
@@ -110,21 +127,30 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ```
 .
 ├── src/
-│   ├── core/                     # Dominio y aplicación (agnóstico de Next.js)
-│   │   ├── domain/               # Entidades y esquemas de dominio
-│   │   └── use-cases/            # Casos de uso
-│   ├── infrastructure/           # Detalles de implementación
-│   │   ├── db/                   # Cliente PostgreSQL, esquemas y migraciones
-│   │   ├── ai/                   # Adaptadores de Claude y embeddings
-│   │   └── repositories/         # Implementaciones de los repositorios del dominio
-│   ├── app/                      # Presentación (Next.js App Router)
-│   │   ├── api/                  # Route Handlers
+│   ├── domain/                   # 🔴 Reglas del negocio
+│   │   ├── entities/             # HistoricalEvent
+│   │   └── value-objects/        # HistoricalDate, HistoricalEra
+│   ├── application/              # 🟠 Organiza el trabajo
+│   │   ├── use-cases/            # Casos de uso
+│   │   └── ports/                # Interfaces de repositorios y servicios externos
+│   ├── infrastructure/           # 🔵 Mundo real
+│   │   ├── persistence/
+│   │   │   ├── in-memory/        # Repositorios en memoria (tests y desarrollo)
+│   │   │   └── postgres/         # PostgreSQL + pgvector: esquemas, migraciones y repositorios
+│   │   └── ai/                   # Adaptadores de Claude y embeddings
+│   ├── composition/              # 🟢 Conexión de piezas y configuración
+│   ├── shared/                   # 🟤 Utilidades transversales
+│   ├── app/                      # ⚪ Presentación (Next.js App Router)
+│   │   ├── api/                  # Route Handlers (entrada HTTP)
 │   │   ├── (dashboard)/          # Panel privado del usuario
 │   │   ├── layout.tsx            # Layout raíz: fuentes, tema y metadatos
 │   │   ├── page.tsx              # Portada
 │   │   └── globals.css           # Paleta de colores y temas claro/oscuro
-│   ├── components/               # Componentes de UI reutilizables
-│   └── lib/                      # Utilidades, constantes y validadores
+│   ├── components/               # ⚪ Componentes de UI reutilizables
+│   └── lib/                      # ⚪ Utilidades de la interfaz
+├── tests/                        # Tests, replicando la estructura de src/
+│   ├── domain/
+│   └── lib/
 ├── public/                       # Recursos estáticos
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA
@@ -132,7 +158,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 └── package.json
 ```
 
-Los tests están junto al código que prueban (por ejemplo, `HistoricalEvent.test.ts` al lado de `HistoricalEvent.ts`).
+Los tests viven en `tests/` y replican la ruta del código que prueban: `src/domain/entities/HistoricalEvent.ts` se prueba en `tests/domain/entities/HistoricalEvent.test.ts`.
 
 ---
 
@@ -203,7 +229,7 @@ Las variables se validan con Zod al arrancar la aplicación: si falta alguna o t
 
 ## 8. Tests y metodología TDD
 
-Toda la lógica de `core/` se desarrolla con **TDD estricto**:
+Toda la lógica de `domain/` y `application/` se desarrolla con **TDD estricto**:
 
 1. 🔴 **Red**: se escribe el test y se comprueba que falla.
 2. 🟢 **Green**: se escribe el código mínimo para que pase.
@@ -217,8 +243,8 @@ npm run test
 
 | Tipo | Ámbito | Herramientas |
 | --- | --- | --- |
-| Unitarios | `core/` (dominio y casos de uso) y utilidades de `lib/` | Vitest con mocks y stubs; objetivo de cobertura del 100 % en `core/` |
-| Integración | `infrastructure/` y `app/api/` | Vitest contra la base de datos vectorial y los endpoints |
+| Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
+| Integración | `tests/infrastructure/` y endpoints de `app/api/` | Vitest contra la base de datos vectorial y los endpoints |
 
 > _Por completar con el resumen final de tests y cobertura._
 

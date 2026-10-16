@@ -1,4 +1,4 @@
-import type { HistoricalEra } from "@/core/domain/HistoricalEvent";
+import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import { ERA_LABELS } from "@/lib/sampleEvents";
 
 const ERA_STYLES: Record<HistoricalEra, { text: string; dot: string }> = {

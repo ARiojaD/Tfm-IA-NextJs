@@ -1,4 +1,4 @@
-import type { HistoricalDate } from "@/core/domain/HistoricalEvent";
+import type { HistoricalDate } from "@/domain/value-objects/HistoricalDate";
 
 export const MONTHS = [
   "enero",

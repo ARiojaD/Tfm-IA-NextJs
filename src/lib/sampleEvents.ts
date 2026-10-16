@@ -1,4 +1,5 @@
-import { HistoricalEventSchema, type HistoricalEra } from "@/core/domain/HistoricalEvent";
+import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
+import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 
 export const ERA_LABELS: Record<HistoricalEra, string> = {
   ANCIENT_GREECE: "Grecia Antigua",
