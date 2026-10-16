@@ -1,5 +1,5 @@
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
-import { ERA_LABELS } from "@/lib/sampleEvents";
+import { ERA_LABELS } from "@/lib/eraLabels";
 
 const ERA_STYLES: Record<HistoricalEra, { text: string; dot: string }> = {
   ANCIENT_GREECE: { text: "text-era-greece", dot: "bg-era-greece" },

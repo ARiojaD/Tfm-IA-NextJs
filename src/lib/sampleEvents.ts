@@ -1,11 +1,4 @@
 import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
-import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
-
-export const ERA_LABELS: Record<HistoricalEra, string> = {
-  ANCIENT_GREECE: "Grecia Antigua",
-  ROMAN: "Roma",
-  HISPANIA: "Hispania",
-};
 
 // Demo data for the landing page until the database exists. Parsing with the domain
 // schema means invalid sample data fails loudly instead of rendering silently.
