@@ -17,15 +17,19 @@ El proyecto sigue una arquitectura limpia orientada al dominio para garantizar u
 ```
 src/
 ├── domain/                 # 🔴 DOMINIO: reglas del negocio. No depende de nada
-│   ├── entities/           # Entidades (HistoricalEvent, Source, Timeline)
-│   └── value-objects/      # Valores con reglas propias (HistoricalDate, HistoricalEra)
-├── application/            # 🟠 APLICACIÓN: organiza el trabajo. Depende solo de domain
-│   ├── use-cases/          # Casos de uso (CreateHistoricalEventUseCase, ExecuteHistoryRAGUseCase)
-│   └── ports/              # Interfaces que necesitan los casos de uso (HistoricalEventRepository, LLM, embeddings)
+│   ├── entities/           # Entidades (HistoricalTopic, HistoricalEvent, Quiz, Comment, Recommendation)
+│   └── value-objects/      # Valores con reglas propias (HistoricalDate, HistoricalEra, Slug, EntityId)
+├── application/            # 🟠 APLICACIÓN: organiza el trabajo. Depende solo de domain y shared
+│   ├── use-cases/          # Casos de uso (GetTopicDetailUseCase, AddCommentUseCase, ExecuteHistoryRAGUseCase)
+│   ├── ports/              # Interfaces que necesitan los casos de uso (repositorios, reloj, ids, LLM, embeddings)
+│   ├── dto/                # Entradas validadas (AddCommentInput) y salidas públicas (PublicQuiz) de los casos de uso
+│   └── errors/             # Errores esperados de los casos de uso (TopicNotFoundError, InvalidCommentError…)
 ├── infrastructure/         # 🔵 INFRAESTRUCTURA: el mundo real. Implementa los ports
 │   ├── persistence/
 │   │   ├── in-memory/      # Repositorios en memoria (tests y desarrollo)
+│   │   │   └── seed/       # Datos iniciales por tema, validados con los esquemas del dominio
 │   │   └── postgres/       # Cliente PostgreSQL + pgvector, esquemas ORM, migraciones y repositorios
+│   ├── system/             # Reloj del sistema y generador de UUID (implementan Clock e IdGenerator)
 │   └── ai/                 # Adaptadores de Anthropic Claude (Vercel AI SDK) y de embeddings
 ├── composition/            # 🟢 COMPOSICIÓN: conecta casos de uso con implementaciones reales
 │                           #    (container) y valida la configuración/entorno con Zod
@@ -39,13 +43,23 @@ src/
 
 tests/                      # Tests, fuera de src/, replicando su estructura
 ├── domain/                 # Unitarios del dominio
-├── application/            # Unitarios de casos de uso (con repositorios in-memory o mocks)
-├── infrastructure/         # Integración con base de datos y servicios externos
-└── lib/                    # Unitarios de utilidades
+├── application/
+│   ├── use-cases/          # Unitarios de casos de uso (con repositorios in-memory)
+│   └── ports/              # Tests de contrato (*.contract.ts) que debe cumplir toda implementación de un port
+├── infrastructure/         # Implementaciones de los ports (ejecutan los contratos) e integración
+├── shared/                 # Unitarios de utilidades transversales
+├── lib/                    # Unitarios de utilidades de presentación
+└── fixtures/               # Constructores de datos de prueba (aTopic, anEvent…)
 ```
 
 * **Regla de Dependencias:** las dependencias solo apuntan hacia dentro: `infrastructure` → `application` → `domain`. `domain` y `application` **nunca** importan de `infrastructure`, `composition`, `app` ni de Next.js. Los casos de uso piden lo que necesitan del exterior a través de interfaces en `application/ports/`, que `infrastructure/` implementa y `composition/` conecta (inyección de dependencias).
-* **Carpetas bajo demanda:** solo se crean las carpetas que el proyecto usa. Si en el futuro hacen falta, se añaden siguiendo la misma convención: `domain/errors/`, `domain/events/` (eventos de dominio), `application/dto/` (datos de entrada y salida de los casos de uso), `application/errors/`, `infrastructure/messaging/`.
+* **Errores esperados:** los casos de uso no lanzan excepciones por situaciones previstas (tema inexistente, entrada inválida). Devuelven un `Result` de `shared/Result.ts` (`{ success: true, data } | { success: false, error }`), coherente con las respuestas de la API.
+* **Entradas no confiables:** los casos de uso que reciben datos del usuario aceptan `unknown` y lo validan con su DTO de `application/dto/` (esquema estricto) antes de hacer nada. Los datos que decide el servidor (ids, fechas, propietario) nunca vienen en la entrada: los aportan los ports `IdGenerator` y `Clock` (y la sesión, cuando exista).
+* **Salidas sin datos privados:** los casos de uso nunca devuelven a la presentación datos que el usuario no debe ver. Se mapean a un DTO de salida con una lista explícita de campos permitidos (*allowlist*), como `PublicQuiz` (el quiz sin respuestas correctas ni explicaciones). Las respuestas se comprueban en el servidor (`AnswerQuizQuestionUseCase`).
+* **Server Actions finas:** son endpoints POST públicos. No contienen lógica: pasan la entrada sin confiar en ella (`unknown`) al caso de uso y traducen su `Result` a lo que muestra la interfaz, sin filtrar detalles internos en los mensajes de error.
+* **Container en desarrollo:** `getContainer()` comparte en `globalThis` solo los repositorios (los datos) y crea los casos de uso en cada llamada, para que la recarga en caliente de Next.js aplique el código editado sin perder los datos en memoria.
+* **Puertos asíncronos y contratos:** todos los ports de persistencia devuelven `Promise`, aunque la implementación sea en memoria. Cada port tiene un test de contrato en `tests/application/ports/` que deben pasar todas sus implementaciones (in-memory hoy, PostgreSQL después); así son intercambiables cambiando solo `composition/`.
+* **Carpetas bajo demanda:** solo se crean las carpetas que el proyecto usa. Si en el futuro hacen falta, se añaden siguiendo la misma convención: `domain/errors/` (reglas de negocio violadas), `domain/events/` (eventos de dominio), `infrastructure/messaging/`.
 
 ---
 

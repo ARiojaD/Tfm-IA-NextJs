@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 
 const validEvent = {
+  id: "event-marathon",
+  topicId: "topic-persian-wars",
   title: "Batalla de Maratón",
   date: { year: -490, month: 9 },
   era: "ANCIENT_GREECE",
@@ -25,6 +27,17 @@ describe("HistoricalEventSchema", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("rechaza un evento sin id", () => {
+    const eventWithoutId: Partial<typeof validEvent> = { ...validEvent };
+    delete eventWithoutId.id;
+
+    expect(HistoricalEventSchema.safeParse(eventWithoutId).success).toBe(false);
+  });
+
+  it("rechaza un evento sin tema asociado", () => {
+    expect(HistoricalEventSchema.safeParse({ ...validEvent, topicId: "" }).success).toBe(false);
   });
 
   it("rechaza un título vacío", () => {

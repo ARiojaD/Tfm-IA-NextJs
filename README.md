@@ -128,29 +128,39 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 .
 ├── src/
 │   ├── domain/                   # 🔴 Reglas del negocio
-│   │   ├── entities/             # HistoricalEvent
-│   │   └── value-objects/        # HistoricalDate, HistoricalEra
+│   │   ├── entities/             # Temas, eventos, quizzes, comentarios y recomendaciones
+│   │   └── value-objects/        # Fechas históricas, épocas, slugs e identificadores
 │   ├── application/              # 🟠 Organiza el trabajo
 │   │   ├── use-cases/            # Casos de uso
-│   │   └── ports/                # Interfaces de repositorios y servicios externos
+│   │   ├── ports/                # Interfaces de repositorios y servicios externos
+│   │   ├── dto/                  # Esquemas de entrada de los casos de uso
+│   │   └── errors/               # Errores esperados de los casos de uso
 │   ├── infrastructure/           # 🔵 Mundo real
 │   │   ├── persistence/
-│   │   │   ├── in-memory/        # Repositorios en memoria (tests y desarrollo)
+│   │   │   ├── in-memory/        # Repositorios en memoria y datos iniciales (seed)
 │   │   │   └── postgres/         # PostgreSQL + pgvector: esquemas, migraciones y repositorios
+│   │   ├── system/               # Reloj y generador de identificadores
 │   │   └── ai/                   # Adaptadores de Claude y embeddings
-│   ├── composition/              # 🟢 Conexión de piezas y configuración
+│   ├── composition/              # 🟢 Conexión de piezas (container) y configuración
 │   ├── shared/                   # 🟤 Utilidades transversales
 │   ├── app/                      # ⚪ Presentación (Next.js App Router)
 │   │   ├── api/                  # Route Handlers (entrada HTTP)
 │   │   ├── (dashboard)/          # Panel privado del usuario
+│   │   ├── [era]/[topic]/        # Página de cada tema histórico (p. ej. /roma/julio-cesar) y sus Server Actions
 │   │   ├── layout.tsx            # Layout raíz: fuentes, tema y metadatos
 │   │   ├── page.tsx              # Portada
+│   │   ├── not-found.tsx         # Página 404
 │   │   └── globals.css           # Paleta de colores y temas claro/oscuro
 │   ├── components/               # ⚪ Componentes de UI reutilizables
+│   │   └── topic/                # Módulos de la página de un tema (quiz, comentarios, recomendaciones)
 │   └── lib/                      # ⚪ Utilidades de la interfaz
 ├── tests/                        # Tests, replicando la estructura de src/
-│   ├── domain/
-│   └── lib/
+│   ├── domain/                   # Unitarios del dominio
+│   ├── application/              # Casos de uso y tests de contrato de los ports
+│   ├── infrastructure/           # Implementaciones de los ports
+│   ├── shared/
+│   ├── lib/
+│   └── fixtures/                 # Constructores de datos de prueba
 ├── public/                       # Recursos estáticos
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA

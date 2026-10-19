@@ -1,9 +1,14 @@
 import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 
+// Mixed-era showcase for the landing timeline; it does not belong to a real topic.
+const LANDING_SHOWCASE_TOPIC_ID = "landing-showcase";
+
 // Demo data for the landing page until the database exists. Parsing with the domain
 // schema means invalid sample data fails loudly instead of rendering silently.
 export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
   {
+    id: "sample-rome-foundation",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Fundación de Roma",
     date: { year: -753, month: 4 },
     era: "ROMAN",
@@ -11,6 +16,8 @@ export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
       "Según la tradición, Rómulo traza el pomerium sobre el Palatino el 21 de abril, fecha que los romanos celebraban como el nacimiento de la Urbe.",
   },
   {
+    id: "sample-marathon",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Batalla de Maratón",
     date: { year: -490, month: 9 },
     era: "ANCIENT_GREECE",
@@ -18,6 +25,8 @@ export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
       "Atenienses y plateos, al mando de Milcíades, frenan el desembarco persa enviado por Darío I en la Primera Guerra Médica.",
   },
   {
+    id: "sample-thermopylae",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Batalla de las Termópilas",
     date: { year: -480 },
     era: "ANCIENT_GREECE",
@@ -25,6 +34,8 @@ export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
       "Leónidas y sus aliados griegos resisten durante tres días al ejército de Jerjes en el estrecho paso entre la montaña y el mar.",
   },
   {
+    id: "sample-numantia",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Caída de Numancia",
     date: { year: -133 },
     era: "HISPANIA",
@@ -32,6 +43,8 @@ export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
       "Tras un largo asedio dirigido por Escipión Emiliano, la ciudad celtíbera cae y se convierte en símbolo de resistencia frente a Roma.",
   },
   {
+    id: "sample-ides-of-march",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Idus de marzo",
     date: { year: -44, month: 3 },
     era: "ROMAN",
@@ -39,6 +52,8 @@ export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
       "Julio César es asesinado en la Curia de Pompeyo por un grupo de senadores encabezados por Bruto y Casio.",
   },
   {
+    id: "sample-emerita-augusta",
+    topicId: LANDING_SHOWCASE_TOPIC_ID,
     title: "Fundación de Emerita Augusta",
     date: { year: -25 },
     era: "HISPANIA",

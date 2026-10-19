@@ -1,6 +1,10 @@
 import { RagPreview } from "@/components/RagPreview";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { SectionHeading } from "@/components/SectionHeading";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Timeline } from "@/components/Timeline";
+import { TopicCard, UpcomingTopicCard } from "@/components/topic/TopicCard";
+import { getContainer } from "@/composition/container";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { formatHistoricalDate } from "@/lib/formatHistoricalDate";
 import { SAMPLE_EVENTS } from "@/lib/sampleEvents";
@@ -42,22 +46,17 @@ const STATS = [
   },
 ];
 
-export default function Home() {
+const UPCOMING_TOPICS = [
+  { title: "Grecia Antigua", text: "Las Guerras Médicas, la Atenas de Pericles y la guerra del Peloponeso." },
+  { title: "Hispania", text: "Numancia, las Guerras Cántabras y la romanización de la Península." },
+];
+
+export default async function Home() {
+  const juliusCaesar = await getContainer().getTopicDetail.execute("julio-cesar");
+
   return (
     <>
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-        <a href="#" className="font-serif text-xl font-bold tracking-tight">
-          Memnon<span className="text-accent">History</span> AI
-        </a>
-        <div className="flex items-center gap-6">
-          <nav aria-label="Principal" className="hidden gap-6 text-sm text-muted sm:flex">
-            <a href="#cronologia" className="hover:text-foreground">Cronología</a>
-            <a href="#consulta" className="hover:text-foreground">Consulta</a>
-            <a href="#como-funciona" className="hover:text-foreground">Cómo funciona</a>
-          </nav>
-          <ThemeToggle />
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="flex-1">
         <section className="relative isolate">
@@ -78,10 +77,10 @@ export default function Home() {
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <a
-                href="#cronologia"
+                href="#temas"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-85"
               >
-                Explorar la cronología
+                Explorar los temas
               </a>
               <a
                 href="#consulta"
@@ -110,6 +109,22 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-6 text-muted">{feature.text}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section id="temas" className="scroll-mt-8 border-t border-border py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <SectionHeading
+              eyebrow="Temas"
+              title="Explora la historia por temas"
+              text="Cada tema reúne su cronología, un quiz, la conversación de la comunidad y recomendaciones de libros, películas y series."
+            />
+            <div className="grid gap-4 md:grid-cols-3">
+              {juliusCaesar.success && <TopicCard detail={juliusCaesar.data} />}
+              {UPCOMING_TOPICS.map((topic) => (
+                <UpcomingTopicCard key={topic.title} title={topic.title} text={topic.text} />
+              ))}
+            </div>
           </div>
         </section>
 
@@ -151,22 +166,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-muted sm:flex-row sm:justify-between sm:px-6">
-          <p>Trabajo Fin de Máster · Máster en Desarrollo con IA · BigSchool</p>
-          <p>Memnón, hijo de Eos, la Aurora: el amanecer del conocimiento histórico.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
-  );
-}
-
-function SectionHeading({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
-  return (
-    <div className="mb-10 max-w-2xl">
-      <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
-      <h2 className="font-serif text-4xl font-semibold tracking-tight">{title}</h2>
-      {text && <p className="mt-4 leading-7 text-muted">{text}</p>}
-    </div>
   );
 }

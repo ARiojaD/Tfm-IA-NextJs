@@ -7,7 +7,7 @@ export function Timeline({ events }: { events: HistoricalEvent[] }) {
     <ol className="relative space-y-6 before:absolute before:inset-y-2 before:left-[0.4375rem] before:w-px before:bg-border md:before:left-[9.4375rem]">
       {events.map((event) => (
         <li
-          key={`${event.date.year}-${event.title}`}
+          key={event.id}
           className="relative grid gap-2 pl-8 md:grid-cols-[8rem_1fr] md:gap-8 md:pl-0"
         >
           <span

@@ -18,6 +18,10 @@
   --era-greece: light-dark(#2f6f9f, #7fb3dc);
   --era-rome: light-dark(#9e2b35, #e07a83);
   --era-hispania: light-dark(#5f7d3a, #a9c77a);
+  --success: light-dark(#2f7d4f, #7fd19b);
+  --success-soft: light-dark(#e3f2e8, #1d3527);
+  --danger: light-dark(#b23b3b, #f08a8a);
+  --danger-soft: light-dark(#f8e1e1, #3d2226);
 }
 
 :root[data-theme="light"] {
@@ -41,6 +45,10 @@
   --color-era-greece: var(--era-greece);
   --color-era-rome: var(--era-rome);
   --color-era-hispania: var(--era-hispania);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-cormorant);

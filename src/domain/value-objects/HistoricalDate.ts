@@ -10,3 +10,9 @@ export const HistoricalDateSchema = z.strictObject({
 });
 
 export type HistoricalDate = z.infer<typeof HistoricalDateSchema>;
+
+// Chronological comparator for Array.prototype.sort. Within a year, a date with unknown
+// month goes first: it can only be placed at the start of that year.
+export function compareHistoricalDates(a: HistoricalDate, b: HistoricalDate): number {
+  return a.year - b.year || (a.month ?? 0) - (b.month ?? 0);
+}
