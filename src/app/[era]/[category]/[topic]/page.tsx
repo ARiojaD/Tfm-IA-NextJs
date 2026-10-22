@@ -12,27 +12,33 @@ import { CommentList } from "@/components/topic/CommentList";
 import { QuizGame } from "@/components/topic/QuizGame";
 import { RecommendationList } from "@/components/topic/RecommendationList";
 import { getContainer } from "@/composition/container";
+import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_LABELS } from "@/lib/eraLabels";
-import { eraFromRouteSlug } from "@/lib/eraRoutes";
+import { categoryFromRouteSlug, categoryPath, eraFromRouteSlug, eraPath } from "@/lib/routes";
 import { addComment, answerQuizQuestion } from "./actions";
 
-// One template for every topic (/roma/julio-cesar, /grecia/…): only the data changes.
+// One template for every topic (/roma/personajes/julio-cesar, /grecia/guerras-y-batallas/…): only the data changes.
 
 // cache() dedupes the lookup between generateMetadata and the page within one request.
 const getTopicDetail = cache((topicSlug: string) => getContainer().getTopicDetail.execute(topicSlug));
 
-// The topic must exist and belong to the era in the URL: /grecia/julio-cesar is a 404.
-async function loadTopic(params: PageProps<"/[era]/[topic]">["params"]) {
-  const { era, topic } = await params;
+// The topic must exist and match the era and category in the URL:
+// /grecia/personajes/julio-cesar and /roma/guerras-y-batallas/julio-cesar are 404s.
+async function loadTopic(params: PageProps<"/[era]/[category]/[topic]">["params"]) {
+  const { era, category, topic } = await params;
   const result = await getTopicDetail(topic);
 
-  if (!result.success || eraFromRouteSlug(era) !== result.data.topic.era) {
+  if (
+    !result.success ||
+    eraFromRouteSlug(era) !== result.data.topic.era ||
+    categoryFromRouteSlug(category) !== result.data.topic.category
+  ) {
     return null;
   }
   return result.data;
 }
 
-export async function generateMetadata({ params }: PageProps<"/[era]/[topic]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[era]/[category]/[topic]">): Promise<Metadata> {
   const detail = await loadTopic(params);
 
   return detail
@@ -40,7 +46,7 @@ export async function generateMetadata({ params }: PageProps<"/[era]/[topic]">):
     : { title: "Tema no encontrado · MemnonHistory AI" };
 }
 
-export default async function TopicPage({ params }: PageProps<"/[era]/[topic]">) {
+export default async function TopicPage({ params }: PageProps<"/[era]/[category]/[topic]">) {
   const detail = await loadTopic(params);
   if (!detail) {
     notFound();
@@ -71,7 +77,15 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[topic]">)
                   <Link href="/" className="hover:text-foreground">Inicio</Link>
                 </li>
                 <li aria-hidden="true">/</li>
-                <li>{ERA_LABELS[topic.era]}</li>
+                <li>
+                  <Link href={eraPath(topic.era)} className="hover:text-foreground">{ERA_LABELS[topic.era]}</Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href={categoryPath(topic.era, topic.category)} className="hover:text-foreground">
+                    {CATEGORY_LABELS[topic.category]}
+                  </Link>
+                </li>
                 <li aria-hidden="true">/</li>
                 <li aria-current="page" className="text-foreground">{topic.title}</li>
               </ol>

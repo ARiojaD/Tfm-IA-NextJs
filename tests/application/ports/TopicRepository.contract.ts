@@ -24,6 +24,22 @@ export function describeTopicRepositoryContract(
       expect(await repository.findBySlug("augusto")).toBeNull();
     });
 
+    it("lista solo los temas de la época indicada", async () => {
+      const augustus = aTopic({ id: "topic-augustus", slug: "augusto", title: "Augusto" });
+      const repository = await createRepository([caesar, pericles, augustus]);
+
+      const topics = await repository.listByEra("ROMAN");
+
+      expect(topics).toHaveLength(2);
+      expect(topics).toEqual(expect.arrayContaining([caesar, augustus]));
+    });
+
+    it("devuelve una lista vacía si la época no tiene temas", async () => {
+      const repository = await createRepository([caesar]);
+
+      expect(await repository.listByEra("HISPANIA")).toEqual([]);
+    });
+
     it("devuelve copias: modificar el resultado no altera los datos guardados", async () => {
       const repository = await createRepository([caesar]);
 

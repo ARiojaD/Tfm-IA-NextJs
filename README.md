@@ -52,6 +52,7 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
   - Las fechas están pensadas para la historia antigua: año entero (negativo = a.C.), sin año 0 y con mes opcional, porque de muchos eventos solo se conoce el año.
   - Las épocas son un catálogo cerrado (Grecia Antigua, Roma, Hispania…).
 - **Fuentes y notas personales** asociadas a cada evento, para saber siempre de dónde procede cada dato.
+- **Navegación por civilizaciones** (Roma, Antigua Grecia, Hispania) y, dentro de cada una, por categorías: personajes, guerras y batallas, etapas y ciudades.
 - **Líneas del tiempo** que ordenan los eventos y los distinguen por época.
 
 ### Inteligencia Artificial
@@ -129,7 +130,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ├── src/
 │   ├── domain/                   # 🔴 Reglas del negocio
 │   │   ├── entities/             # Temas, eventos, quizzes, comentarios y recomendaciones
-│   │   └── value-objects/        # Fechas históricas, épocas, slugs e identificadores
+│   │   └── value-objects/        # Fechas históricas, épocas, categorías, slugs e identificadores
 │   ├── application/              # 🟠 Organiza el trabajo
 │   │   ├── use-cases/            # Casos de uso
 │   │   ├── ports/                # Interfaces de repositorios y servicios externos
@@ -147,7 +148,8 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 │   ├── app/                      # ⚪ Presentación (Next.js App Router)
 │   │   ├── api/                  # Route Handlers (entrada HTTP)
 │   │   ├── (dashboard)/          # Panel privado del usuario
-│   │   ├── [era]/[topic]/        # Página de cada tema histórico (p. ej. /roma/julio-cesar) y sus Server Actions
+│   │   ├── [era]/                # Página de cada civilización (/roma), con sus temas por categoría
+│   │   │   └── [category]/[topic]/  # Página de cada tema (/roma/personajes/julio-cesar) y sus Server Actions
 │   │   ├── layout.tsx            # Layout raíz: fuentes, tema y metadatos
 │   │   ├── page.tsx              # Portada
 │   │   ├── not-found.tsx         # Página 404

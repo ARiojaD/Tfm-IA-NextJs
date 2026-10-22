@@ -17,6 +17,13 @@ describe("container", () => {
     expect(result.data.recommendations).toHaveLength(6);
   });
 
+  it("conecta ListTopicsByEra: Julio César aparece en los personajes de Roma", async () => {
+    const overview = await createContainer().listTopicsByEra.execute("ROMAN");
+
+    const people = overview.categories.find((group) => group.category === "PEOPLE");
+    expect(people?.topics.map((topic) => topic.slug)).toContain("julio-cesar");
+  });
+
   it("AddComment y GetTopicDetail comparten el mismo repositorio de comentarios", async () => {
     const container = createContainer();
 
@@ -69,6 +76,20 @@ describe("container", () => {
     const sixth = await getContainer().addComment.execute(comment, "visitante-limite");
 
     expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
+  });
+
+  it("getContainer reconstruye el estado si se creó con clases anteriores a una recarga en caliente", async () => {
+    // Simulates instances built before a hot reload: same shape, but not of the current classes.
+    const globalWithState = globalThis as typeof globalThis & { __memnonState?: unknown };
+    globalWithState.__memnonState = {
+      clock: { now: () => new Date() },
+      repositories: { topics: { findBySlug: async () => null } },
+      rateLimiters: {},
+    };
+
+    const overview = await getContainer().listTopicsByEra.execute("ROMAN");
+
+    expect(overview.totalTopics).toBeGreaterThan(0);
   });
 
   it("getContainer crea casos de uso nuevos en cada llamada (el código actualizado se aplica sin reiniciar)", () => {

@@ -1,11 +1,11 @@
+import { CivilizationCard } from "@/components/era/CivilizationCard";
 import { RagPreview } from "@/components/RagPreview";
 import { SectionHeading } from "@/components/SectionHeading";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Timeline } from "@/components/Timeline";
-import { TopicCard, UpcomingTopicCard } from "@/components/topic/TopicCard";
 import { getContainer } from "@/composition/container";
-import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
+import { HISTORICAL_ERAS, type HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import { formatHistoricalDate } from "@/lib/formatHistoricalDate";
 import { SAMPLE_EVENTS } from "@/lib/sampleEvents";
 
@@ -46,13 +46,12 @@ const STATS = [
   },
 ];
 
-const UPCOMING_TOPICS = [
-  { title: "Grecia Antigua", text: "Las Guerras Médicas, la Atenas de Pericles y la guerra del Peloponeso." },
-  { title: "Hispania", text: "Numancia, las Guerras Cántabras y la romanización de la Península." },
-];
+// Display order on the landing page: Rome first, as it has the most content so far.
+const CIVILIZATIONS: HistoricalEra[] = ["ROMAN", "ANCIENT_GREECE", "HISPANIA"];
 
 export default async function Home() {
-  const juliusCaesar = await getContainer().getTopicDetail.execute("julio-cesar");
+  const { listTopicsByEra } = getContainer();
+  const overviews = await Promise.all(CIVILIZATIONS.map((era) => listTopicsByEra.execute(era)));
 
   return (
     <>
@@ -77,10 +76,10 @@ export default async function Home() {
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <a
-                href="#temas"
+                href="#civilizaciones"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-85"
               >
-                Explorar los temas
+                Explorar las civilizaciones
               </a>
               <a
                 href="#consulta"
@@ -112,17 +111,16 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="temas" className="scroll-mt-8 border-t border-border py-20">
+        <section id="civilizaciones" className="scroll-mt-8 border-t border-border py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <SectionHeading
-              eyebrow="Temas"
-              title="Explora la historia por temas"
-              text="Cada tema reúne su cronología, un quiz, la conversación de la comunidad y recomendaciones de libros, películas y series."
+              eyebrow="Civilizaciones"
+              title="¿A qué mundo antiguo viajas hoy?"
+              text="Del Foro de Roma a la Acrópolis de Atenas, cada civilización guarda sus propias historias: los protagonistas que la gobernaron, las guerras que la forjaron, las etapas que la transformaron. Elige tu destino, explora a tu ritmo y pon a prueba lo aprendido."
             />
             <div className="grid gap-4 md:grid-cols-3">
-              {juliusCaesar.success && <TopicCard detail={juliusCaesar.data} />}
-              {UPCOMING_TOPICS.map((topic) => (
-                <UpcomingTopicCard key={topic.title} title={topic.title} text={topic.text} />
+              {overviews.map((overview) => (
+                <CivilizationCard key={overview.era} era={overview.era} totalTopics={overview.totalTopics} />
               ))}
             </div>
           </div>

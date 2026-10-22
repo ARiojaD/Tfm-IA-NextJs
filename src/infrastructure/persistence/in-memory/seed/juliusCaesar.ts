@@ -13,6 +13,7 @@ export const juliusCaesarTopic = HistoricalTopicSchema.parse({
   slug: "julio-cesar",
   title: "Julio César",
   era: "ROMAN",
+  category: "PEOPLE",
   summary:
     "Del Primer Triunvirato a los Idus de marzo: el general y político que conquistó la Galia, cruzó el Rubicón y precipitó el final de la República romana.",
 });

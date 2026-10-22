@@ -13,10 +13,10 @@ export default function NotFound() {
           La página que buscas no existe o todavía no se ha escrito. Puede que el tema aún no esté disponible.
         </p>
         <Link
-          href="/#temas"
+          href="/#civilizaciones"
           className="mt-10 inline-flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-85"
         >
-          Ver los temas disponibles
+          Ver las civilizaciones
         </Link>
       </main>
       <SiteFooter />

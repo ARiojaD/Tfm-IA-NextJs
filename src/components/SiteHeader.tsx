@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_LINKS = [
-  { href: "/#temas", label: "Temas" },
+  { href: "/#civilizaciones", label: "Civilizaciones" },
   { href: "/#cronologia", label: "Cronología" },
   { href: "/#consulta", label: "Consulta" },
 ];

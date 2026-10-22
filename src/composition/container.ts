@@ -2,6 +2,7 @@ import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
 import { AddCommentUseCase } from "@/application/use-cases/AddCommentUseCase";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
 import { GetTopicDetailUseCase } from "@/application/use-cases/GetTopicDetailUseCase";
+import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
@@ -44,6 +45,7 @@ function createUseCases({ clock, repositories, rateLimiters }: State) {
   const { topics, quizzes, comments } = repositories;
 
   return {
+    listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
     getTopicDetail: new GetTopicDetailUseCase(repositories),
     addComment: new AddCommentUseCase({
       topics,
@@ -70,6 +72,27 @@ export function createContainer(seed: Seed = SEED): Container {
 const globalForState = globalThis as typeof globalThis & { __memnonState?: State };
 
 export function getContainer(): Container {
-  globalForState.__memnonState ??= createState(SEED);
+  if (!isBuiltWithCurrentClasses(globalForState.__memnonState)) {
+    globalForState.__memnonState = createState(SEED);
+  }
   return createUseCases(globalForState.__memnonState);
+}
+
+// A hot reload of an infrastructure module redefines its class. Instances created before keep the
+// old methods (e.g. a repository method added later would be missing), so the state is rebuilt.
+// Only happens in development; it resets in-memory data, which a restart would do anyway.
+function isBuiltWithCurrentClasses(state: State | undefined): state is State {
+  if (!state) return false;
+  const { clock, repositories, rateLimiters } = state;
+
+  return (
+    clock instanceof SystemClock &&
+    repositories.topics instanceof InMemoryTopicRepository &&
+    repositories.events instanceof InMemoryHistoricalEventRepository &&
+    repositories.quizzes instanceof InMemoryQuizRepository &&
+    repositories.comments instanceof InMemoryCommentRepository &&
+    repositories.recommendations instanceof InMemoryRecommendationRepository &&
+    rateLimiters.comments instanceof InMemoryRateLimiter &&
+    rateLimiters.quizAnswers instanceof InMemoryRateLimiter
+  );
 }

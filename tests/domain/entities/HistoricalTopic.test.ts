@@ -6,6 +6,7 @@ const validTopic = {
   slug: "julio-cesar",
   title: "Julio César",
   era: "ROMAN",
+  category: "PEOPLE",
   summary: "Del cruce del Rubicón a los Idus de marzo: el general que acabó con la República romana.",
 };
 
@@ -31,6 +32,21 @@ describe("HistoricalTopicSchema", () => {
 
   it("rechaza una época desconocida", () => {
     expect(HistoricalTopicSchema.safeParse({ ...validTopic, era: "ATLANTIS" }).success).toBe(false);
+  });
+
+  it.each(["PEOPLE", "WARS_AND_BATTLES", "PERIODS", "CITIES"])("acepta la categoría %s", (category) => {
+    expect(HistoricalTopicSchema.safeParse({ ...validTopic, category }).success).toBe(true);
+  });
+
+  it("rechaza una categoría desconocida", () => {
+    expect(HistoricalTopicSchema.safeParse({ ...validTopic, category: "MYTHS" }).success).toBe(false);
+  });
+
+  it("rechaza un tema sin categoría", () => {
+    const topicWithoutCategory: Partial<typeof validTopic> = { ...validTopic };
+    delete topicWithoutCategory.category;
+
+    expect(HistoricalTopicSchema.safeParse(topicWithoutCategory).success).toBe(false);
   });
 
   it("rechaza un resumen vacío", () => {

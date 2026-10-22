@@ -12,6 +12,7 @@ export function aTopic(overrides: Partial<HistoricalTopic> = {}): HistoricalTopi
     slug: "tema-de-prueba",
     title: "Tema de prueba",
     era: "ROMAN",
+    category: "PEOPLE",
     summary: "Resumen del tema de prueba.",
     ...overrides,
   };
