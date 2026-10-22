@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import { createContainer, getContainer } from "@/composition/container";
+
+const VISITOR = "visitante-1";
+const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola" };
 
 describe("container", () => {
   it("conecta GetTopicDetail con los datos de ejemplo de Julio César", async () => {
@@ -16,7 +20,7 @@ describe("container", () => {
   it("AddComment y GetTopicDetail comparten el mismo repositorio de comentarios", async () => {
     const container = createContainer();
 
-    const added = await container.addComment.execute({ topicSlug: "julio-cesar", author: "Livia", message: "Hola" });
+    const added = await container.addComment.execute(comment, VISITOR);
     const detail = await container.getTopicDetail.execute("julio-cesar");
 
     expect(added.success).toBe(true);
@@ -24,7 +28,7 @@ describe("container", () => {
   });
 
   it("cada container nuevo empieza con los datos de ejemplo, sin cambios de otros", async () => {
-    await createContainer().addComment.execute({ topicSlug: "julio-cesar", author: "Livia", message: "Hola" });
+    await createContainer().addComment.execute(comment, VISITOR);
 
     const detail = await createContainer().getTopicDetail.execute("julio-cesar");
 
@@ -32,21 +36,39 @@ describe("container", () => {
   });
 
   it("conecta AnswerQuizQuestion con el quiz de Julio César", async () => {
-    const result = await createContainer().answerQuizQuestion.execute({
-      topicSlug: "julio-cesar",
-      questionId: "question-caesar-rubicon",
-      optionIndex: 1,
-    });
+    const result = await createContainer().answerQuizQuestion.execute(
+      { topicSlug: "julio-cesar", questionId: "question-caesar-rubicon", optionIndex: 1 },
+      VISITOR,
+    );
 
     expect(result.success && result.data.isCorrect).toBe(true);
   });
 
+  it("limita cada visitante a 5 comentarios por minuto", async () => {
+    const container = createContainer();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await container.addComment.execute(comment, VISITOR)).success).toBe(true);
+    }
+
+    const sixth = await container.addComment.execute(comment, VISITOR);
+
+    expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
+  });
+
   it("getContainer comparte los mismos datos entre llamadas", async () => {
-    const added = await getContainer().addComment.execute({ topicSlug: "julio-cesar", author: "Livia", message: "Hola" });
+    const added = await getContainer().addComment.execute(comment, VISITOR);
 
     const detail = await getContainer().getTopicDetail.execute("julio-cesar");
 
     expect(detail.success && detail.data.comments[0]).toEqual(added.success && added.data);
+  });
+
+  it("getContainer mantiene el contador del límite entre llamadas", async () => {
+    for (let attempt = 0; attempt < 5; attempt++) await getContainer().addComment.execute(comment, "visitante-limite");
+
+    const sixth = await getContainer().addComment.execute(comment, "visitante-limite");
+
+    expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
   });
 
   it("getContainer crea casos de uso nuevos en cada llamada (el código actualizado se aplica sin reiniciar)", () => {

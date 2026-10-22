@@ -140,6 +140,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 │   │   │   ├── in-memory/        # Repositorios en memoria y datos iniciales (seed)
 │   │   │   └── postgres/         # PostgreSQL + pgvector: esquemas, migraciones y repositorios
 │   │   ├── system/               # Reloj y generador de identificadores
+│   │   ├── rate-limiting/        # Limitadores de frecuencia
 │   │   └── ai/                   # Adaptadores de Claude y embeddings
 │   ├── composition/              # 🟢 Conexión de piezas (container) y configuración
 │   ├── shared/                   # 🟤 Utilidades transversales
@@ -271,14 +272,18 @@ El desarrollo sigue tres guías OWASP:
 - **OWASP API Security Top 10:**
   - comprobación de propiedad de cada recurso (BOLA, API1);
   - validación estricta del cuerpo de las peticiones contra *Mass Assignment* (API3);
-  - *rate limiting* (API4).
+  - *rate limiting* por visitante en comentarios y respuestas del quiz (API4).
 - **OWASP Top 10 for LLM Applications:**
   - separación entre instrucciones del sistema y contenido del usuario contra la inyección de prompts (LLM01);
   - salidas del modelo estructuradas y validadas con Zod (LLM02);
   - filtrado de datos sensibles (LLM06);
   - límites de tokens y *timeouts* (LLM10).
 
-Por ejemplo, los esquemas de dominio rechazan cualquier propiedad no declarada, de modo que un `userId` inyectado en el cuerpo de una petición se descarta. Este comportamiento está cubierto por tests.
+Algunos ejemplos ya aplicados, todos cubiertos por tests:
+
+- Los esquemas de dominio rechazan cualquier propiedad no declarada, de modo que un `userId` inyectado en el cuerpo de una petición se descarta.
+- El quiz se envía al navegador sin las respuestas correctas; cada respuesta se corrige en el servidor.
+- Cada visitante puede publicar como máximo 5 comentarios y enviar 30 respuestas del quiz por minuto; los intentos inválidos también cuentan.
 
 El detalle completo está en [`AGENTS.md`](AGENTS.md#3-directivas-de-seguridad-owasp-triléctica-de-seguridad).
 

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { InvalidQuizAnswerError } from "@/application/errors/InvalidQuizAnswerError";
 import { QuizQuestionNotFoundError } from "@/application/errors/QuizQuestionNotFoundError";
+import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import { TopicNotFoundError } from "@/application/errors/TopicNotFoundError";
+import type { Clock } from "@/application/ports/Clock";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
 import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
+import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 import { aQuiz, aTopic } from "../../fixtures/historicalTopics";
 
 const caesar = aTopic({ id: "topic-caesar", slug: "julio-cesar" });
@@ -30,15 +33,45 @@ const caesarQuiz = aQuiz({
   ],
 });
 
-const useCase = new AnswerQuizQuestionUseCase({
-  topics: new InMemoryTopicRepository([caesar, pericles]),
-  quizzes: new InMemoryQuizRepository([caesarQuiz]),
-});
+const VISITOR = "visitante-1";
+const fixedClock: Clock = { now: () => new Date("2026-10-22T10:00:00Z") };
 
-const answer = (overrides: Record<string, unknown> = {}) =>
-  useCase.execute({ topicSlug: "julio-cesar", questionId: "question-rubicon", optionIndex: 1, ...overrides });
+function createUseCase(answerLimit: number) {
+  return new AnswerQuizQuestionUseCase({
+    topics: new InMemoryTopicRepository([caesar, pericles]),
+    quizzes: new InMemoryQuizRepository([caesarQuiz]),
+    rateLimiter: new InMemoryRateLimiter({ limit: answerLimit, windowMs: 60_000 }, fixedClock),
+  });
+}
+
+// Shared by the functional tests below, with a limit high enough never to be reached.
+const useCase = createUseCase(1_000);
+
+const validAnswer = { topicSlug: "julio-cesar", questionId: "question-rubicon", optionIndex: 1 };
+const answer = (overrides: Record<string, unknown> = {}) => useCase.execute({ ...validAnswer, ...overrides }, VISITOR);
 
 describe("AnswerQuizQuestionUseCase", () => {
+  describe("límite de frecuencia (OWASP API4)", () => {
+    it("rechaza las respuestas que superan el límite (frena scripts y abusos)", async () => {
+      const limitedUseCase = createUseCase(2);
+      await limitedUseCase.execute(validAnswer, VISITOR);
+      await limitedUseCase.execute(validAnswer, VISITOR);
+
+      const result = await limitedUseCase.execute(validAnswer, VISITOR);
+
+      expect(!result.success && result.error).toBeInstanceOf(RateLimitExceededError);
+    });
+
+    it("el límite es por visitante", async () => {
+      const limitedUseCase = createUseCase(1);
+      await limitedUseCase.execute(validAnswer, VISITOR);
+
+      const result = await limitedUseCase.execute(validAnswer, "visitante-2");
+
+      expect(result.success).toBe(true);
+    });
+  });
+
   it("indica que la respuesta es correcta y da la explicación", async () => {
     expect(await answer()).toEqual({
       success: true,
@@ -97,7 +130,7 @@ describe("AnswerQuizQuestionUseCase", () => {
   });
 
   it.each([null, "Rubicón", 1])("rechaza una entrada que no es un objeto: %j", async (input) => {
-    const result = await useCase.execute(input);
+    const result = await useCase.execute(input, VISITOR);
 
     expect(!result.success && result.error).toBeInstanceOf(InvalidQuizAnswerError);
   });

@@ -3,10 +3,12 @@ import { CommentSchema, type Comment } from "@/domain/entities/Comment";
 import { failure, success, type Result } from "@/shared/Result";
 import { AddCommentInputSchema } from "../dto/AddCommentInput";
 import { InvalidCommentError } from "../errors/InvalidCommentError";
+import { RateLimitExceededError } from "../errors/RateLimitExceededError";
 import { TopicNotFoundError } from "../errors/TopicNotFoundError";
 import type { Clock } from "../ports/Clock";
 import type { CommentRepository } from "../ports/CommentRepository";
 import type { IdGenerator } from "../ports/IdGenerator";
+import type { RateLimiter } from "../ports/RateLimiter";
 import type { TopicRepository } from "../ports/TopicRepository";
 
 export interface AddCommentDependencies {
@@ -14,14 +16,24 @@ export interface AddCommentDependencies {
   comments: CommentRepository;
   clock: Clock;
   ids: IdGenerator;
+  rateLimiter: RateLimiter;
 }
+
+export type AddCommentError = RateLimitExceededError | InvalidCommentError | TopicNotFoundError;
 
 // Posts a visitor's comment to a topic's social zone.
 export class AddCommentUseCase {
   constructor(private readonly dependencies: AddCommentDependencies) {}
 
   // The input is `unknown` on purpose: it comes from a form, so nothing about it is trusted until validated.
-  async execute(input: unknown): Promise<Result<Comment, InvalidCommentError | TopicNotFoundError>> {
+  // requesterId identifies who is asking (IP today, user id once there is authentication) for rate limiting.
+  async execute(input: unknown, requesterId: string): Promise<Result<Comment, AddCommentError>> {
+    // Checked first so every attempt counts, valid or not: spamming invalid payloads is also throttled.
+    const decision = await this.dependencies.rateLimiter.consume(requesterId);
+    if (!decision.allowed) {
+      return failure(new RateLimitExceededError(decision.retryAfterSeconds));
+    }
+
     const parsedInput = AddCommentInputSchema.safeParse(input);
     if (!parsedInput.success) {
       const { fieldErrors, formErrors } = z.flattenError(parsedInput.error);
