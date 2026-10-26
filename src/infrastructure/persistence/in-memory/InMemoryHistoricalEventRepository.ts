@@ -9,7 +9,7 @@ export class InMemoryHistoricalEventRepository implements HistoricalEventReposit
     this.events = structuredClone(events);
   }
 
-  async listByTopic(topicId: EntityId): Promise<HistoricalEvent[]> {
-    return structuredClone(this.events.filter((event) => event.topicId === topicId));
+  listByTopic(topicId: EntityId): Promise<HistoricalEvent[]> {
+    return Promise.resolve(structuredClone(this.events.filter((event) => event.topicId === topicId)));
   }
 }

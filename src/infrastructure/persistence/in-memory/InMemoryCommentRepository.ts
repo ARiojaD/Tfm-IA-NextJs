@@ -10,11 +10,12 @@ export class InMemoryCommentRepository implements CommentRepository {
     this.comments = structuredClone(comments);
   }
 
-  async listByTopic(topicId: EntityId): Promise<Comment[]> {
-    return structuredClone(this.comments.filter((comment) => comment.topicId === topicId));
+  listByTopic(topicId: EntityId): Promise<Comment[]> {
+    return Promise.resolve(structuredClone(this.comments.filter((comment) => comment.topicId === topicId)));
   }
 
-  async add(comment: Comment): Promise<void> {
+  add(comment: Comment): Promise<void> {
     this.comments.push(structuredClone(comment));
+    return Promise.resolve();
   }
 }

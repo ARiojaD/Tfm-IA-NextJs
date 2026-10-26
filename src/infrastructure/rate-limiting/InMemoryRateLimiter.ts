@@ -12,7 +12,7 @@ export class InMemoryRateLimiter implements RateLimiter {
     private readonly clock: Clock,
   ) {}
 
-  async consume(key: string): Promise<RateLimitDecision> {
+  consume(key: string): Promise<RateLimitDecision> {
     const now = this.clock.now().getTime();
     const windowStart = now - this.policy.windowMs;
     const recent = (this.requestsByKey.get(key) ?? []).filter((timestamp) => timestamp > windowStart);
@@ -20,11 +20,11 @@ export class InMemoryRateLimiter implements RateLimiter {
     if (recent.length >= this.policy.limit) {
       this.requestsByKey.set(key, recent);
       const oldestExpiresAt = recent[0] + this.policy.windowMs;
-      return { allowed: false, retryAfterSeconds: Math.ceil((oldestExpiresAt - now) / 1000) };
+      return Promise.resolve({ allowed: false, retryAfterSeconds: Math.ceil((oldestExpiresAt - now) / 1000) });
     }
 
     recent.push(now);
     this.requestsByKey.set(key, recent);
-    return { allowed: true };
+    return Promise.resolve({ allowed: true });
   }
 }

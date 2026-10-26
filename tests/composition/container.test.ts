@@ -83,7 +83,7 @@ describe("container", () => {
     const globalWithState = globalThis as typeof globalThis & { __memnonState?: unknown };
     globalWithState.__memnonState = {
       clock: { now: () => new Date() },
-      repositories: { topics: { findBySlug: async () => null } },
+      repositories: { topics: { findBySlug: () => Promise.resolve(null) } },
       rateLimiters: {},
     };
 

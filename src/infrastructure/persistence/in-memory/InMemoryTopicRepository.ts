@@ -11,12 +11,12 @@ export class InMemoryTopicRepository implements TopicRepository {
     this.topics = structuredClone(topics);
   }
 
-  async findBySlug(slug: Slug): Promise<HistoricalTopic | null> {
+  findBySlug(slug: Slug): Promise<HistoricalTopic | null> {
     const topic = this.topics.find((candidate) => candidate.slug === slug);
-    return topic ? structuredClone(topic) : null;
+    return Promise.resolve(topic ? structuredClone(topic) : null);
   }
 
-  async listByEra(era: HistoricalEra): Promise<HistoricalTopic[]> {
-    return structuredClone(this.topics.filter((topic) => topic.era === era));
+  listByEra(era: HistoricalEra): Promise<HistoricalTopic[]> {
+    return Promise.resolve(structuredClone(this.topics.filter((topic) => topic.era === era)));
   }
 }

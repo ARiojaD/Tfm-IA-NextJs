@@ -9,7 +9,9 @@ export class InMemoryRecommendationRepository implements RecommendationRepositor
     this.recommendations = structuredClone(recommendations);
   }
 
-  async listByTopic(topicId: EntityId): Promise<Recommendation[]> {
-    return structuredClone(this.recommendations.filter((recommendation) => recommendation.topicId === topicId));
+  listByTopic(topicId: EntityId): Promise<Recommendation[]> {
+    return Promise.resolve(
+      structuredClone(this.recommendations.filter((recommendation) => recommendation.topicId === topicId)),
+    );
   }
 }

@@ -9,8 +9,8 @@ export class InMemoryQuizRepository implements QuizRepository {
     this.quizzes = structuredClone(quizzes);
   }
 
-  async findByTopic(topicId: EntityId): Promise<Quiz | null> {
+  findByTopic(topicId: EntityId): Promise<Quiz | null> {
     const quiz = this.quizzes.find((candidate) => candidate.topicId === topicId);
-    return quiz ? structuredClone(quiz) : null;
+    return Promise.resolve(quiz ? structuredClone(quiz) : null);
   }
 }
