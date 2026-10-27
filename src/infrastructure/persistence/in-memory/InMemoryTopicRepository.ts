@@ -1,5 +1,6 @@
 import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
+import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import type { Slug } from "@/domain/value-objects/Slug";
 
@@ -18,5 +19,9 @@ export class InMemoryTopicRepository implements TopicRepository {
 
   listByEra(era: HistoricalEra): Promise<HistoricalTopic[]> {
     return Promise.resolve(structuredClone(this.topics.filter((topic) => topic.era === era)));
+  }
+
+  findByIds(ids: EntityId[]): Promise<HistoricalTopic[]> {
+    return Promise.resolve(structuredClone(this.topics.filter((topic) => ids.includes(topic.id))));
   }
 }

@@ -24,6 +24,7 @@ function createState(seed: Seed) {
   const clock = new SystemClock();
 
   return {
+    seed,
     clock,
     repositories: {
       topics: new InMemoryTopicRepository(seed.topics),
@@ -72,7 +73,7 @@ export function createContainer(seed: Seed = SEED): Container {
 const globalForState = globalThis as typeof globalThis & { __memnonState?: State };
 
 export function getContainer(): Container {
-  if (!isBuiltWithCurrentClasses(globalForState.__memnonState)) {
+  if (!isBuiltWithCurrentCode(globalForState.__memnonState)) {
     globalForState.__memnonState = createState(SEED);
   }
   return createUseCases(globalForState.__memnonState);
@@ -80,12 +81,14 @@ export function getContainer(): Container {
 
 // A hot reload of an infrastructure module redefines its class. Instances created before keep the
 // old methods (e.g. a repository method added later would be missing), so the state is rebuilt.
+// Editing the seed files creates a new SEED object, which also rebuilds it with the new data.
 // Only happens in development; it resets in-memory data, which a restart would do anyway.
-function isBuiltWithCurrentClasses(state: State | undefined): state is State {
+function isBuiltWithCurrentCode(state: State | undefined): state is State {
   if (!state) return false;
-  const { clock, repositories, rateLimiters } = state;
+  const { seed, clock, repositories, rateLimiters } = state;
 
   return (
+    seed === SEED &&
     clock instanceof SystemClock &&
     repositories.topics instanceof InMemoryTopicRepository &&
     repositories.events instanceof InMemoryHistoricalEventRepository &&

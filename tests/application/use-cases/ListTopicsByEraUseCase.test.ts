@@ -32,7 +32,17 @@ describe("ListTopicsByEraUseCase", () => {
     expect(overview.totalTopics).toBe(1);
   });
 
-  it("ordena alfabéticamente los temas de cada categoría, respetando las tildes", async () => {
+  it("ordena cronológicamente los temas de cada categoría, por su fecha de inicio", async () => {
+    const empire = aTopic({ id: "t-empire", slug: "imperio", title: "Imperio", category: "PERIODS", period: { start: { year: -27 } } });
+    const monarchy = aTopic({ id: "t-monarchy", slug: "monarquia", title: "Monarquía", category: "PERIODS", period: { start: { year: -753 } } });
+    const republic = aTopic({ id: "t-republic", slug: "republica", title: "República", category: "PERIODS", period: { start: { year: -509 } } });
+
+    const overview = await listTopics([empire, republic, monarchy]).execute("ROMAN");
+
+    expect(overview.categories[0].topics.map((topic) => topic.title)).toEqual(["Monarquía", "República", "Imperio"]);
+  });
+
+  it("desempata alfabéticamente, respetando las tildes, los temas que empiezan a la vez", async () => {
     const overview = await listTopics([caesar, augustus]).execute("ROMAN");
 
     expect(overview.categories[0].topics.map((topic) => topic.title)).toEqual(["Augusto", "Julio César"]);

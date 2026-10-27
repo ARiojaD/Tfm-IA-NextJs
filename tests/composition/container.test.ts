@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import { createContainer, getContainer } from "@/composition/container";
+import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
+import { SEED, type Seed } from "@/infrastructure/persistence/in-memory/seed";
 
 const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola" };
@@ -90,6 +92,27 @@ describe("container", () => {
     const overview = await getContainer().listTopicsByEra.execute("ROMAN");
 
     expect(overview.totalTopics).toBeGreaterThan(0);
+  });
+
+  it("getContainer reconstruye el estado si se creó con una versión anterior del seed", async () => {
+    // Simulates a hot reload of the seed files: the stored state was built from an older SEED object.
+    getContainer();
+    const globalWithState = globalThis as typeof globalThis & {
+      __memnonState?: { seed: Seed; repositories: { topics: InMemoryTopicRepository } };
+    };
+    globalWithState.__memnonState!.seed = { ...SEED, topics: [] };
+    globalWithState.__memnonState!.repositories.topics = new InMemoryTopicRepository([]);
+
+    const overview = await getContainer().listTopicsByEra.execute("ROMAN");
+
+    expect(overview.totalTopics).toBe(SEED.topics.filter((topic) => topic.era === "ROMAN").length);
+  });
+
+  it("conecta ListTopicsByEra: el asedio de Alesia aparece en las guerras y batallas de Roma", async () => {
+    const overview = await createContainer().listTopicsByEra.execute("ROMAN");
+
+    const battles = overview.categories.find((group) => group.category === "WARS_AND_BATTLES");
+    expect(battles?.topics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
   });
 
   it("getContainer crea casos de uso nuevos en cada llamada (el código actualizado se aplica sin reiniciar)", () => {

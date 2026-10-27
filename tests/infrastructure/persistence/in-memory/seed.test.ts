@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CommentSchema } from "@/domain/entities/Comment";
 import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
@@ -12,8 +14,40 @@ const hasDuplicates = (values: string[]) => new Set(values).size !== values.leng
 describe("Datos de ejemplo (seed)", () => {
   const topicIds = new Set(ids(SEED.topics));
 
-  it("incluye el tema de Julio César", () => {
-    expect(SEED.topics.map((topic) => topic.slug)).toContain("julio-cesar");
+  it("incluye un personaje y una batalla de Roma: Julio César y el asedio de Alesia", () => {
+    const slugs = SEED.topics.map((topic) => topic.slug);
+
+    expect(slugs).toEqual(expect.arrayContaining(["julio-cesar", "asedio-de-alesia"]));
+  });
+
+  it("los dos temas de Roma tienen imagen", () => {
+    for (const slug of ["julio-cesar", "asedio-de-alesia"]) {
+      expect(SEED.topics.find((topic) => topic.slug === slug)?.image, `${slug} sin imagen`).toBeDefined();
+    }
+  });
+
+  it("las imágenes de los temas existen en public/", () => {
+    for (const topic of SEED.topics) {
+      if (!topic.image) continue;
+      expect(existsSync(join("public", topic.image.src)), `${topic.slug}: no existe ${topic.image.src}`).toBe(true);
+    }
+  });
+
+  it("los temas relacionados apuntan a temas existentes", () => {
+    for (const topic of SEED.topics) {
+      for (const relatedId of topic.relatedTopicIds) {
+        expect(topicIds, `${topic.slug} enlaza a un tema inexistente: ${relatedId}`).toContain(relatedId);
+      }
+    }
+  });
+
+  it("las relaciones entre temas son recíprocas", () => {
+    for (const topic of SEED.topics) {
+      for (const relatedId of topic.relatedTopicIds) {
+        const related = SEED.topics.find((candidate) => candidate.id === relatedId);
+        expect(related?.relatedTopicIds, `${related?.slug} no enlaza de vuelta a ${topic.slug}`).toContain(topic.id);
+      }
+    }
   });
 
   it("todos los datos cumplen los esquemas del dominio", () => {

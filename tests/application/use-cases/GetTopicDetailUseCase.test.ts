@@ -54,7 +54,37 @@ describe("GetTopicDetailUseCase", () => {
     };
     expect(result).toEqual({
       success: true,
-      data: { topic: caesar, events: [event], quiz: publicQuiz, comments: [comment], recommendations: [recommendation] },
+      data: {
+        topic: caesar,
+        events: [event],
+        quiz: publicQuiz,
+        comments: [comment],
+        recommendations: [recommendation],
+        relatedTopics: [],
+      },
+    });
+  });
+
+  describe("temas relacionados", () => {
+    const alesia = aTopic({ id: "topic-alesia", slug: "asedio-de-alesia", period: { start: { year: -52 } } });
+    const gallicWars = aTopic({ id: "topic-gallic-wars", slug: "guerra-de-las-galias", period: { start: { year: -58 } } });
+
+    it("devuelve los temas relacionados en orden cronológico", async () => {
+      const caesarWithLinks = { ...caesar, relatedTopicIds: ["topic-alesia", "topic-gallic-wars"] };
+      const useCase = createUseCase({ topics: [caesarWithLinks, alesia, gallicWars] });
+
+      const result = await useCase.execute("julio-cesar");
+
+      expect(result.success && result.data.relatedTopics).toEqual([gallicWars, alesia]);
+    });
+
+    it("ignora los temas relacionados que ya no existen", async () => {
+      const caesarWithLinks = { ...caesar, relatedTopicIds: ["topic-alesia", "topic-deleted"] };
+      const useCase = createUseCase({ topics: [caesarWithLinks, alesia] });
+
+      const result = await useCase.execute("julio-cesar");
+
+      expect(result.success && result.data.relatedTopics).toEqual([alesia]);
     });
   });
 

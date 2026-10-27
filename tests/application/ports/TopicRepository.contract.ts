@@ -40,6 +40,28 @@ export function describeTopicRepositoryContract(
       expect(await repository.listByEra("HISPANIA")).toEqual([]);
     });
 
+    it("encuentra varios temas por sus ids", async () => {
+      const augustus = aTopic({ id: "topic-augustus", slug: "augusto", title: "Augusto" });
+      const repository = await createRepository([caesar, pericles, augustus]);
+
+      const topics = await repository.findByIds(["topic-augustus", "topic-pericles"]);
+
+      expect(topics).toHaveLength(2);
+      expect(topics).toEqual(expect.arrayContaining([augustus, pericles]));
+    });
+
+    it("ignora los ids que no corresponden a ningún tema", async () => {
+      const repository = await createRepository([caesar]);
+
+      expect(await repository.findByIds(["topic-caesar", "topic-missing"])).toEqual([caesar]);
+    });
+
+    it("devuelve una lista vacía si no se pide ningún id", async () => {
+      const repository = await createRepository([caesar]);
+
+      expect(await repository.findByIds([])).toEqual([]);
+    });
+
     it("devuelve copias: modificar el resultado no altera los datos guardados", async () => {
       const repository = await createRepository([caesar]);
 

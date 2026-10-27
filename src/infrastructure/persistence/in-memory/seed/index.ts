@@ -10,6 +10,13 @@ import {
   juliusCaesarRecommendations,
   juliusCaesarTopic,
 } from "./juliusCaesar";
+import {
+  siegeOfAlesiaComments,
+  siegeOfAlesiaEvents,
+  siegeOfAlesiaQuiz,
+  siegeOfAlesiaRecommendations,
+  siegeOfAlesiaTopic,
+} from "./siegeOfAlesia";
 
 export interface Seed {
   topics: HistoricalTopic[];
@@ -22,9 +29,9 @@ export interface Seed {
 // Initial data for the in-memory repositories; later reusable as the database seed.
 // A new topic is added by creating its file next to juliusCaesar.ts and listing it here.
 export const SEED: Seed = {
-  topics: [juliusCaesarTopic],
-  events: [...juliusCaesarEvents],
-  quizzes: [juliusCaesarQuiz],
-  comments: [...juliusCaesarComments],
-  recommendations: [...juliusCaesarRecommendations],
+  topics: [juliusCaesarTopic, siegeOfAlesiaTopic],
+  events: [...juliusCaesarEvents, ...siegeOfAlesiaEvents],
+  quizzes: [juliusCaesarQuiz, siegeOfAlesiaQuiz],
+  comments: [...juliusCaesarComments, ...siegeOfAlesiaComments],
+  recommendations: [...juliusCaesarRecommendations, ...siegeOfAlesiaRecommendations],
 };

@@ -3,6 +3,7 @@ import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { Recommendation } from "@/domain/entities/Recommendation";
 import { compareHistoricalDates } from "@/domain/value-objects/HistoricalDate";
+import { compareHistoricalPeriods } from "@/domain/value-objects/HistoricalPeriod";
 import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType";
 import { SlugSchema } from "@/domain/value-objects/Slug";
 import { failure, success, type Result } from "@/shared/Result";
@@ -20,6 +21,7 @@ export interface TopicDetail {
   quiz: PublicQuiz | null;
   comments: Comment[];
   recommendations: Recommendation[];
+  relatedTopics: HistoricalTopic[];
 }
 
 export interface GetTopicDetailDependencies {
@@ -30,7 +32,7 @@ export interface GetTopicDetailDependencies {
   recommendations: RecommendationRepository;
 }
 
-// Loads everything a topic page shows: the topic plus its four modules, already in display order.
+// Loads everything a topic page shows: the topic, its four modules and its related topics, already in display order.
 export class GetTopicDetailUseCase {
   constructor(private readonly repositories: GetTopicDetailDependencies) {}
 
@@ -46,11 +48,12 @@ export class GetTopicDetailUseCase {
       return failure(new TopicNotFoundError(slug));
     }
 
-    const [events, quiz, comments, recommendations] = await Promise.all([
+    const [events, quiz, comments, recommendations, relatedTopics] = await Promise.all([
       this.repositories.events.listByTopic(topic.id),
       this.repositories.quizzes.findByTopic(topic.id),
       this.repositories.comments.listByTopic(topic.id),
       this.repositories.recommendations.listByTopic(topic.id),
+      this.repositories.topics.findByIds(topic.relatedTopicIds),
     ]);
 
     return success({
@@ -59,12 +62,17 @@ export class GetTopicDetailUseCase {
       quiz: quiz ? toPublicQuiz(quiz) : null,
       comments: comments.toSorted(newestFirst),
       recommendations: recommendations.toSorted(byTypeThenYear),
+      relatedTopics: relatedTopics.toSorted(byPeriod),
     });
   }
 }
 
 function chronologically(a: HistoricalEvent, b: HistoricalEvent): number {
   return compareHistoricalDates(a.date, b.date);
+}
+
+function byPeriod(a: HistoricalTopic, b: HistoricalTopic): number {
+  return compareHistoricalPeriods(a.period, b.period);
 }
 
 function newestFirst(a: Comment, b: Comment): number {

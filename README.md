@@ -52,7 +52,8 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
   - Las fechas están pensadas para la historia antigua: año entero (negativo = a.C.), sin año 0 y con mes opcional, porque de muchos eventos solo se conoce el año.
   - Las épocas son un catálogo cerrado (Grecia Antigua, Roma, Hispania…).
 - **Fuentes y notas personales** asociadas a cada evento, para saber siempre de dónde procede cada dato.
-- **Navegación por civilizaciones** (Roma, Antigua Grecia, Hispania) y, dentro de cada una, por categorías: personajes, guerras y batallas, etapas y ciudades.
+- **Navegación por civilizaciones** (Roma, Antigua Grecia, Hispania) y, dentro de cada una, por categorías: personajes, guerras y batallas, etapas y ciudades. Los temas de cada categoría se ordenan cronológicamente.
+- **Temas históricos** (un personaje, una batalla, una etapa…) con periodo, introducción, datos clave, imagen opcional con su crédito, cronología, quiz, comentarios, recomendaciones y temas relacionados.
 - **Líneas del tiempo** que ordenan los eventos y los distinguen por época.
 
 ### Inteligencia Artificial
@@ -130,7 +131,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ├── src/
 │   ├── domain/                   # 🔴 Reglas del negocio
 │   │   ├── entities/             # Temas, eventos, quizzes, comentarios y recomendaciones
-│   │   └── value-objects/        # Fechas históricas, épocas, categorías, slugs e identificadores
+│   │   └── value-objects/        # Fechas y periodos, épocas, categorías, datos clave, imágenes, slugs e ids
 │   ├── application/              # 🟠 Organiza el trabajo
 │   │   ├── use-cases/            # Casos de uso
 │   │   ├── ports/                # Interfaces de repositorios y servicios externos
@@ -286,6 +287,7 @@ Algunos ejemplos ya aplicados, todos cubiertos por tests:
 - Los esquemas de dominio rechazan cualquier propiedad no declarada, de modo que un `userId` inyectado en el cuerpo de una petición se descarta.
 - El quiz se envía al navegador sin las respuestas correctas; cada respuesta se corrige en el servidor.
 - Cada visitante puede publicar como máximo 5 comentarios y enviar 30 respuestas del quiz por minuto; los intentos inválidos también cuentan.
+- Las imágenes de los temas solo pueden ser archivos locales de `/images` (JPG, PNG, WebP o AVIF): ni dominios externos, ni rutas con `..`, ni SVG, que puede contener scripts.
 
 El detalle completo está en [`AGENTS.md`](AGENTS.md#3-directivas-de-seguridad-owasp-triléctica-de-seguridad).
 

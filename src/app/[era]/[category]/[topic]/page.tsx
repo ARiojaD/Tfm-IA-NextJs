@@ -11,9 +11,12 @@ import { CommentForm } from "@/components/topic/CommentForm";
 import { CommentList } from "@/components/topic/CommentList";
 import { QuizGame } from "@/components/topic/QuizGame";
 import { RecommendationList } from "@/components/topic/RecommendationList";
+import { TopicCard } from "@/components/topic/TopicCard";
+import { TopicIntroduction } from "@/components/topic/TopicIntroduction";
 import { getContainer } from "@/composition/container";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_LABELS } from "@/lib/eraLabels";
+import { formatHistoricalPeriod } from "@/lib/formatHistoricalPeriod";
 import { categoryFromRouteSlug, categoryPath, eraFromRouteSlug, eraPath } from "@/lib/routes";
 import { addComment, answerQuizQuestion } from "./actions";
 
@@ -52,12 +55,14 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
     notFound();
   }
 
-  const { topic, events, quiz, comments, recommendations } = detail;
+  const { topic, events, quiz, comments, recommendations, relatedTopics } = detail;
+  // The introduction sits right below the header, so it needs no shortcut.
   const sections = [
     { id: "cronologia", label: "Cronología", count: events.length },
     { id: "quiz", label: "Quiz", count: quiz?.questions.length ?? 0 },
     { id: "comunidad", label: "Comunidad", count: comments.length },
     { id: "recomendaciones", label: "Recomendaciones", count: recommendations.length },
+    ...(relatedTopics.length > 0 ? [{ id: "relacionados", label: "Relacionados", count: relatedTopics.length }] : []),
   ];
 
   return (
@@ -91,7 +96,10 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
               </ol>
             </nav>
 
-            <EraBadge era={topic.era} />
+            <div className="flex flex-wrap items-center gap-3">
+              <EraBadge era={topic.era} />
+              <span className="text-sm font-medium text-muted">{formatHistoricalPeriod(topic.period)}</span>
+            </div>
             <h1 className="mt-4 font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
               {topic.title}
             </h1>
@@ -112,6 +120,12 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
                 ))}
               </ul>
             </nav>
+          </div>
+        </section>
+
+        <section id="introduccion" className="scroll-mt-8 pb-16">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+            <TopicIntroduction topic={topic} />
           </div>
         </section>
 
@@ -149,6 +163,19 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
             <RecommendationList recommendations={recommendations} />
           </div>
         </section>
+
+        {relatedTopics.length > 0 && (
+          <section id="relacionados" className="scroll-mt-8 border-t border-border bg-surface/50 py-16">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6">
+              <SectionHeading eyebrow="Relacionados" title="Sigue explorando" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {relatedTopics.map((related) => (
+                  <TopicCard key={related.id} topic={related} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <SiteFooter />

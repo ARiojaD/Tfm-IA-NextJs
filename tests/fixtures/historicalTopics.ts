@@ -14,6 +14,10 @@ export function aTopic(overrides: Partial<HistoricalTopic> = {}): HistoricalTopi
     era: "ROMAN",
     category: "PEOPLE",
     summary: "Resumen del tema de prueba.",
+    period: { start: { year: -100 } },
+    introduction: ["Introducción del tema de prueba."],
+    keyFacts: [{ label: "Dato", value: "Valor del dato de prueba" }],
+    relatedTopicIds: [],
     ...overrides,
   };
 }

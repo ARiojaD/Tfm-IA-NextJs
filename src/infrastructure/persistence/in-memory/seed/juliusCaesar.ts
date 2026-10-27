@@ -16,6 +16,29 @@ export const juliusCaesarTopic = HistoricalTopicSchema.parse({
   category: "PEOPLE",
   summary:
     "Del Primer Triunvirato a los Idus de marzo: el general y político que conquistó la Galia, cruzó el Rubicón y precipitó el final de la República romana.",
+  period: { start: { year: -100, month: 7 }, end: { year: -44, month: 3 } },
+  introduction: [
+    "Cayo Julio César nació en Roma en la gens Julia, una familia patricia de linaje antiguo pero de escasa influencia política. Creció en una República sacudida por la guerra civil entre Mario, su tío político, y Sila, y se ganó al pueblo con espectáculos, obras públicas y una oratoria brillante, endeudándose hasta límites temerarios para lograrlo.",
+    "En el 60 a.C. selló con Pompeyo y Craso el Primer Triunvirato, un pacto privado que le abrió el consulado y, después, el gobierno de las Galias. Allí libró durante ocho años una guerra de conquista que culminó en el asedio de Alesia y que él mismo relató en sus Comentarios, convertidos en una pieza maestra de propaganda política.",
+    "Cuando el Senado le ordenó licenciar su ejército, cruzó el Rubicón y desencadenó la guerra civil. Tras vencer a Pompeyo acumuló un poder sin precedentes y fue nombrado dictador perpetuo, lo que llevó a un grupo de senadores a asesinarlo en los idus de marzo del 44 a.C. Su muerte no salvó la República: su heredero, Octavio, acabaría convirtiéndose en Augusto, el primer emperador.",
+  ],
+  keyFacts: [
+    { label: "Nacimiento", value: "12 o 13 de julio del 100 a.C., Roma" },
+    { label: "Muerte", value: "15 de marzo del 44 a.C., en la Curia de Pompeyo (Roma)" },
+    { label: "Familia", value: "Gens Julia, de origen patricio" },
+    { label: "Cargos", value: "Pontífice máximo, cónsul, procónsul de las Galias y dictador perpetuo" },
+    { label: "Obras", value: "Comentarios sobre la guerra de las Galias y sobre la guerra civil" },
+    { label: "Heredero", value: "Octavio, su sobrino nieto e hijo adoptivo, el futuro Augusto" },
+  ],
+  image: {
+    src: "/images/topics/julio-cesar.jpg",
+    alt: "Busto de mármol de Julio César, de frente, con el rostro delgado y arrugado",
+    caption: "Retrato de Túsculo. Museo de Antigüedades de Turín.",
+    credit: "Foto: Ángel M. Felicísimo · Dominio público",
+    width: 960,
+    height: 1694,
+  },
+  relatedTopicIds: ["topic-siege-of-alesia"],
 });
 
 export const juliusCaesarEvents = HistoricalEventSchema.array().parse([
