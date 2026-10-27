@@ -107,6 +107,8 @@ Toda la lógica de negocio en `domain/` y `application/` se desarrollará bajo T
 - **Ubicación:** los tests viven en `tests/`, fuera de `src/`, replicando su estructura (`src/domain/entities/HistoricalEvent.ts` → `tests/domain/entities/HistoricalEvent.test.ts`). Importan el código con el alias `@/`.
 - **Unidades (`tests/domain/` y `tests/application/`):** Cobertura del 100% en dominio y casos de uso mediante repositorios in-memory, Mocks y Stubs con Vitest.
 - **Integración (`tests/infrastructure/` y endpoints de `app/api/`):** Pruebas de verificación de endpoints y consultas a la base de datos vectorizada.
+- **End-to-end (`e2e/`, Playwright):** recorren la web real en un navegador sobre una compilación de producción en el puerto 3100 (nunca contra el servidor de desarrollo). Cubren los flujos clave: navegación hasta un tema, quiz corregido en el servidor y comentarios. Se ejecutan con `npm run test:e2e` antes de cambios que afecten a toda la aplicación, como sustituir los repositorios en memoria por PostgreSQL.
+- **Lint:** la regla `require-await` está activa; los adaptadores síncronos que implementan ports asíncronos devuelven `Promise.resolve(...)` en lugar de declarar `async` sin `await`.
 
 ---
 

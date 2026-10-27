@@ -77,12 +77,13 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 
 | Tecnología | Versión | Uso |
 | --- | --- | --- |
-| [Next.js](https://nextjs.org) (App Router, Turbopack) | 16.3.8 | Framework *fullstack* |
+| [Next.js](https://nextjs.org) (App Router, Turbopack) | 16.4.3 | Framework *fullstack* |
 | [React](https://react.dev) | 19.2.8 | Interfaz de usuario |
 | [TypeScript](https://www.typescriptlang.org) | 5.9.3 | Lenguaje, en modo `strict` y sin `any` |
 | [Tailwind CSS](https://tailwindcss.com) | 4.3.3 | Estilos |
 | [Zod](https://zod.dev) | 4.6.7 | Validación de esquemas de dominio, de entrada y de salidas del LLM |
 | [Vitest](https://vitest.dev) | 5.0.4 | Tests unitarios y de integración |
+| [Playwright](https://playwright.dev) | 1.64.1 | Tests end-to-end en el navegador |
 | [ESLint](https://eslint.org) (`eslint-config-next`) | 9.39.5 | Linter |
 | PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) | _Por completar_ | Base de datos relacional y vectorial |
 | ORM | _Por completar_ | Consultas parametrizadas y migraciones |
@@ -165,10 +166,12 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 │   ├── shared/
 │   ├── lib/
 │   └── fixtures/                 # Constructores de datos de prueba
-├── public/                       # Recursos estáticos
+├── e2e/                          # Tests end-to-end con Playwright (la web entera en un navegador)
+├── public/                       # Recursos estáticos (images/topics: imágenes de los temas)
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA
-├── vitest.config.ts              # Configuración de tests
+├── vitest.config.mts             # Configuración de los tests unitarios y de integración
+├── playwright.config.ts          # Configuración de los tests end-to-end
 └── package.json
 ```
 
@@ -222,6 +225,7 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 | `npm run lint` | Análisis estático con ESLint |
 | `npm run test` | Ejecución única de los tests |
 | `npm run test:watch` | Tests en modo observación, para el ciclo TDD |
+| `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100). La primera vez, instalar el navegador con `npx playwright install chromium` |
 
 ---
 
@@ -259,6 +263,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/infrastructure/` y endpoints de `app/api/` | Vitest contra la base de datos vectorial y los endpoints |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción: navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML) y comentarios |
 
 > _Por completar con el resumen final de tests y cobertura._
 
