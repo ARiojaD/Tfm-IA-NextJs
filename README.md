@@ -85,8 +85,8 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 | [Vitest](https://vitest.dev) | 5.0.4 | Tests unitarios y de integración |
 | [Playwright](https://playwright.dev) | 1.64.1 | Tests end-to-end en el navegador |
 | [ESLint](https://eslint.org) (`eslint-config-next`) | 9.39.5 | Linter |
-| PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) | _Por completar_ | Base de datos relacional y vectorial |
-| ORM | _Por completar_ | Consultas parametrizadas y migraciones |
+| PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) | 17 + 0.8.7 (Docker) | Base de datos relacional y vectorial |
+| [Drizzle ORM](https://orm.drizzle.team) (+ `drizzle-kit`) | 0.45.4 | Consultas parametrizadas, esquema y migraciones |
 | [Anthropic Claude API](https://docs.anthropic.com) vía [Vercel AI SDK](https://sdk.vercel.ai) | _Por completar_ | Generación de respuestas y *Structured Outputs* |
 | Modelo de embeddings | _Por completar_ | Vectorización de notas para el RAG |
 | Autenticación | _Por completar_ | Registro, inicio de sesión y sesiones |
@@ -141,7 +141,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 │   ├── infrastructure/           # 🔵 Mundo real
 │   │   ├── persistence/
 │   │   │   ├── in-memory/        # Repositorios en memoria y datos iniciales (seed)
-│   │   │   └── postgres/         # PostgreSQL + pgvector: esquemas, migraciones y repositorios
+│   │   │   └── postgres/         # PostgreSQL: cliente, esquema, migraciones, mappers, seed y repositorios
 │   │   ├── system/               # Reloj y generador de identificadores
 │   │   ├── rate-limiting/        # Limitadores de frecuencia
 │   │   └── ai/                   # Adaptadores de Claude y embeddings
@@ -162,15 +162,20 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ├── tests/                        # Tests, replicando la estructura de src/
 │   ├── domain/                   # Unitarios del dominio
 │   ├── application/              # Casos de uso y tests de contrato de los ports
-│   ├── infrastructure/           # Implementaciones de los ports
+│   ├── infrastructure/           # Implementaciones de los ports (postgres/: *.integration.test.ts)
 │   ├── shared/
 │   ├── lib/
 │   └── fixtures/                 # Constructores de datos de prueba
 ├── e2e/                          # Tests end-to-end con Playwright (la web entera en un navegador)
+├── scripts/                      # Scripts de mantenimiento (db-seed.ts)
 ├── public/                       # Recursos estáticos (images/topics: imágenes de los temas)
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA
-├── vitest.config.mts             # Configuración de los tests unitarios y de integración
+├── .env.example                  # Plantilla de variables de entorno (sin valores reales)
+├── docker-compose.yml            # PostgreSQL + pgvector para desarrollo
+├── drizzle.config.ts             # Configuración de drizzle-kit (esquema y migraciones)
+├── vitest.config.mts             # Configuración de los tests unitarios
+├── vitest.integration.config.mts # Configuración de los tests de integración (PostgreSQL)
 ├── playwright.config.ts          # Configuración de los tests end-to-end
 └── package.json
 ```
@@ -186,7 +191,7 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 - [Node.js](https://nodejs.org) 24 LTS
 - npm 11 o superior
 - Git
-- PostgreSQL con la extensión pgvector (_versión por completar_)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ejecuta PostgreSQL 17 con pgvector; no hace falta instalar PostgreSQL)
 
 ### Pasos
 
@@ -205,7 +210,13 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 
 3. Configurar las variables de entorno (ver [sección 7](#7-variables-de-entorno)).
 
-4. Preparar la base de datos: _por completar (migraciones y datos de ejemplo)_.
+4. Con Docker Desktop abierto, levantar la base de datos, crear las tablas y cargar los datos de ejemplo:
+
+   ```bash
+   npm run db:up
+   npm run db:migrate
+   npm run db:seed
+   ```
 
 5. Arrancar el servidor de desarrollo:
 
@@ -223,8 +234,13 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 | `npm run build` | Compilación de producción |
 | `npm run start` | Servidor de producción (requiere `npm run build` antes) |
 | `npm run lint` | Análisis estático con ESLint |
-| `npm run test` | Ejecución única de los tests |
+| `npm run test` | Ejecución única de los tests unitarios (no necesitan Docker) |
 | `npm run test:watch` | Tests en modo observación, para el ciclo TDD |
+| `npm run test:integration` | Tests de integración contra PostgreSQL, en una base de datos de test aparte (`<nombre>_test`) que se crea y migra sola. Requiere `npm run db:up` |
+| `npm run db:up` / `db:down` | Levanta o para PostgreSQL en Docker (los datos se conservan en un volumen) |
+| `npm run db:generate` | Genera una migración SQL a partir de los cambios del esquema |
+| `npm run db:migrate` | Aplica las migraciones pendientes |
+| `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos) |
 | `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100). La primera vez, instalar el navegador con `npx playwright install chromium` |
 
 ---
@@ -239,7 +255,10 @@ cp .env.example .env.local
 
 | Variable | Descripción |
 | --- | --- |
-| _Por completar_ | _Conexión a PostgreSQL, clave de la API de Anthropic, secreto de autenticación…_ |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Usuario, contraseña y nombre con los que Docker crea la base de datos la primera vez |
+| `DATABASE_URL` | Conexión de la aplicación: `postgresql://usuario:contraseña@localhost:5432/basededatos` (los mismos valores de arriba) |
+| `TEST_DATABASE_URL` | Opcional. Base de datos de los tests de integración; por defecto, la de `DATABASE_URL` con `_test` al final del nombre |
+| _Por completar_ | _Clave de la API de Anthropic, secreto de autenticación…_ |
 
 Las variables se validan con Zod al arrancar la aplicación: si falta alguna o tiene un formato incorrecto, la aplicación no arranca (OWASP A05). Los archivos `.env*` con valores reales nunca se suben al repositorio.
 
@@ -262,7 +281,7 @@ npm run test
 | Tipo | Ámbito | Herramientas |
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
-| Integración | `tests/infrastructure/` y endpoints de `app/api/` | Vitest contra la base de datos vectorial y los endpoints |
+| Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
 | End-to-end | `e2e/` | Playwright sobre una compilación de producción: navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML) y comentarios |
 
 > _Por completar con el resumen final de tests y cobertura._

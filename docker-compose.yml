@@ -1,0 +1,24 @@
+# Local development database: PostgreSQL 17 with the pgvector extension (for the RAG embeddings).
+# Credentials come from .env.local (see .env.example): npm run db:up passes it with --env-file.
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg17
+    container_name: memnon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Falta POSTGRES_USER en .env.local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env.local}
+      POSTGRES_DB: ${POSTGRES_DB:?Falta POSTGRES_DB en .env.local}
+    ports:
+      # Bound to localhost only: the database is not reachable from other machines on the network.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - memnon-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  memnon-db-data:
