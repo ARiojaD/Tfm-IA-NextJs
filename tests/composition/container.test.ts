@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
-import { createContainer, getContainer } from "@/composition/container";
-import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
-import { SEED, type Seed } from "@/infrastructure/persistence/in-memory/seed";
+import { createContainer } from "@/composition/container";
 
 const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola" };
 
-describe("container", () => {
+// createContainer(): the in-memory wiring the unit tests use. getContainer(), the one the app uses, runs
+// against PostgreSQL and is tested in container.integration.test.ts.
+describe("createContainer (en memoria)", () => {
   it("conecta GetTopicDetail con los datos de ejemplo de Julio César", async () => {
     const result = await createContainer().getTopicDetail.execute("julio-cesar");
 
@@ -64,58 +64,10 @@ describe("container", () => {
     expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
   });
 
-  it("getContainer comparte los mismos datos entre llamadas", async () => {
-    const added = await getContainer().addComment.execute(comment, VISITOR);
-
-    const detail = await getContainer().getTopicDetail.execute("julio-cesar");
-
-    expect(detail.success && detail.data.comments[0]).toEqual(added.success && added.data);
-  });
-
-  it("getContainer mantiene el contador del límite entre llamadas", async () => {
-    for (let attempt = 0; attempt < 5; attempt++) await getContainer().addComment.execute(comment, "visitante-limite");
-
-    const sixth = await getContainer().addComment.execute(comment, "visitante-limite");
-
-    expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
-  });
-
-  it("getContainer reconstruye el estado si se creó con clases anteriores a una recarga en caliente", async () => {
-    // Simulates instances built before a hot reload: same shape, but not of the current classes.
-    const globalWithState = globalThis as typeof globalThis & { __memnonState?: unknown };
-    globalWithState.__memnonState = {
-      clock: { now: () => new Date() },
-      repositories: { topics: { findBySlug: () => Promise.resolve(null) } },
-      rateLimiters: {},
-    };
-
-    const overview = await getContainer().listTopicsByEra.execute("ROMAN");
-
-    expect(overview.totalTopics).toBeGreaterThan(0);
-  });
-
-  it("getContainer reconstruye el estado si se creó con una versión anterior del seed", async () => {
-    // Simulates a hot reload of the seed files: the stored state was built from an older SEED object.
-    getContainer();
-    const globalWithState = globalThis as typeof globalThis & {
-      __memnonState?: { seed: Seed; repositories: { topics: InMemoryTopicRepository } };
-    };
-    globalWithState.__memnonState!.seed = { ...SEED, topics: [] };
-    globalWithState.__memnonState!.repositories.topics = new InMemoryTopicRepository([]);
-
-    const overview = await getContainer().listTopicsByEra.execute("ROMAN");
-
-    expect(overview.totalTopics).toBe(SEED.topics.filter((topic) => topic.era === "ROMAN").length);
-  });
-
   it("conecta ListTopicsByEra: el asedio de Alesia aparece en las guerras y batallas de Roma", async () => {
     const overview = await createContainer().listTopicsByEra.execute("ROMAN");
 
     const battles = overview.categories.find((group) => group.category === "WARS_AND_BATTLES");
     expect(battles?.topics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
-  });
-
-  it("getContainer crea casos de uso nuevos en cada llamada (el código actualizado se aplica sin reiniciar)", () => {
-    expect(getContainer().getTopicDetail).not.toBe(getContainer().getTopicDetail);
   });
 });

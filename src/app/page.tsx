@@ -46,6 +46,10 @@ const STATS = [
   },
 ];
 
+// Rendered on each request: the topic counts come from PostgreSQL, so they must not be frozen at build
+// time (and `next build` must not need the database).
+export const dynamic = "force-dynamic";
+
 // Display order on the landing page: Rome first, as it has the most content so far.
 const CIVILIZATIONS: HistoricalEra[] = ["ROMAN", "ANCIENT_GREECE", "HISPANIA"];
 

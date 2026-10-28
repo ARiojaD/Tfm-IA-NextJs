@@ -4,7 +4,16 @@ import { parseEnv } from "@/composition/env";
 // The test database lives next to the development one, with "_test" appended to its name
 // (memnon → memnon_test). TEST_DATABASE_URL overrides it (e.g. in CI). The "_test" suffix is
 // mandatory: tests truncate every table, and must never run against real data.
+// Computed once: some tests point DATABASE_URL at the test database, and deriving again from it
+// would append "_test" twice.
+let cachedUrl: string | undefined;
+
 export function testDatabaseUrl(): string {
+  cachedUrl ??= resolveTestDatabaseUrl();
+  return cachedUrl;
+}
+
+function resolveTestDatabaseUrl(): string {
   if (existsSync(".env.local")) {
     process.loadEnvFile(".env.local");
   }

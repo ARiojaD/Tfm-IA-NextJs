@@ -226,6 +226,8 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 
 6. Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
 
+La aplicación lee y guarda los datos en PostgreSQL, así que Docker Desktop tiene que estar abierto y la base de datos levantada (`npm run db:up`) mientras se usa. Los datos se conservan entre reinicios.
+
 ### Scripts disponibles
 
 | Comando | Descripción |
@@ -241,7 +243,7 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 | `npm run db:generate` | Genera una migración SQL a partir de los cambios del esquema |
 | `npm run db:migrate` | Aplica las migraciones pendientes |
 | `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos) |
-| `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100). La primera vez, instalar el navegador con `npx playwright install chromium` |
+| `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100), contra la base de datos de test. Requiere `npm run db:up`. La primera vez, instalar el navegador con `npx playwright install chromium` |
 
 ---
 
@@ -282,7 +284,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción: navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML) y comentarios |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML) y comentarios |
 
 > _Por completar con el resumen final de tests y cobertura._
 

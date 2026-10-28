@@ -1,9 +1,9 @@
-import { sql } from "drizzle-orm";
 import { afterAll } from "vitest";
 import type { Seed } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase } from "@/infrastructure/persistence/postgres/client";
 import { insertSeed } from "@/infrastructure/persistence/postgres/insertSeed";
 import { aTopic } from "../../../fixtures/historicalTopics";
+import { truncateAllTables } from "./prepareTestDatabase";
 import { testDatabaseUrl } from "./testDatabaseUrl";
 
 const connection = createDatabase(testDatabaseUrl(), { maxConnections: 1 });
@@ -17,9 +17,7 @@ const CONTRACT_TOPIC_IDS = ["topic-1", "topic-caesar", "topic-pericles", "topic-
 
 // Empties every table and loads the given data. Without topics, the placeholder topics are created.
 export async function resetDatabase(seed: Partial<Seed> = {}) {
-  await testDb.execute(
-    sql`TRUNCATE topics, topic_relations, historical_events, quizzes, quiz_questions, comments, recommendations`,
-  );
+  await truncateAllTables(testDb);
   const topics = seed.topics ?? CONTRACT_TOPIC_IDS.map((id) => aTopic({ id, slug: id }));
   await insertSeed(testDb, { ...seed, topics });
 }
