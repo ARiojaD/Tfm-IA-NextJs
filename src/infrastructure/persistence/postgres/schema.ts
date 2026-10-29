@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  boolean,
   check,
   index,
   integer,
@@ -135,7 +136,8 @@ export const quizQuestions = pgTable(
   ],
 );
 
-// Anonymous for now: phase 2 (login) adds a user_id column and the author comes from the session.
+// user_id is empty for the seed comments (written before accounts existed). New comments belong to the
+// signed-in user; deleting a user deletes their comments too (right to erasure).
 export const comments = pgTable(
   "comments",
   {
@@ -143,11 +145,88 @@ export const comments = pgTable(
     topicId: text("topic_id")
       .notNull()
       .references(() => topics.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     author: text("author").notNull(),
     message: text("message").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => [index("comments_topic_created_idx").on(table.topicId, table.createdAt.desc())],
+);
+
+// --- Authentication (Better Auth) ---
+// The tables Better Auth 1.7 needs (core/dist/db/get-tables), with plural names (usePlural) and
+// snake_case columns. The drizzle adapter maps them through the property names (emailVerified…).
+// Passwords never live in `users`: Better Auth stores their scrypt hash in accounts.password.
+
+const timestamps = {
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+};
+
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  // Display name, shown publicly (e.g. as the author of a comment). The email is never shown to others.
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  ...timestamps,
+});
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    // The value of the session cookie.
+    token: text("token").notNull().unique(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [index("sessions_user_idx").on(table.userId)],
+);
+
+// One row per way of signing in: "credential" (email and password) today; Google or GitHub could be
+// added later as more rows for the same user, without changing this table.
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    password: text("password"),
+    ...timestamps,
+  },
+  (table) => [index("accounts_user_idx").on(table.userId)],
+);
+
+// Single-use tokens (email verification, password reset). Unused until those features arrive.
+export const verifications = pgTable(
+  "verifications",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
 export const recommendations = pgTable(

@@ -23,7 +23,7 @@ import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/P
 import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 import { RandomUuidGenerator } from "@/infrastructure/system/RandomUuidGenerator";
 import { SystemClock } from "@/infrastructure/system/SystemClock";
-import { parseEnv } from "./env";
+import { parseDatabaseEnv } from "./env";
 
 // Rate limits per requester (OWASP API4). Generous for a person, tight for a script.
 export const COMMENT_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 60_000 };
@@ -119,7 +119,7 @@ export function getContainer(): Container {
 // DATABASE_URL is validated on first use (OWASP A05): a missing or malformed value stops with a clear
 // error that names the variable but never shows its value.
 function getDatabase(): Database {
-  globalForApp.__memnonDatabase ??= createDatabase(parseEnv(process.env).DATABASE_URL);
+  globalForApp.__memnonDatabase ??= createDatabase(parseDatabaseEnv(process.env).DATABASE_URL);
   return globalForApp.__memnonDatabase.db;
 }
 

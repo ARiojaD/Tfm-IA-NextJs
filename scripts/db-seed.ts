@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { parseEnv } from "@/composition/env";
+import { parseDatabaseEnv } from "@/composition/env";
 import { SEED } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase } from "@/infrastructure/persistence/postgres/client";
 import { insertSeed } from "@/infrastructure/persistence/postgres/insertSeed";
@@ -11,7 +11,7 @@ async function main() {
   if (existsSync(".env.local")) {
     process.loadEnvFile(".env.local");
   }
-  const { db, close } = createDatabase(parseEnv(process.env).DATABASE_URL, { maxConnections: 1 });
+  const { db, close } = createDatabase(parseDatabaseEnv(process.env).DATABASE_URL, { maxConnections: 1 });
 
   try {
     await insertSeed(db, SEED);

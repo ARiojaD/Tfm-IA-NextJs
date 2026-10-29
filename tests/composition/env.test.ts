@@ -1,32 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { InvalidEnvironmentError, parseEnv } from "@/composition/env";
+import { InvalidEnvironmentError, parseAuthEnv, parseDatabaseEnv } from "@/composition/env";
 
 const DATABASE_URL = "postgresql://memnon:clave-secreta@localhost:5432/memnon";
 
-describe("parseEnv", () => {
+describe("parseDatabaseEnv", () => {
   it("acepta una URL de PostgreSQL válida", () => {
-    expect(parseEnv({ DATABASE_URL })).toEqual({ DATABASE_URL });
+    expect(parseDatabaseEnv({ DATABASE_URL })).toEqual({ DATABASE_URL });
   });
 
   it("acepta también el esquema corto postgres://", () => {
     const url = "postgres://memnon:clave@db.example.com:5432/memnon";
 
-    expect(parseEnv({ DATABASE_URL: url }).DATABASE_URL).toBe(url);
+    expect(parseDatabaseEnv({ DATABASE_URL: url }).DATABASE_URL).toBe(url);
   });
 
   it("ignora el resto de variables del sistema", () => {
-    expect(parseEnv({ DATABASE_URL, PATH: "/usr/bin", HOME: "/home/memnon" })).toEqual({ DATABASE_URL });
+    expect(parseDatabaseEnv({ DATABASE_URL, PATH: "/usr/bin", HOME: "/home/memnon" })).toEqual({ DATABASE_URL });
   });
 
   it("falla si falta DATABASE_URL y nombra la variable", () => {
-    expect(() => parseEnv({})).toThrow(InvalidEnvironmentError);
-    expect(() => parseEnv({})).toThrow(/DATABASE_URL/);
+    expect(() => parseDatabaseEnv({})).toThrow(InvalidEnvironmentError);
+    expect(() => parseDatabaseEnv({})).toThrow(/DATABASE_URL/);
   });
 
   it.each(["mysql://memnon:clave@localhost:3306/memnon", "no-es-una-url", "", "https://localhost:5432/memnon"])(
     "falla si DATABASE_URL no es una URL de PostgreSQL: %j",
     (value) => {
-      expect(() => parseEnv({ DATABASE_URL: value })).toThrow(InvalidEnvironmentError);
+      expect(() => parseDatabaseEnv({ DATABASE_URL: value })).toThrow(InvalidEnvironmentError);
     },
   );
 
@@ -34,11 +34,55 @@ describe("parseEnv", () => {
     const leakyValue = "mysql://memnon:clave-secreta@localhost:3306/memnon";
 
     try {
-      parseEnv({ DATABASE_URL: leakyValue });
-      expect.unreachable("parseEnv debería haber fallado");
+      parseDatabaseEnv({ DATABASE_URL: leakyValue });
+      expect.unreachable("parseDatabaseEnv debería haber fallado");
     } catch (error) {
       expect(String(error)).not.toContain("clave-secreta");
       expect(JSON.stringify(error)).not.toContain("clave-secreta");
+    }
+  });
+});
+
+describe("parseAuthEnv", () => {
+  const BETTER_AUTH_SECRET = "s".repeat(32);
+  const BETTER_AUTH_URL = "http://localhost:3000";
+
+  it("acepta un secreto de al menos 32 caracteres y la URL de la aplicación", () => {
+    expect(parseAuthEnv({ BETTER_AUTH_SECRET, BETTER_AUTH_URL, DATABASE_URL })).toEqual({
+      BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL,
+    });
+  });
+
+  it("acepta una URL https (producción)", () => {
+    const url = "https://memnon.example.com";
+
+    expect(parseAuthEnv({ BETTER_AUTH_SECRET, BETTER_AUTH_URL: url }).BETTER_AUTH_URL).toBe(url);
+  });
+
+  it("falla si el secreto es demasiado corto (por ejemplo, el valor de la plantilla)", () => {
+    expect(() => parseAuthEnv({ BETTER_AUTH_SECRET: "pon-aqui-un-secreto-generado", BETTER_AUTH_URL })).toThrow(
+      /BETTER_AUTH_SECRET/,
+    );
+  });
+
+  it("falla si falta el secreto o la URL, y nombra cada variable", () => {
+    expect(() => parseAuthEnv({})).toThrow(/BETTER_AUTH_SECRET, BETTER_AUTH_URL/);
+  });
+
+  it.each(["ftp://localhost:3000", "localhost:3000", ""])("falla si BETTER_AUTH_URL no es http(s): %j", (url) => {
+    expect(() => parseAuthEnv({ BETTER_AUTH_SECRET, BETTER_AUTH_URL: url })).toThrow(InvalidEnvironmentError);
+  });
+
+  it("el error nunca muestra el secreto", () => {
+    const shortSecret = "secreto-corto-que-no-debe-salir";
+
+    try {
+      parseAuthEnv({ BETTER_AUTH_SECRET: shortSecret, BETTER_AUTH_URL });
+      expect.unreachable("parseAuthEnv debería haber fallado");
+    } catch (error) {
+      expect(String(error)).not.toContain(shortSecret);
+      expect(JSON.stringify(error)).not.toContain(shortSecret);
     }
   });
 });

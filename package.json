@@ -15,9 +15,11 @@
     "db:down": "docker compose --env-file .env.local down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/db-seed.ts"
+    "db:seed": "tsx scripts/db-seed.ts",
+    "auth:secret": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('base64'))\""
   },
   "dependencies": {
+    "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",
     "postgres": "^3.4.9",

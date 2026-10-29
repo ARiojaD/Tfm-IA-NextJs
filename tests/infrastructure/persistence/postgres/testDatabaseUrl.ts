@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { parseEnv } from "@/composition/env";
+import { parseDatabaseEnv } from "@/composition/env";
 
 // The test database lives next to the development one, with "_test" appended to its name
 // (memnon → memnon_test). TEST_DATABASE_URL overrides it (e.g. in CI). The "_test" suffix is
@@ -18,7 +18,7 @@ function resolveTestDatabaseUrl(): string {
     process.loadEnvFile(".env.local");
   }
 
-  const url = process.env.TEST_DATABASE_URL ?? deriveTestUrl(parseEnv(process.env).DATABASE_URL);
+  const url = process.env.TEST_DATABASE_URL ?? deriveTestUrl(parseDatabaseEnv(process.env).DATABASE_URL);
   const databaseName = new URL(url).pathname.slice(1);
   if (!/^[a-z0-9_]+_test$/.test(databaseName)) {
     throw new Error(`La base de datos de test debe terminar en "_test" (recibido: "${databaseName}")`);
