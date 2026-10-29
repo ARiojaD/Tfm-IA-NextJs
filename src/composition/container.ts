@@ -1,4 +1,5 @@
 import type { AuthService } from "@/application/ports/AuthService";
+import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
@@ -15,7 +16,9 @@ import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
+import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
+import { InMemoryBreachedPasswordChecker } from "@/infrastructure/auth/InMemoryBreachedPasswordChecker";
 import { NextSessionCookies } from "@/infrastructure/auth/NextSessionCookies";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
@@ -75,12 +78,13 @@ function postgresRepositories(db: Database): Repositories {
 
 // The rate-limit counters stay in memory: valid for a single server process. With several instances
 // they must move to a shared store (PostgreSQL or Redis).
-function createState(repositories: Repositories) {
+function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker) {
   const clock = new SystemClock();
 
   return {
     clock,
     repositories,
+    breachedPasswords,
     rateLimiters: {
       comments: new InMemoryRateLimiter(COMMENT_RATE_LIMIT, clock),
       quizAnswers: new InMemoryRateLimiter(QUIZ_ANSWER_RATE_LIMIT, clock),
@@ -94,7 +98,7 @@ type State = ReturnType<typeof createState>;
 
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
-function createUseCases({ clock, repositories, rateLimiters }: State, auth: AuthService) {
+function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }: State, auth: AuthService) {
   const { topics, quizzes, comments } = repositories;
 
   return {
@@ -109,7 +113,7 @@ function createUseCases({ clock, repositories, rateLimiters }: State, auth: Auth
       rateLimiter: rateLimiters.comments,
     }),
     answerQuizQuestion: new AnswerQuizQuestionUseCase({ topics, quizzes, rateLimiter: rateLimiters.quizAnswers }),
-    registerUser: new RegisterUserUseCase({ auth, rateLimiter: rateLimiters.signUp }),
+    registerUser: new RegisterUserUseCase({ auth, rateLimiter: rateLimiters.signUp, breachedPasswords }),
     signIn: new SignInUseCase({ auth, rateLimiter: rateLimiters.signIn }),
     signOut: new SignOutUseCase({ auth }),
     getCurrentUser: new GetCurrentUserUseCase({ auth }),
@@ -120,7 +124,10 @@ export type Container = ReturnType<typeof createUseCases>;
 
 // A fresh, isolated container over in-memory data and accounts (used by the unit tests; no database needed).
 export function createContainer(seed: Seed = SEED): Container {
-  return createUseCases(createState(inMemoryRepositories(seed)), new InMemoryAuthService());
+  return createUseCases(
+    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker()),
+    new InMemoryAuthService(),
+  );
 }
 
 // The app's container, backed by PostgreSQL. Next.js re-evaluates modules on hot reload and may load this
@@ -135,7 +142,7 @@ const globalForApp = globalThis as typeof globalThis & {
 
 export function getContainer(): Container {
   if (!isBuiltWithCurrentClasses(globalForApp.__memnonState)) {
-    globalForApp.__memnonState = createState(postgresRepositories(getDatabase()));
+    globalForApp.__memnonState = createState(postgresRepositories(getDatabase()), new HaveIBeenPwnedChecker());
   }
   return createUseCases(globalForApp.__memnonState, new BetterAuthService(getBetterAuth(), new NextSessionCookies()));
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { DISPLAY_NAME_MAX_LENGTH } from "@/domain/value-objects/DisplayName";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/domain/value-objects/Password";
 import { AuthField } from "./AuthField";
 import { type AuthFormState, INITIAL_AUTH_FORM_STATE } from "./authFormState";
+import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 
 // The browser limits (maxLength, type="email") only help the visitor; the server validates everything.
 export function RegisterForm({
@@ -14,7 +15,12 @@ export function RegisterForm({
   action: (state: AuthFormState, formData: FormData) => Promise<AuthFormState>;
   volver: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, INITIAL_AUTH_FORM_STATE);
+  const [password, setPassword] = useState("");
+  const [state, formAction, isPending] = useActionState(async (previous: AuthFormState, formData: FormData) => {
+    const next = await action(previous, formData);
+    setPassword(""); // The password field is emptied after every attempt: so is its meter.
+    return next;
+  }, INITIAL_AUTH_FORM_STATE);
 
   return (
     <form action={formAction} className="space-y-5" noValidate>
@@ -46,8 +52,10 @@ export function RegisterForm({
         hint={`Al menos ${PASSWORD_MIN_LENGTH} caracteres. Una frase larga es más segura y fácil de recordar.`}
         autoComplete="new-password"
         maxLength={PASSWORD_MAX_LENGTH}
+        onChange={(event) => setPassword(event.target.value)}
         errors={state.fieldErrors?.password}
       />
+      <PasswordStrengthMeter password={password} id="register-password-strength" />
       {state.formError && (
         <p role="alert" className="text-sm text-danger">
           {state.formError}

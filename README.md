@@ -318,7 +318,8 @@ Algunos ejemplos ya aplicados, todos cubiertos por tests:
 - El quiz se envía al navegador sin las respuestas correctas; cada respuesta se corrige en el servidor.
 - Cada usuario puede publicar como máximo 5 comentarios por minuto, y cada visitante enviar 30 respuestas del quiz; los intentos inválidos también cuentan.
 - **Autenticación** (Better Auth sobre nuestra PostgreSQL):
-  - contraseñas de 12 a 128 caracteres (OWASP ASVS), guardadas con scrypt y nunca en texto plano;
+  - contraseñas de 12 a 128 caracteres (OWASP ASVS), sin reglas de composición, guardadas con scrypt y nunca en texto plano;
+  - el registro rechaza las contraseñas que aparecen en filtraciones conocidas (Have I Been Pwned, con k-anonimato: solo salen los 5 primeros caracteres de su hash SHA-1), y un indicador de fortaleza orienta mientras se escribe;
   - cookie de sesión `httpOnly` y `SameSite=Lax`; al cerrar sesión se borra también en la base de datos;
   - el inicio de sesión responde siempre "Email o contraseña incorrectos" (no revela qué emails tienen cuenta) y limita los intentos por visitante y por cuenta contra la fuerza bruta;
   - el autor de un comentario sale de la sesión, nunca del formulario: nadie puede comentar en nombre de otro;

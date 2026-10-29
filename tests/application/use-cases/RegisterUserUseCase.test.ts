@@ -5,21 +5,52 @@ import { RegistrationRejectedError } from "@/application/errors/RegistrationReje
 import type { Clock } from "@/application/ports/Clock";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
+import { InMemoryBreachedPasswordChecker } from "@/infrastructure/auth/InMemoryBreachedPasswordChecker";
 import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 
 const fixedClock: Clock = { now: () => new Date("2026-10-29T12:00:00Z") };
 const validInput = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
+const LEAKED_PASSWORD = "contraseña123456";
 const VISITOR = "visitante-1";
 const LIMIT = 3;
 
 describe("RegisterUserUseCase", () => {
   let auth: InMemoryAuthService;
+  let breachedPasswords: InMemoryBreachedPasswordChecker;
   let useCase: RegisterUserUseCase;
 
   beforeEach(() => {
     auth = new InMemoryAuthService();
+    breachedPasswords = new InMemoryBreachedPasswordChecker([LEAKED_PASSWORD]);
     const rateLimiter = new InMemoryRateLimiter({ limit: LIMIT, windowMs: 600_000 }, fixedClock);
-    useCase = new RegisterUserUseCase({ auth, rateLimiter });
+    useCase = new RegisterUserUseCase({ auth, rateLimiter, breachedPasswords });
+  });
+
+  describe("contraseñas filtradas (OWASP ASVS)", () => {
+    it("rechaza una contraseña que aparece en filtraciones, sin crear la cuenta", async () => {
+      const result = await useCase.execute({ ...validInput, password: LEAKED_PASSWORD }, VISITOR);
+
+      expect(!result.success && result.error instanceof InvalidRegistrationError && result.error.fieldErrors.password).toEqual([
+        "Esta contraseña aparece en filtraciones de datos conocidas. Elige otra.",
+      ]);
+      expect(await auth.getCurrentUser()).toBeNull();
+    });
+
+    it("no consulta las filtraciones si los datos ya son inválidos", async () => {
+      await useCase.execute({ ...validInput, password: "corta" }, VISITOR);
+
+      expect(breachedPasswords.checkedPasswords).toEqual([]);
+    });
+
+    it("si el servicio de filtraciones falla, deja registrarse (no bloquea a nadie por una caída externa)", async () => {
+      const failingChecker = { isBreached: () => Promise.reject(new Error("servicio caído")) };
+      const rateLimiter = new InMemoryRateLimiter({ limit: LIMIT, windowMs: 600_000 }, fixedClock);
+      const resilient = new RegisterUserUseCase({ auth, rateLimiter, breachedPasswords: failingChecker });
+
+      const result = await resilient.execute(validInput, VISITOR);
+
+      expect(result.success).toBe(true);
+    });
   });
 
   it("crea la cuenta, inicia la sesión y devuelve el usuario", async () => {
