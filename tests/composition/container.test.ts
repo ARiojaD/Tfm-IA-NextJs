@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
-import { createContainer } from "@/composition/container";
+import { createContainer, SIGN_IN_RATE_LIMIT } from "@/composition/container";
 
 const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola" };
@@ -62,6 +62,30 @@ describe("createContainer (en memoria)", () => {
     const sixth = await container.addComment.execute(comment, VISITOR);
 
     expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
+  });
+
+  it("conecta el registro, el usuario actual, el cierre y el inicio de sesión", async () => {
+    const container = createContainer();
+    const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
+
+    const registered = await container.registerUser.execute(livia, VISITOR);
+    expect(await container.getCurrentUser.execute()).toEqual(registered.success && registered.data);
+
+    await container.signOut.execute();
+    expect(await container.getCurrentUser.execute()).toBeNull();
+
+    const signedIn = await container.signIn.execute({ email: livia.email, password: livia.password }, VISITOR);
+    expect(signedIn.success && signedIn.data.name).toBe("Livia");
+  });
+
+  it("limita los intentos de inicio de sesión de un visitante", async () => {
+    const container = createContainer();
+    const wrong = { email: "livia@example.com", password: "no es la contraseña" };
+    for (let attempt = 0; attempt < SIGN_IN_RATE_LIMIT.limit; attempt++) await container.signIn.execute(wrong, VISITOR);
+
+    const next = await container.signIn.execute(wrong, VISITOR);
+
+    expect(!next.success && next.error).toBeInstanceOf(RateLimitExceededError);
   });
 
   it("conecta ListTopicsByEra: el asedio de Alesia aparece en las guerras y batallas de Roma", async () => {

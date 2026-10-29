@@ -1,22 +1,17 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { headers } from "next/headers";
 import { InvalidCommentError } from "@/application/errors/InvalidCommentError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import type { CommentFormState } from "@/components/topic/CommentForm";
 import type { QuizAnswerState } from "@/components/topic/QuizGame";
 import { getContainer } from "@/composition/container";
-import { requesterIdFromHeaders } from "@/lib/requesterId";
+import { currentRequesterId } from "@/lib/currentRequesterId";
 
 // Server Actions are public POST endpoints: anyone can call them with any payload, not only
 // through our UI. They stay thin on purpose: the use cases validate every input (unknown → DTO)
 // and enforce the rate limits; these functions only identify the caller and translate the
 // Result into what the components display.
-
-async function currentRequesterId(): Promise<string> {
-  return requesterIdFromHeaders(await headers());
-}
 
 function rateLimitMessage(error: RateLimitExceededError, action: string): string {
   return `Has ${action} demasiadas veces seguidas. Espera ${error.retryAfterSeconds} s y vuelve a intentarlo.`;

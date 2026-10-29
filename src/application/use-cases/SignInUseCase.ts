@@ -18,7 +18,7 @@ export class SignInUseCase {
   constructor(private readonly dependencies: SignInDependencies) {}
 
   async execute(input: unknown, requesterId: string): Promise<Result<AuthenticatedUser, SignInError>> {
-    const byVisitor = await this.dependencies.rateLimiter.consume(`ip:${requesterId}`);
+    const byVisitor = await this.dependencies.rateLimiter.consume(`visitor:${requesterId}`);
     if (!byVisitor.allowed) {
       return failure(new RateLimitExceededError(byVisitor.retryAfterSeconds));
     }
