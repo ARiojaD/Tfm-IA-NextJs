@@ -53,6 +53,15 @@ export function describeCommentRepositoryContract(
       expect((await repository.listByTopic("topic-caesar"))[0].message).toBe("Original");
     });
 
+    it("conserva el usuario que escribió el comentario", async () => {
+      const repository = await createRepository([]);
+      const byUser = aComment({ id: "comment-by-user", topicId: "topic-caesar", userId: "user-1" });
+
+      await repository.add(byUser);
+
+      expect(await repository.listByTopic("topic-caesar")).toEqual([byUser]);
+    });
+
     it("devuelve copias: modificar el resultado no altera los datos guardados", async () => {
       const repository = await createRepository([livia]);
 

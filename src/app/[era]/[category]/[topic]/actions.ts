@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { InvalidCommentError } from "@/application/errors/InvalidCommentError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import type { CommentFormState } from "@/components/topic/CommentForm";
@@ -29,28 +30,27 @@ export async function answerQuizQuestion(input: unknown): Promise<QuizAnswerStat
   return { status: "error", message: "No se ha podido comprobar la respuesta. Inténtalo de nuevo." };
 }
 
+// The author is never read from the form: the use case takes it from the session.
 export async function addComment(_previous: CommentFormState, formData: FormData): Promise<CommentFormState> {
-  const result = await getContainer().addComment.execute(
-    {
-      topicSlug: formData.get("topicSlug"),
-      author: formData.get("author"),
-      message: formData.get("message"),
-    },
-    await currentRequesterId(),
-  );
+  const result = await getContainer().addComment.execute({
+    topicSlug: formData.get("topicSlug"),
+    message: formData.get("message"),
+  });
 
   if (result.success) {
     refresh(); // Re-render the page so the new comment appears at the top of the list.
     return { status: "success" };
   }
+  if (result.error instanceof AuthenticationRequiredError) {
+    return { status: "error", formError: "Tu sesión ha terminado. Inicia sesión de nuevo para comentar." };
+  }
   if (result.error instanceof RateLimitExceededError) {
     return { status: "error", formError: rateLimitMessage(result.error, "comentado") };
   }
   if (result.error instanceof InvalidCommentError) {
-    const { author, message } = result.error.fieldErrors;
     return {
       status: "error",
-      fieldErrors: { author, message },
+      fieldErrors: { message: result.error.fieldErrors.message },
       formError: result.error.formErrors[0] ?? (result.error.fieldErrors.topicSlug ? "Tema no válido." : undefined),
     };
   }

@@ -29,7 +29,8 @@ describe("BetterAuthService (seguridad)", () => {
     expect(account.providerId).toBe("credential");
     expect(account.password).not.toContain(livia.password);
     expect(account.password).toMatch(/^[0-9a-f]+:[0-9a-f]+$/); // scrypt: salt:hash
-    expect(Object.keys((await testDb.select().from(users))[0])).not.toContain("password");
+    const [user] = await testDb.select().from(users).where(eq(users.email, livia.email));
+    expect(Object.keys(user)).not.toContain("password");
   });
 
   it("la cookie de sesión es httpOnly (JavaScript no puede leerla) y SameSite=Lax (frena el CSRF)", async () => {
@@ -55,6 +56,6 @@ describe("BetterAuthService (seguridad)", () => {
     const { service } = await createService();
 
     await expect(service.register({ ...livia, password: "corta123456" })).rejects.toThrow();
-    expect(await testDb.select().from(users)).toEqual([]);
+    expect(await testDb.select().from(users).where(eq(users.email, livia.email))).toEqual([]);
   });
 });

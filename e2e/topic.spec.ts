@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { AUTHOR, AUTHOR_STORAGE_STATE } from "./testUsers";
 
 const CAESAR_PATH = "/roma/personajes/julio-cesar";
 
@@ -45,25 +46,38 @@ test.describe("Quiz", () => {
   });
 });
 
-test.describe("Comentarios", () => {
-  test("un comentario publicado aparece en la conversación", async ({ page }) => {
+test.describe("Comentarios sin sesión", () => {
+  test("no hay formulario: se invita a iniciar sesión", async ({ page }) => {
+    await page.goto(CAESAR_PATH);
+    const community = page.locator("#comunidad");
+
+    await expect(community.getByRole("link", { name: "Inicia sesión para comentar" })).toBeVisible();
+    await expect(community.getByRole("button", { name: "Publicar comentario" })).toHaveCount(0);
+  });
+});
+
+test.describe("Comentarios con sesión", () => {
+  test.use({ storageState: AUTHOR_STORAGE_STATE });
+
+  test("un comentario publicado aparece firmado con el nombre de la cuenta", async ({ page }) => {
     const message = `Comentario de prueba E2E ${Date.now()}`;
     await page.goto(CAESAR_PATH);
     const community = page.locator("#comunidad");
 
-    await community.getByLabel("Tu nombre").fill("Playwright");
+    await expect(community.getByText(`Comentas como ${AUTHOR.name}`)).toBeVisible();
+    await expect(community.getByLabel("Tu nombre")).toHaveCount(0); // the author cannot be chosen
     await community.getByLabel("Comentario").fill(message);
     await community.getByRole("button", { name: "Publicar comentario" }).click();
 
     await expect(community.getByText("¡Comentario publicado!")).toBeVisible();
-    await expect(community.getByText(message)).toBeVisible();
+    const published = community.getByRole("listitem").filter({ hasText: message });
+    await expect(published).toContainText(AUTHOR.name);
   });
 
   test("un comentario vacío muestra el error sin publicarse", async ({ page }) => {
     await page.goto(CAESAR_PATH);
     const community = page.locator("#comunidad");
 
-    await community.getByLabel("Tu nombre").fill("Playwright");
     await community.getByRole("button", { name: "Publicar comentario" }).click();
 
     await expect(community.getByLabel("Comentario")).toHaveAttribute("aria-invalid", "true");

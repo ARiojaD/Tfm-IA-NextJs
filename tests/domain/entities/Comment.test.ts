@@ -52,7 +52,19 @@ describe("CommentSchema", () => {
     expect(CommentSchema.safeParse({ ...validComment, topicId: "" }).success).toBe(false);
   });
 
+  it("acepta el usuario que lo escribió", () => {
+    expect(CommentSchema.parse({ ...validComment, userId: "user-livia" }).userId).toBe("user-livia");
+  });
+
+  it("acepta un comentario sin usuario (los del seed, anteriores a las cuentas)", () => {
+    expect(CommentSchema.parse(validComment)).not.toHaveProperty("userId");
+  });
+
+  it("rechaza un usuario vacío", () => {
+    expect(CommentSchema.safeParse({ ...validComment, userId: " " }).success).toBe(false);
+  });
+
   it("rechaza propiedades no permitidas", () => {
-    expect(CommentSchema.safeParse({ ...validComment, userId: "attacker-id" }).success).toBe(false);
+    expect(CommentSchema.safeParse({ ...validComment, isApproved: true }).success).toBe(false);
   });
 });

@@ -103,6 +103,7 @@ function createUseCases({ clock, repositories, rateLimiters }: State, auth: Auth
     addComment: new AddCommentUseCase({
       topics,
       comments,
+      auth,
       clock,
       ids: new RandomUuidGenerator(),
       rateLimiter: rateLimiters.comments,

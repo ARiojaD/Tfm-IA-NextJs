@@ -118,6 +118,7 @@ export function toComment(row: CommentRow): Comment {
   return CommentSchema.parse({
     id: row.id,
     topicId: row.topicId,
+    ...(row.userId !== null && { userId: row.userId }),
     author: row.author,
     message: row.message,
     createdAt: row.createdAt,
@@ -125,7 +126,7 @@ export function toComment(row: CommentRow): Comment {
 }
 
 export function toCommentRow(comment: Comment): typeof comments.$inferInsert {
-  return { ...comment };
+  return { ...comment, userId: comment.userId ?? null };
 }
 
 export function toRecommendation(row: RecommendationRow): Recommendation {

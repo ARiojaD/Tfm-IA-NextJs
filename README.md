@@ -63,7 +63,8 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 
 ### Usuarios e interfaz
 
-- **Cuentas de usuario:** cada usuario accede únicamente a sus propios eventos, fuentes y notas.
+- **Cuentas de usuario:** registro e inicio de sesión con email y contraseña (`/registro`, `/iniciar-sesion`). En público solo se muestra el nombre visible, nunca el email. Comentar requiere sesión: el comentario se firma con el nombre de la cuenta.
+- **Biblioteca personal** (en desarrollo): cada usuario accederá únicamente a sus propios eventos, fuentes y notas.
 - **Panel privado** para gestionar la biblioteca personal.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
 - **Modo claro y oscuro:** sigue la preferencia del sistema y recuerda la elección del usuario.
@@ -89,7 +90,7 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 | [Drizzle ORM](https://orm.drizzle.team) (+ `drizzle-kit`) | 0.45.4 | Consultas parametrizadas, esquema y migraciones |
 | [Anthropic Claude API](https://docs.anthropic.com) vía [Vercel AI SDK](https://sdk.vercel.ai) | _Por completar_ | Generación de respuestas y *Structured Outputs* |
 | Modelo de embeddings | _Por completar_ | Vectorización de notas para el RAG |
-| Autenticación | _Por completar_ | Registro, inicio de sesión y sesiones |
+| [Better Auth](https://www.better-auth.com) | 1.7.14 | Registro, inicio de sesión y sesiones (en nuestra PostgreSQL) |
 | Despliegue | _Por completar_ | Alojamiento de la aplicación y la base de datos |
 
 ---
@@ -243,6 +244,7 @@ La aplicación lee y guarda los datos en PostgreSQL, así que Docker Desktop tie
 | `npm run db:generate` | Genera una migración SQL a partir de los cambios del esquema |
 | `npm run db:migrate` | Aplica las migraciones pendientes |
 | `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos) |
+| `npm run auth:secret` | Genera un secreto aleatorio para `BETTER_AUTH_SECRET` |
 | `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100), contra la base de datos de test. Requiere `npm run db:up`. La primera vez, instalar el navegador con `npx playwright install chromium` |
 
 ---
@@ -260,7 +262,9 @@ cp .env.example .env.local
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Usuario, contraseña y nombre con los que Docker crea la base de datos la primera vez |
 | `DATABASE_URL` | Conexión de la aplicación: `postgresql://usuario:contraseña@localhost:5432/basededatos` (los mismos valores de arriba) |
 | `TEST_DATABASE_URL` | Opcional. Base de datos de los tests de integración; por defecto, la de `DATABASE_URL` con `_test` al final del nombre |
-| _Por completar_ | _Clave de la API de Anthropic, secreto de autenticación…_ |
+| `BETTER_AUTH_SECRET` | Firma las cookies de sesión. Al menos 32 caracteres aleatorios: `npm run auth:secret` |
+| `BETTER_AUTH_URL` | Dirección de la aplicación (`http://localhost:3000` en desarrollo; la URL pública con https en producción) |
+| _Por completar_ | _Clave de la API de Anthropic…_ |
 
 Las variables se validan con Zod al arrancar la aplicación: si falta alguna o tiene un formato incorrecto, la aplicación no arranca (OWASP A05). Los archivos `.env*` con valores reales nunca se suben al repositorio.
 
@@ -284,7 +288,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML) y comentarios |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada y comentarios con y sin sesión |
 
 > _Por completar con el resumen final de tests y cobertura._
 
@@ -301,7 +305,7 @@ El desarrollo sigue tres guías OWASP:
 - **OWASP API Security Top 10:**
   - comprobación de propiedad de cada recurso (BOLA, API1);
   - validación estricta del cuerpo de las peticiones contra *Mass Assignment* (API3);
-  - *rate limiting* por visitante en comentarios y respuestas del quiz (API4).
+  - *rate limiting* en comentarios, respuestas del quiz, registro e inicio de sesión (API4).
 - **OWASP Top 10 for LLM Applications:**
   - separación entre instrucciones del sistema y contenido del usuario contra la inyección de prompts (LLM01);
   - salidas del modelo estructuradas y validadas con Zod (LLM02);
@@ -312,7 +316,14 @@ Algunos ejemplos ya aplicados, todos cubiertos por tests:
 
 - Los esquemas de dominio rechazan cualquier propiedad no declarada, de modo que un `userId` inyectado en el cuerpo de una petición se descarta.
 - El quiz se envía al navegador sin las respuestas correctas; cada respuesta se corrige en el servidor.
-- Cada visitante puede publicar como máximo 5 comentarios y enviar 30 respuestas del quiz por minuto; los intentos inválidos también cuentan.
+- Cada usuario puede publicar como máximo 5 comentarios por minuto, y cada visitante enviar 30 respuestas del quiz; los intentos inválidos también cuentan.
+- **Autenticación** (Better Auth sobre nuestra PostgreSQL):
+  - contraseñas de 12 a 128 caracteres (OWASP ASVS), guardadas con scrypt y nunca en texto plano;
+  - cookie de sesión `httpOnly` y `SameSite=Lax`; al cerrar sesión se borra también en la base de datos;
+  - el inicio de sesión responde siempre "Email o contraseña incorrectos" (no revela qué emails tienen cuenta) y limita los intentos por visitante y por cuenta contra la fuerza bruta;
+  - el autor de un comentario sale de la sesión, nunca del formulario: nadie puede comentar en nombre de otro;
+  - tras iniciar sesión solo se vuelve a rutas de la propia web (sin redirecciones abiertas);
+  - la ruta HTTP de Better Auth no se expone: todo pasa por Server Actions que validan y limitan.
 - Las imágenes de los temas solo pueden ser archivos locales de `/images` (JPG, PNG, WebP o AVIF): ni dominios externos, ni rutas con `..`, ni SVG, que puede contener scripts.
 
 El detalle completo está en [`AGENTS.md`](AGENTS.md#3-directivas-de-seguridad-owasp-triléctica-de-seguridad).

@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import { createContainer, SIGN_IN_RATE_LIMIT } from "@/composition/container";
 
 const VISITOR = "visitante-1";
-const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola" };
+const comment = { topicSlug: "julio-cesar", message: "Hola" };
+const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
+
+// A container with Livia signed in (comments require a session).
+async function containerWithLivia() {
+  const container = createContainer();
+  await container.registerUser.execute(livia, VISITOR);
+  return container;
+}
 
 // createContainer(): the in-memory wiring the unit tests use. getContainer(), the one the app uses, runs
 // against PostgreSQL and is tested in container.integration.test.ts.
@@ -27,17 +36,26 @@ describe("createContainer (en memoria)", () => {
   });
 
   it("AddComment y GetTopicDetail comparten el mismo repositorio de comentarios", async () => {
-    const container = createContainer();
+    const container = await containerWithLivia();
 
-    const added = await container.addComment.execute(comment, VISITOR);
+    const added = await container.addComment.execute(comment);
     const detail = await container.getTopicDetail.execute("julio-cesar");
 
-    expect(added.success).toBe(true);
+    expect(added.success && added.data.author).toBe("Livia");
     expect(detail.success && detail.data.comments[0]).toEqual(added.success && added.data);
   });
 
+  it("AddComment usa la misma sesión que el registro: sin sesión, no se comenta", async () => {
+    const container = await containerWithLivia();
+    await container.signOut.execute();
+
+    const result = await container.addComment.execute(comment);
+
+    expect(!result.success && result.error).toBeInstanceOf(AuthenticationRequiredError);
+  });
+
   it("cada container nuevo empieza con los datos de ejemplo, sin cambios de otros", async () => {
-    await createContainer().addComment.execute(comment, VISITOR);
+    await (await containerWithLivia()).addComment.execute(comment);
 
     const detail = await createContainer().getTopicDetail.execute("julio-cesar");
 
@@ -53,13 +71,13 @@ describe("createContainer (en memoria)", () => {
     expect(result.success && result.data.isCorrect).toBe(true);
   });
 
-  it("limita cada visitante a 5 comentarios por minuto", async () => {
-    const container = createContainer();
+  it("limita cada usuario a 5 comentarios por minuto", async () => {
+    const container = await containerWithLivia();
     for (let attempt = 0; attempt < 5; attempt++) {
-      expect((await container.addComment.execute(comment, VISITOR)).success).toBe(true);
+      expect((await container.addComment.execute(comment)).success).toBe(true);
     }
 
-    const sixth = await container.addComment.execute(comment, VISITOR);
+    const sixth = await container.addComment.execute(comment);
 
     expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
   });

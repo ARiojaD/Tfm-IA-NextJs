@@ -1,23 +1,13 @@
 import { z } from "zod";
-import {
-  COMMENT_AUTHOR_MAX_LENGTH,
-  COMMENT_AUTHOR_MIN_LENGTH,
-  COMMENT_MESSAGE_MAX_LENGTH,
-} from "@/domain/entities/Comment";
+import { COMMENT_MESSAGE_MAX_LENGTH } from "@/domain/entities/Comment";
 import { SlugSchema } from "@/domain/value-objects/Slug";
 
-// What a visitor sends to post a comment. Unlike the Comment entity, it carries user-facing
-// Spanish messages for the form, and never id, topicId or createdAt: those are set by the use case.
+// What a signed-in user sends to post a comment: only the topic and the text. The author, the user, the
+// id and the date are decided by the server (from the session, IdGenerator and Clock). Strict, so a form
+// that tries to send author or userId is rejected: nobody can comment in someone else's name.
 export const AddCommentInputSchema = z.strictObject(
   {
     topicSlug: SlugSchema,
-    author: z
-      .string({ error: "Indica tu nombre" })
-      .trim()
-      .min(COMMENT_AUTHOR_MIN_LENGTH, { error: `El nombre debe tener al menos ${COMMENT_AUTHOR_MIN_LENGTH} caracteres` })
-      .max(COMMENT_AUTHOR_MAX_LENGTH, {
-        error: `El nombre no puede superar los ${COMMENT_AUTHOR_MAX_LENGTH} caracteres`,
-      }),
     message: z
       .string({ error: "Escribe un comentario" })
       .trim()

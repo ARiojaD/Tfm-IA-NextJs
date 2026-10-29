@@ -1,13 +1,13 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
-import { closeContainer, getContainer } from "@/composition/container";
+import { closeContainer, getContainer, QUIZ_ANSWER_RATE_LIMIT } from "@/composition/container";
 import { InvalidEnvironmentError } from "@/composition/env";
 import { SEED } from "@/infrastructure/persistence/in-memory/seed";
-import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
-import { resetDatabase, testDb } from "../infrastructure/persistence/postgres/testDatabase";
+import { resetDatabase } from "../infrastructure/persistence/postgres/testDatabase";
 import { testDatabaseUrl } from "../infrastructure/persistence/postgres/testDatabaseUrl";
 
-const comment = { topicSlug: "julio-cesar", author: "Livia", message: "Hola desde PostgreSQL" };
+// Comments need a session, which only exists inside a real Next.js request: that path is covered by
+// BetterAuthService.integration.test.ts (sessions against PostgreSQL) and by the end-to-end tests.
 const globalWithState = globalThis as typeof globalThis & { __memnonState?: unknown; __memnonDatabase?: unknown };
 
 // getContainer() is what the app uses: it must read and write PostgreSQL (DATABASE_URL points to the
@@ -34,13 +34,6 @@ describe("getContainer (PostgreSQL)", () => {
     expect(result.success && result.data.quiz?.questions[0]).not.toHaveProperty("correctOptionIndex");
   });
 
-  it("guarda los comentarios en PostgreSQL", async () => {
-    const added = await getContainer().addComment.execute(comment, "visitante-1");
-
-    const stored = await new PostgresCommentRepository(testDb).listByTopic("topic-julius-caesar");
-    expect(stored).toContainEqual(added.success && added.data);
-  });
-
   it("corrige el quiz con las respuestas guardadas en PostgreSQL", async () => {
     const result = await getContainer().answerQuizQuestion.execute(
       { topicSlug: "julio-cesar", questionId: "question-caesar-rubicon", optionIndex: 1 },
@@ -50,12 +43,15 @@ describe("getContainer (PostgreSQL)", () => {
     expect(result.success && result.data.isCorrect).toBe(true);
   });
 
-  it("mantiene el contador del límite de comentarios entre llamadas", async () => {
-    for (let attempt = 0; attempt < 5; attempt++) await getContainer().addComment.execute(comment, "visitante-limite");
+  it("mantiene los contadores del rate limiting entre llamadas", async () => {
+    const answer = { topicSlug: "julio-cesar", questionId: "question-caesar-rubicon", optionIndex: 1 };
+    for (let attempt = 0; attempt < QUIZ_ANSWER_RATE_LIMIT.limit; attempt++) {
+      await getContainer().answerQuizQuestion.execute(answer, "visitante-limite");
+    }
 
-    const sixth = await getContainer().addComment.execute(comment, "visitante-limite");
+    const next = await getContainer().answerQuizQuestion.execute(answer, "visitante-limite");
 
-    expect(!sixth.success && sixth.error).toBeInstanceOf(RateLimitExceededError);
+    expect(!next.success && next.error).toBeInstanceOf(RateLimitExceededError);
   });
 
   it("crea casos de uso nuevos en cada llamada (el código actualizado se aplica sin reiniciar)", () => {

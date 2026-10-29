@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Timeline } from "@/components/Timeline";
 import { CommentForm } from "@/components/topic/CommentForm";
+import { SignInToComment } from "@/components/topic/SignInToComment";
 import { CommentList } from "@/components/topic/CommentList";
 import { QuizGame } from "@/components/topic/QuizGame";
 import { RecommendationList } from "@/components/topic/RecommendationList";
@@ -17,7 +18,7 @@ import { getContainer } from "@/composition/container";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_LABELS } from "@/lib/eraLabels";
 import { formatHistoricalPeriod } from "@/lib/formatHistoricalPeriod";
-import { categoryFromRouteSlug, categoryPath, eraFromRouteSlug, eraPath } from "@/lib/routes";
+import { categoryFromRouteSlug, categoryPath, eraFromRouteSlug, eraPath, topicPath } from "@/lib/routes";
 import { addComment, answerQuizQuestion } from "./actions";
 
 // One template for every topic (/roma/personajes/julio-cesar, /grecia/guerras-y-batallas/…): only the data changes.
@@ -56,6 +57,7 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
   }
 
   const { topic, events, quiz, comments, recommendations, relatedTopics } = detail;
+  const currentUser = await getContainer().getCurrentUser.execute();
   // The introduction sits right below the header, so it needs no shortcut.
   const sections = [
     { id: "cronologia", label: "Cronología", count: events.length },
@@ -151,7 +153,11 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
           <div className="mx-auto max-w-4xl px-4 sm:px-6">
             <SectionHeading eyebrow="Comunidad" title="La conversación" />
             <div className="space-y-8">
-              <CommentForm topicSlug={topic.slug} action={addComment} />
+              {currentUser ? (
+                <CommentForm topicSlug={topic.slug} authorName={currentUser.name} action={addComment} />
+              ) : (
+                <SignInToComment returnTo={topicPath(topic)} />
+              )}
               <CommentList comments={comments} />
             </div>
           </div>
