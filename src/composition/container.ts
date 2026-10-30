@@ -2,6 +2,7 @@ import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
+import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
 import type { RecommendationRepository } from "@/application/ports/RecommendationRepository";
@@ -9,11 +10,15 @@ import type { TopicRepository } from "@/application/ports/TopicRepository";
 import { AddCommentUseCase } from "@/application/use-cases/AddCommentUseCase";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
 import { GetCurrentUserUseCase } from "@/application/use-cases/GetCurrentUserUseCase";
+import { GetLibraryStatusUseCase } from "@/application/use-cases/GetLibraryStatusUseCase";
+import { GetMyLibraryUseCase } from "@/application/use-cases/GetMyLibraryUseCase";
 import { GetTopicDetailUseCase } from "@/application/use-cases/GetTopicDetailUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
 import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
+import { UpdateEraFollowUseCase } from "@/application/use-cases/UpdateEraFollowUseCase";
+import { UpdateSavedTopicUseCase } from "@/application/use-cases/UpdateSavedTopicUseCase";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
 import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
@@ -22,6 +27,7 @@ import { InMemoryBreachedPasswordChecker } from "@/infrastructure/auth/InMemoryB
 import { NextSessionCookies } from "@/infrastructure/auth/NextSessionCookies";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
+import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memory/InMemoryLibraryRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
 import { InMemoryRecommendationRepository } from "@/infrastructure/persistence/in-memory/InMemoryRecommendationRepository";
 import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
@@ -29,6 +35,7 @@ import { SEED, type Seed } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase, type Database } from "@/infrastructure/persistence/postgres/client";
 import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
 import { PostgresHistoricalEventRepository } from "@/infrastructure/persistence/postgres/PostgresHistoricalEventRepository";
+import { PostgresLibraryRepository } from "@/infrastructure/persistence/postgres/PostgresLibraryRepository";
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
 import { PostgresRecommendationRepository } from "@/infrastructure/persistence/postgres/PostgresRecommendationRepository";
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
@@ -45,6 +52,8 @@ export const QUIZ_ANSWER_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60
 export const SIGN_IN_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 60_000 };
 // Mass account creation: 5 sign-ups every 15 minutes per visitor.
 export const SIGN_UP_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 15 * 60_000 };
+// Following and saving share one budget per user: plenty for clicking around, not for a script.
+export const LIBRARY_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000 };
 
 interface Repositories {
   topics: TopicRepository;
@@ -52,6 +61,7 @@ interface Repositories {
   quizzes: QuizRepository;
   comments: CommentRepository;
   recommendations: RecommendationRepository;
+  library: LibraryRepository;
 }
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
@@ -63,6 +73,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     quizzes: new InMemoryQuizRepository(seed.quizzes),
     comments: new InMemoryCommentRepository(seed.comments),
     recommendations: new InMemoryRecommendationRepository(seed.recommendations),
+    library: new InMemoryLibraryRepository(),
   };
 }
 
@@ -73,6 +84,7 @@ function postgresRepositories(db: Database): Repositories {
     quizzes: new PostgresQuizRepository(db),
     comments: new PostgresCommentRepository(db),
     recommendations: new PostgresRecommendationRepository(db),
+    library: new PostgresLibraryRepository(db),
   };
 }
 
@@ -90,6 +102,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       quizAnswers: new InMemoryRateLimiter(QUIZ_ANSWER_RATE_LIMIT, clock),
       signIn: new InMemoryRateLimiter(SIGN_IN_RATE_LIMIT, clock),
       signUp: new InMemoryRateLimiter(SIGN_UP_RATE_LIMIT, clock),
+      library: new InMemoryRateLimiter(LIBRARY_RATE_LIMIT, clock),
     },
   };
 }
@@ -99,7 +112,7 @@ type State = ReturnType<typeof createState>;
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
 function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }: State, auth: AuthService) {
-  const { topics, quizzes, comments } = repositories;
+  const { topics, quizzes, comments, library } = repositories;
 
   return {
     listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
@@ -117,6 +130,10 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     signIn: new SignInUseCase({ auth, rateLimiter: rateLimiters.signIn }),
     signOut: new SignOutUseCase({ auth }),
     getCurrentUser: new GetCurrentUserUseCase({ auth }),
+    updateEraFollow: new UpdateEraFollowUseCase({ library, auth, rateLimiter: rateLimiters.library }),
+    updateSavedTopic: new UpdateSavedTopicUseCase({ topics, library, auth, clock, rateLimiter: rateLimiters.library }),
+    getLibraryStatus: new GetLibraryStatusUseCase({ library, auth }),
+    getMyLibrary: new GetMyLibraryUseCase({ topics, library, auth }),
   };
 }
 
@@ -182,9 +199,11 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.quizzes instanceof PostgresQuizRepository &&
     repositories.comments instanceof PostgresCommentRepository &&
     repositories.recommendations instanceof PostgresRecommendationRepository &&
+    repositories.library instanceof PostgresLibraryRepository &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&
-    rateLimiters.signUp instanceof InMemoryRateLimiter
+    rateLimiters.signUp instanceof InMemoryRateLimiter &&
+    rateLimiters.library instanceof InMemoryRateLimiter
   );
 }

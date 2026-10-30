@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EraBadge } from "@/components/EraBadge";
+import { FollowEraButton } from "@/components/library/FollowEraButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TopicCard } from "@/components/topic/TopicCard";
@@ -27,7 +28,11 @@ export default async function EraPage({ params }: PageProps<"/[era]">) {
     notFound();
   }
 
-  const overview = await getContainer().listTopicsByEra.execute(era);
+  const container = getContainer();
+  const [overview, libraryStatus] = await Promise.all([
+    container.listTopicsByEra.execute(era),
+    container.getLibraryStatus.execute(),
+  ]);
   const upcomingCategories = TOPIC_CATEGORIES.filter(
     (category) => !overview.categories.some((group) => group.category === category),
   );
@@ -58,6 +63,9 @@ export default async function EraPage({ params }: PageProps<"/[era]">) {
               {ERA_LABELS[era]}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{ERA_DESCRIPTIONS[era]}</p>
+            <div className="mt-6">
+              <FollowEraButton era={era} status={libraryStatus} />
+            </div>
 
             {overview.categories.length > 0 && (
               <nav aria-label="Categorías" className="mt-10">

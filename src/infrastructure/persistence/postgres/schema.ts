@@ -229,6 +229,38 @@ export const verifications = pgTable(
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
+// --- Mi biblioteca ---
+// The primary keys make following or saving twice impossible. Deleting a user deletes their library;
+// deleting a topic removes it from every library.
+
+// Following a civilization stores only the era: its topics are read at request time, so new ones appear on their own.
+export const eraFollows = pgTable(
+  "era_follows",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    era: historicalEra("era").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.era] })],
+);
+
+export const savedTopics = pgTable(
+  "saved_topics",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    topicId: text("topic_id")
+      .notNull()
+      .references(() => topics.id, { onDelete: "cascade" }),
+    // Set by the server's Clock (not defaultNow) so the order is exact, also in the tests.
+    savedAt: timestamp("saved_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.topicId] })],
+);
+
 export const recommendations = pgTable(
   "recommendations",
   {

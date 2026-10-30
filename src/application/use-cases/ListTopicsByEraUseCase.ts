@@ -1,6 +1,5 @@
-import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
+import { compareTopicsChronologically, type HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
-import { compareHistoricalPeriods } from "@/domain/value-objects/HistoricalPeriod";
 import { TOPIC_CATEGORIES, type TopicCategory } from "@/domain/value-objects/TopicCategory";
 import type { TopicRepository } from "../ports/TopicRepository";
 
@@ -25,15 +24,9 @@ export class ListTopicsByEraUseCase {
 
     const categories = TOPIC_CATEGORIES.map((category) => ({
       category,
-      topics: topics.filter((topic) => topic.category === category).toSorted(chronologicallyThenByTitle),
+      topics: topics.filter((topic) => topic.category === category).toSorted(compareTopicsChronologically),
     })).filter((group) => group.topics.length > 0);
 
     return { era, totalTopics: topics.length, categories };
   }
-}
-
-// History reads in time order (Monarquía → República → Imperio, which alphabetical order would break).
-// Ties use Spanish collation, so accented titles ("Ávila") sort where a reader expects them.
-function chronologicallyThenByTitle(a: HistoricalTopic, b: HistoricalTopic): number {
-  return compareHistoricalPeriods(a.period, b.period) || a.title.localeCompare(b.title, "es");
 }

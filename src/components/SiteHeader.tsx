@@ -31,6 +31,9 @@ export async function SiteHeader() {
             <span className="hidden text-muted sm:inline">
               Hola, <span className="font-medium text-foreground">{user.name}</span>
             </span>
+            <Link href="/mi-biblioteca" className="font-medium hover:text-accent">
+              Mi biblioteca
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"

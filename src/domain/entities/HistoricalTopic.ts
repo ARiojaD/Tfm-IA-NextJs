@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { EntityIdSchema } from "../value-objects/EntityId";
 import { HistoricalEraSchema } from "../value-objects/HistoricalEra";
-import { HistoricalPeriodSchema } from "../value-objects/HistoricalPeriod";
+import { compareHistoricalPeriods, HistoricalPeriodSchema } from "../value-objects/HistoricalPeriod";
 import { KeyFactSchema } from "../value-objects/KeyFact";
 import { SlugSchema } from "../value-objects/Slug";
 import { TopicCategorySchema } from "../value-objects/TopicCategory";
@@ -35,3 +35,12 @@ export const HistoricalTopicSchema = z
   });
 
 export type HistoricalTopic = z.infer<typeof HistoricalTopicSchema>;
+
+// History reads in time order (Monarquía → República → Imperio, which alphabetical order would break).
+// Ties use Spanish collation, so accented titles ("Ávila") sort where a reader expects them.
+export function compareTopicsChronologically(
+  a: Pick<HistoricalTopic, "title" | "period">,
+  b: Pick<HistoricalTopic, "title" | "period">,
+): number {
+  return compareHistoricalPeriods(a.period, b.period) || a.title.localeCompare(b.title, "es");
+}

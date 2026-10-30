@@ -64,7 +64,8 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 ### Usuarios e interfaz
 
 - **Cuentas de usuario:** registro e inicio de sesión con email y contraseña (`/registro`, `/iniciar-sesion`). En público solo se muestra el nombre visible, nunca el email. Comentar requiere sesión: el comentario se firma con el nombre de la cuenta.
-- **Biblioteca personal** (en desarrollo): cada usuario accederá únicamente a sus propios eventos, fuentes y notas.
+- **Mi biblioteca** (`/mi-biblioteca`): cada usuario puede **seguir civilizaciones** (le aparecen todos sus temas, también los que se añadan después) y **guardar temas** sueltos con ☆ Guardar. Sin sesión, los botones se ven igual y llevan a iniciar sesión. Cada usuario solo ve y cambia su propia biblioteca.
+- **Contenido propio** (en desarrollo): cada usuario accederá únicamente a sus propios eventos, fuentes y notas.
 - **Panel privado** para gestionar la biblioteca personal.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
 - **Modo claro y oscuro:** sigue la preferencia del sistema y recuerda la elección del usuario.
@@ -288,7 +289,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada y comentarios con y sin sesión |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión y Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) |
 
 > _Por completar con el resumen final de tests y cobertura._
 
@@ -305,7 +306,7 @@ El desarrollo sigue tres guías OWASP:
 - **OWASP API Security Top 10:**
   - comprobación de propiedad de cada recurso (BOLA, API1);
   - validación estricta del cuerpo de las peticiones contra *Mass Assignment* (API3);
-  - *rate limiting* en comentarios, respuestas del quiz, registro e inicio de sesión (API4).
+  - *rate limiting* en comentarios, respuestas del quiz, registro, inicio de sesión y Mi biblioteca (API4).
 - **OWASP Top 10 for LLM Applications:**
   - separación entre instrucciones del sistema y contenido del usuario contra la inyección de prompts (LLM01);
   - salidas del modelo estructuradas y validadas con Zod (LLM02);

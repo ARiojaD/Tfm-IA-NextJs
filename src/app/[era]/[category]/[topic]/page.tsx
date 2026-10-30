@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { EraBadge } from "@/components/EraBadge";
+import { SaveTopicButton } from "@/components/library/SaveTopicButton";
 import { SectionHeading } from "@/components/SectionHeading";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -57,7 +58,11 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
   }
 
   const { topic, events, quiz, comments, recommendations, relatedTopics } = detail;
-  const currentUser = await getContainer().getCurrentUser.execute();
+  const container = getContainer();
+  const [currentUser, libraryStatus] = await Promise.all([
+    container.getCurrentUser.execute(),
+    container.getLibraryStatus.execute(),
+  ]);
   // The introduction sits right below the header, so it needs no shortcut.
   const sections = [
     { id: "cronologia", label: "Cronología", count: events.length },
@@ -106,6 +111,9 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
               {topic.title}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{topic.summary}</p>
+            <div className="mt-6">
+              <SaveTopicButton topic={topic} status={libraryStatus} />
+            </div>
 
             <nav aria-label="Secciones del tema" className="mt-10">
               <ul className="flex flex-wrap gap-2">

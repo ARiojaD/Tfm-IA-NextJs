@@ -3,8 +3,19 @@ import { type HistoricalEvent, HistoricalEventSchema } from "@/domain/entities/H
 import { type HistoricalTopic, HistoricalTopicSchema } from "@/domain/entities/HistoricalTopic";
 import { type Quiz, QuizSchema } from "@/domain/entities/Quiz";
 import { type Recommendation, RecommendationSchema } from "@/domain/entities/Recommendation";
+import { type EntityId, EntityIdSchema } from "@/domain/value-objects/EntityId";
 import type { HistoricalDate } from "@/domain/value-objects/HistoricalDate";
-import type { comments, historicalEvents, quizQuestions, quizzes, recommendations, topics } from "./schema";
+import { type HistoricalEra, HistoricalEraSchema } from "@/domain/value-objects/HistoricalEra";
+import type {
+  comments,
+  eraFollows,
+  historicalEvents,
+  quizQuestions,
+  quizzes,
+  recommendations,
+  savedTopics,
+  topics,
+} from "./schema";
 
 // Translation between table rows and domain entities. Rows read from the database are parsed with the
 // domain schemas: if the data ever drifts from the domain rules, the error shows up here, at the border,
@@ -16,6 +27,8 @@ type QuizRow = typeof quizzes.$inferSelect;
 type QuizQuestionRow = typeof quizQuestions.$inferSelect;
 type CommentRow = typeof comments.$inferSelect;
 type RecommendationRow = typeof recommendations.$inferSelect;
+type EraFollowRow = typeof eraFollows.$inferSelect;
+type SavedTopicRow = typeof savedTopics.$inferSelect;
 
 // SQL NULL becomes a missing property, as optional fields are absent (not null) in the domain.
 function toDate(year: number, month: number | null): HistoricalDate {
@@ -127,6 +140,14 @@ export function toComment(row: CommentRow): Comment {
 
 export function toCommentRow(comment: Comment): typeof comments.$inferInsert {
   return { ...comment, userId: comment.userId ?? null };
+}
+
+export function toFollowedEra(row: Pick<EraFollowRow, "era">): HistoricalEra {
+  return HistoricalEraSchema.parse(row.era);
+}
+
+export function toSavedTopicId(row: Pick<SavedTopicRow, "topicId">): EntityId {
+  return EntityIdSchema.parse(row.topicId);
 }
 
 export function toRecommendation(row: RecommendationRow): Recommendation {

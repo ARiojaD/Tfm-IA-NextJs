@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
-import { createContainer, SIGN_IN_RATE_LIMIT } from "@/composition/container";
+import { createContainer, LIBRARY_RATE_LIMIT, SIGN_IN_RATE_LIMIT } from "@/composition/container";
 
 const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", message: "Hola" };
@@ -103,6 +103,36 @@ describe("createContainer (en memoria)", () => {
 
     const next = await container.signIn.execute(wrong, VISITOR);
 
+    expect(!next.success && next.error).toBeInstanceOf(RateLimitExceededError);
+  });
+
+  it("conecta Mi biblioteca: seguir Roma trae sus temas y guardar un tema lo añade", async () => {
+    const container = await containerWithLivia();
+
+    await container.updateEraFollow.execute({ era: "ROMAN", intent: "follow" });
+    await container.updateSavedTopic.execute({ topicSlug: "julio-cesar", intent: "save" });
+    const library = await container.getMyLibrary.execute();
+
+    expect(library.success && library.data.followedEras[0].topics.map((topic) => topic.slug)).toEqual([
+      "julio-cesar",
+      "asedio-de-alesia",
+    ]);
+    expect(library.success && library.data.savedTopics.map((topic) => topic.slug)).toEqual(["julio-cesar"]);
+    expect(await container.getLibraryStatus.execute()).toEqual({
+      followedEras: ["ROMAN"],
+      savedTopicIds: ["topic-julius-caesar"],
+    });
+  });
+
+  it("limita cada usuario a 30 cambios por minuto en su biblioteca", async () => {
+    const container = await containerWithLivia();
+    for (let attempt = 0; attempt < LIBRARY_RATE_LIMIT.limit; attempt++) {
+      await container.updateEraFollow.execute({ era: "ROMAN", intent: "follow" });
+    }
+
+    const next = await container.updateSavedTopic.execute({ topicSlug: "julio-cesar", intent: "save" });
+
+    expect(LIBRARY_RATE_LIMIT.limit).toBe(30);
     expect(!next.success && next.error).toBeInstanceOf(RateLimitExceededError);
   });
 

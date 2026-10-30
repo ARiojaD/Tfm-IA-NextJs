@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HistoricalTopicSchema } from "@/domain/entities/HistoricalTopic";
+import { compareTopicsChronologically, HistoricalTopicSchema } from "@/domain/entities/HistoricalTopic";
 
 const validTopic = {
   id: "topic-julius-caesar",
@@ -143,5 +143,21 @@ describe("HistoricalTopicSchema", () => {
 
   it("rechaza propiedades no permitidas", () => {
     expect(HistoricalTopicSchema.safeParse({ ...validTopic, isAdmin: true }).success).toBe(false);
+  });
+});
+
+describe("compareTopicsChronologically", () => {
+  const topic = (title: string, startYear: number) => ({ title, period: { start: { year: startYear } } });
+
+  it("ordena los temas por su fecha de inicio", () => {
+    const topics = [topic("Imperio", -27), topic("Monarquía", -753), topic("República", -509)];
+
+    expect(topics.toSorted(compareTopicsChronologically).map((t) => t.title)).toEqual(["Monarquía", "República", "Imperio"]);
+  });
+
+  it("si empiezan a la vez, ordena por título según el español (las tildes no van al final)", () => {
+    const topics = [topic("Zama", -202), topic("Ávila", -202), topic("Cannas", -202)];
+
+    expect(topics.toSorted(compareTopicsChronologically).map((t) => t.title)).toEqual(["Ávila", "Cannas", "Zama"]);
   });
 });
