@@ -3,6 +3,7 @@ import { EntityIdSchema } from "@/domain/value-objects/EntityId";
 import { compareHistoricalDates, type HistoricalDate } from "@/domain/value-objects/HistoricalDate";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import type { HistoricalPeriod } from "@/domain/value-objects/HistoricalPeriod";
+import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType";
 import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
 import { TopicStatusSchema } from "@/domain/value-objects/TopicStatus";
 
@@ -141,3 +142,96 @@ export const UpdateTopicKeyFactsInputSchema = z.strictObject({
 export const ChangeTopicStatusInputSchema = z.strictObject({ topicId, status: TopicStatusSchema });
 
 export const DeleteTopicInputSchema = z.strictObject({ topicId });
+
+// --- The topic's lists: timeline, quiz, recommendations and related topics ---
+// The editor sends each list whole (as JSON in a hidden field). `id` is the row's id when it already
+// existed: the use case keeps it only if it belongs to this topic, so nobody can overwrite another
+// topic's rows by sending their ids.
+
+export const EVENTS_MAX = 50;
+export const QUIZ_QUESTIONS_MAX = 10;
+export const QUIZ_OPTIONS_MIN = 2;
+export const QUIZ_OPTIONS_MAX = 4;
+export const RECOMMENDATIONS_MAX = 20;
+export const RELATED_TOPICS_MAX = 10;
+
+const rowId = z
+  .string()
+  .trim()
+  .max(100)
+  .optional()
+  .transform((value) => value || undefined);
+
+const text = (missing: string, max: number, tooLong: string) =>
+  z.string({ error: missing }).trim().min(1, { error: missing }).max(max, { error: tooLong });
+
+const eventRow = z
+  .strictObject({
+    id: rowId,
+    title: text("escribe el título", 120, "el título no puede superar los 120 caracteres"),
+    year: year("escribe el año"),
+    era: calendarEra,
+    month: optionalMonth,
+    description: text("escribe la descripción", 1000, "la descripción no puede superar los 1000 caracteres"),
+  })
+  .transform(({ id, title, year: yearNumber, era, month, description }) => ({
+    id,
+    title,
+    date: toDate(yearNumber, era, month),
+    description,
+  }));
+
+export const UpdateTopicEventsInputSchema = z.strictObject({
+  topicId,
+  events: z.array(eventRow, { error: "La lista de eventos no es válida" }).max(EVENTS_MAX, { error: `Como máximo ${EVENTS_MAX} eventos` }),
+});
+
+const questionRow = z.strictObject({
+  id: rowId,
+  question: text("escribe la pregunta", 300, "la pregunta no puede superar los 300 caracteres"),
+  options: z
+    .array(text("escribe todas las opciones", 150, "cada opción puede tener hasta 150 caracteres"))
+    .min(QUIZ_OPTIONS_MIN, { error: `pon al menos ${QUIZ_OPTIONS_MIN} opciones` })
+    .max(QUIZ_OPTIONS_MAX, { error: `como máximo ${QUIZ_OPTIONS_MAX} opciones` }),
+  correctOptionIndex: z.number({ error: "marca la respuesta correcta" }).int().min(0, { error: "marca la respuesta correcta" }),
+  explanation: z
+    .string()
+    .trim()
+    .max(500, { error: "la explicación no puede superar los 500 caracteres" })
+    .transform((value) => value || undefined),
+});
+
+// No questions at all removes the topic's quiz.
+export const UpdateTopicQuizInputSchema = z.strictObject({
+  topicId,
+  questions: z.array(questionRow, { error: "La lista de preguntas no es válida" }).max(QUIZ_QUESTIONS_MAX, { error: `Como máximo ${QUIZ_QUESTIONS_MAX} preguntas` }),
+});
+
+const recommendationRow = z.strictObject({
+  id: rowId,
+  type: z.enum(RECOMMENDATION_TYPES, { error: "elige el tipo" }),
+  title: text("escribe el título", 150, "el título no puede superar los 150 caracteres"),
+  creator: text("escribe el autor o director", 120, "el autor no puede superar los 120 caracteres"),
+  // The year of the work (a book, a film): modern years, written as is.
+  year: z
+    .string({ error: "escribe el año" })
+    .trim()
+    .regex(/^\d{1,4}$/, { error: "escribe el año con números (hasta 4 cifras)" })
+    .transform(Number),
+  description: text("escribe por qué la recomiendas", 500, "la descripción no puede superar los 500 caracteres"),
+});
+
+export const UpdateTopicRecommendationsInputSchema = z.strictObject({
+  topicId,
+  recommendations: z
+    .array(recommendationRow, { error: "La lista de recomendaciones no es válida" })
+    .max(RECOMMENDATIONS_MAX, { error: `Como máximo ${RECOMMENDATIONS_MAX} recomendaciones` }),
+});
+
+export const UpdateRelatedTopicsInputSchema = z.strictObject({
+  topicId,
+  relatedTopicIds: z
+    .array(EntityIdSchema, { error: "La lista de temas no es válida" })
+    .max(RELATED_TOPICS_MAX, { error: `Como máximo ${RELATED_TOPICS_MAX} temas relacionados` })
+    .refine((ids) => new Set(ids).size === ids.length, { error: "Un tema no puede estar repetido" }),
+});

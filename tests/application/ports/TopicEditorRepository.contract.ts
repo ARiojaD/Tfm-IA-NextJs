@@ -83,6 +83,38 @@ export function describeTopicEditorRepositoryContract(
       expect(await repository.listAll()).toHaveLength(2);
     });
 
+    describe("setRelatedTopics: los relacionados van en los dos sentidos", () => {
+      it("relacionar un tema con otro lo añade también en el otro", async () => {
+        const repository = await createRepository([caesar, alesia, draft]);
+
+        await repository.setRelatedTopics("topic-draft", ["topic-caesar"]);
+
+        expect((await repository.findById("topic-draft"))?.relatedTopicIds).toEqual(["topic-caesar"]);
+        expect((await repository.findById("topic-caesar"))?.relatedTopicIds).toEqual(
+          expect.arrayContaining(["topic-alesia", "topic-draft"]),
+        );
+      });
+
+      it("quitar un relacionado lo quita también del otro tema", async () => {
+        const repository = await createRepository([caesar, alesia, draft]);
+
+        await repository.setRelatedTopics("topic-caesar", []);
+
+        expect((await repository.findById("topic-caesar"))?.relatedTopicIds).toEqual([]);
+        expect((await repository.findById("topic-alesia"))?.relatedTopicIds).toEqual([]);
+      });
+
+      it("sustituye la lista: lo que no se nombra deja de estar relacionado", async () => {
+        const repository = await createRepository([caesar, alesia, draft]);
+
+        await repository.setRelatedTopics("topic-caesar", ["topic-draft"]);
+
+        expect((await repository.findById("topic-caesar"))?.relatedTopicIds).toEqual(["topic-draft"]);
+        expect((await repository.findById("topic-alesia"))?.relatedTopicIds).toEqual([]);
+        expect((await repository.findById("topic-draft"))?.relatedTopicIds).toEqual(["topic-caesar"]);
+      });
+    });
+
     it("guarda y devuelve copias: modificar los objetos no altera lo guardado", async () => {
       const repository = await createRepository([caesar, alesia]);
       const topic = structuredClone(draft);

@@ -37,5 +37,25 @@ export function describeRecommendationRepositoryContract(
 
       expect((await repository.listByTopic("topic-caesar"))[0].title).toBe(book.title);
     });
+
+    describe("replaceForTopic (editor)", () => {
+      it("sustituye las recomendaciones de un tema por la lista nueva", async () => {
+        const repository = await createRepository([book, series]);
+        const edited = { ...book, title: "Otro libro" };
+
+        await repository.replaceForTopic("topic-caesar", [edited]);
+
+        expect(await repository.listByTopic("topic-caesar")).toEqual([edited]);
+      });
+
+      it("no toca las recomendaciones de otros temas", async () => {
+        const repository = await createRepository([book, film]);
+
+        await repository.replaceForTopic("topic-caesar", []);
+
+        expect(await repository.listByTopic("topic-caesar")).toEqual([]);
+        expect(await repository.listByTopic("topic-pericles")).toEqual([film]);
+      });
+    });
   });
 }

@@ -37,5 +37,35 @@ export function describeHistoricalEventRepositoryContract(
 
       expect((await repository.listByTopic("topic-caesar"))[0].date.year).toBe(rubicon.date.year);
     });
+
+    describe("replaceForTopic (editor)", () => {
+      it("sustituye los eventos de un tema por la lista nueva", async () => {
+        const repository = await createRepository([rubicon, pharsalus]);
+        const edited = { ...rubicon, title: "Cruce del Rubicón (49 a.C.)" };
+        const ides = anEvent({ id: "event-ides", topicId: "topic-caesar", title: "Idus de marzo" });
+
+        await repository.replaceForTopic("topic-caesar", [edited, ides]);
+
+        const events = await repository.listByTopic("topic-caesar");
+        expect(events).toHaveLength(2);
+        expect(events).toEqual(expect.arrayContaining([edited, ides]));
+      });
+
+      it("con una lista vacía deja el tema sin eventos", async () => {
+        const repository = await createRepository([rubicon, pharsalus]);
+
+        await repository.replaceForTopic("topic-caesar", []);
+
+        expect(await repository.listByTopic("topic-caesar")).toEqual([]);
+      });
+
+      it("no toca los eventos de otros temas", async () => {
+        const repository = await createRepository([rubicon, marathon]);
+
+        await repository.replaceForTopic("topic-caesar", []);
+
+        expect(await repository.listByTopic("topic-persian-wars")).toEqual([marathon]);
+      });
+    });
   });
 }

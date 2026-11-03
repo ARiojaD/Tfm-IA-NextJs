@@ -67,11 +67,11 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 - **Mi biblioteca** (`/mi-biblioteca`): cada usuario puede **seguir civilizaciones** (le aparecen todos sus temas, también los que se añadan después) y **guardar temas** sueltos con ☆ Guardar. Sin sesión, los botones se ven igual y llevan a iniciar sesión. Cada usuario solo ve y cambia su propia biblioteca.
 - **Panel de administración** (`/admin`): los administradores crean temas desde la web, sin tocar el código.
   - **Datos básicos:** un tema nuevo nace como **borrador**, invisible para el público, a partir de sus datos básicos. Su URL se genera sola a partir del título y ya no cambia.
-  - **Editor por secciones:** datos básicos, introducción y datos clave, cada sección con su propio botón Guardar.
+  - **Editor por secciones:** datos básicos, introducción, datos clave, cronología, quiz (2–4 opciones con la correcta marcada), recomendaciones y temas relacionados (enlazados en los dos sentidos). Cada sección tiene su propio botón Guardar.
   - **Vista previa:** muestra el tema con la misma plantilla que la página pública.
   - **Publicar:** solo se puede con la introducción y al menos un dato clave. Si falta algo, se indica qué.
   - **Despublicar y borrar:** despublicar lo devuelve a borrador; solo los borradores se pueden borrar.
-  - **Próximamente:** cronología, quiz, recomendaciones, relacionados e imagen, y la revisión de las propuestas de los usuarios.
+  - **Próximamente:** la imagen del tema y la revisión de las propuestas de los usuarios.
   - **Acceso:** sin sesión lleva a iniciar sesión; a una cuenta normal le responde 404.
 - **Propuestas** (próximamente): desde Mi biblioteca, los usuarios podrán proponer eventos, recomendaciones, correcciones o temas nuevos, que un administrador revisa antes de publicarlos.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
@@ -297,7 +297,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión, Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) y panel de administración (acceso de admin, cuenta normal y sin sesión; un tema de principio a fin: crear, completar, publicar, despublicar y borrar) |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión, Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) y panel de administración (acceso de admin, cuenta normal y sin sesión; un tema de principio a fin: crear, completar con cronología y quiz, publicar y jugar su quiz en la web, despublicar y borrar) |
 
 > _Por completar con el resumen final de tests y cobertura._
 

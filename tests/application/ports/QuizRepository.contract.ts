@@ -9,7 +9,12 @@ export function describeQuizRepositoryContract(
 ) {
   describe(`${name} cumple el contrato de QuizRepository`, () => {
     const caesarQuiz = aQuiz({ id: "quiz-caesar", topicId: "topic-caesar" });
-    const periclesQuiz = aQuiz({ id: "quiz-pericles", topicId: "topic-pericles" });
+    // Its own question id: question ids are unique across quizzes (a primary key in PostgreSQL).
+    const periclesQuiz = aQuiz({
+      id: "quiz-pericles",
+      topicId: "topic-pericles",
+      questions: [{ ...aQuiz().questions[0], id: "question-pericles" }],
+    });
 
     it("encuentra el quiz de un tema", async () => {
       const repository = await createRepository([caesarQuiz, periclesQuiz]);
@@ -32,6 +37,48 @@ export function describeQuizRepositoryContract(
       expect((await repository.findByTopic("topic-caesar"))?.questions[0].question).toBe(
         caesarQuiz.questions[0].question,
       );
+    });
+
+    describe("replaceForTopic (editor)", () => {
+      const twoQuestions = aQuiz({
+        id: "quiz-caesar",
+        topicId: "topic-caesar",
+        questions: [
+          { id: "question-a", question: "¿Primera?", options: ["Sí", "No"], correctOptionIndex: 0 },
+          {
+            id: "question-b",
+            question: "¿Segunda?",
+            options: ["Una", "Otra", "La de más allá"],
+            correctOptionIndex: 2,
+            explanation: "Porque sí.",
+          },
+        ],
+      });
+
+      it("sustituye el quiz de un tema, conservando el orden de las preguntas", async () => {
+        const repository = await createRepository([caesarQuiz, periclesQuiz]);
+
+        await repository.replaceForTopic("topic-caesar", twoQuestions);
+
+        expect(await repository.findByTopic("topic-caesar")).toEqual(twoQuestions);
+      });
+
+      it("crea el quiz de un tema que no tenía", async () => {
+        const repository = await createRepository([periclesQuiz]);
+
+        await repository.replaceForTopic("topic-caesar", twoQuestions);
+
+        expect(await repository.findByTopic("topic-caesar")).toEqual(twoQuestions);
+      });
+
+      it("con null deja el tema sin quiz, sin tocar los de otros temas", async () => {
+        const repository = await createRepository([caesarQuiz, periclesQuiz]);
+
+        await repository.replaceForTopic("topic-caesar", null);
+
+        expect(await repository.findByTopic("topic-caesar")).toBeNull();
+        expect(await repository.findByTopic("topic-pericles")).toEqual(periclesQuiz);
+      });
     });
   });
 }

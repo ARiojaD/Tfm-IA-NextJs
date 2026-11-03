@@ -61,12 +61,33 @@ test.describe("Panel de administración", () => {
       await keyFacts.getByRole("button", { name: "Guardar" }).click();
       await expect(keyFacts.getByText("Guardado ✓")).toBeVisible();
 
+      const timeline = page.getByRole("region", { name: "Cronología" });
+      await timeline.getByRole("button", { name: "Añadir evento" }).click();
+      await timeline.getByLabel("Título del evento 1").fill("Batalla de las Termópilas");
+      await timeline.getByLabel("Año del evento 1").fill("480");
+      await timeline.getByLabel("Descripción del evento 1").fill("Trescientos espartanos frente a Jerjes.");
+      await timeline.getByRole("button", { name: "Guardar" }).click();
+      await expect(timeline.getByText("Guardado ✓")).toBeVisible();
+
+      const quiz = page.getByRole("region", { name: "Quiz" });
+      await quiz.getByRole("button", { name: "Añadir pregunta" }).click();
+      await quiz.getByLabel("Texto de la pregunta 1").fill("¿Dónde murió Leónidas?");
+      await quiz.getByLabel("Opción 1 de la pregunta 1").fill("Maratón");
+      await quiz.getByLabel("Opción 2 de la pregunta 1").fill("Termópilas");
+      await quiz.getByLabel("Marcar la opción 2 como correcta en la pregunta 1").check();
+      await quiz.getByRole("button", { name: "Guardar" }).click();
+      await expect(quiz.getByText("Guardado ✓")).toBeVisible();
+
       await page.getByRole("button", { name: "Publicar" }).click();
       await expect(page.getByText("Visible para todo el mundo.")).toBeVisible();
       await page.goto("/grecia");
       await page.getByRole("link", { name: /Leónidas/ }).click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Leónidas");
       await expect(page.getByText("Murió en las Termópilas.")).toBeVisible();
+      await expect(page.locator("#cronologia").getByText("Batalla de las Termópilas")).toBeVisible();
+      // The quiz written in the panel is played on the public page and corrected by the server.
+      await page.locator("#quiz").getByRole("button", { name: "Termópilas" }).click();
+      await expect(page.locator("#quiz").getByText("¡Correcto!")).toBeVisible();
 
       await page.goBack();
       await page.goto("/admin");

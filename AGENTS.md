@@ -70,6 +70,14 @@ tests/                      # Tests, fuera de src/, replicando su estructura
   - **Entrada:** los DTO de `application/dto/TopicEditorInputs.ts` son estrictos y convierten los textos del formulario (años con a.C./d.C., meses, párrafos separados por línea en blanco, filas de datos clave) a datos del dominio.
   - **Guardado:** todo cambio pasa por `editTopic()`, que valida el tema entero con el esquema del dominio antes de guardar.
   - **Slug:** se genera una vez con `slugify()` (único; si existe, `-2`, `-3`…) y no cambia al editar, para no romper enlaces ni bibliotecas.
+  - **Listas del tema (cronología, quiz, recomendaciones, relacionados):**
+    - **Guardado completo:** cada sección guarda la lista entera (`UpdateTopicEvents`, `UpdateTopicQuiz`, `UpdateTopicRecommendations`, `UpdateRelatedTopics`) y el port la sustituye con `replaceForTopic` / `setRelatedTopics`, en una transacción en PostgreSQL.
+    - **Envío:** el formulario manda cada lista como JSON en un campo oculto. La Server Action solo la parsea (`jsonField`, con tamaño máximo) y el DTO estricto la valida como cualquier entrada.
+    - **Ids:** un id se conserva solo si ya era de ese tema (`keepOwnId`); cualquier otro recibe uno nuevo, para que nadie sobrescriba filas de otro tema.
+    - **Lo que pone el servidor:** el tema y la civilización de cada evento.
+    - **Quiz:** sin preguntas, se borra.
+    - **Relacionados:** van en los dos sentidos.
+    - **Respuestas correctas:** el editor sí las recibe (`GetTopicForEditingUseCase`, solo admin); la web pública nunca.
   - **Borrado:** solo se borran los borradores (`TopicIsPublishedError`).
   - **Vista previa:** `/admin/temas/[id]/vista-previa` usa el mismo componente `TopicView` que la página pública y `loadTopicDetail()`, el mismo que `GetTopicDetailUseCase`.
   - **Metadatos:** las páginas de `/admin` calculan su título con `adminPageMetadata()`, para que el 404 de un no-admin no delate el panel.

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import type { TopicEditorRepository } from "@/application/ports/TopicEditorRepository";
 import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
@@ -59,6 +59,24 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
   // Its events, quiz, comments, recommendations, relations and library entries go with it (cascade).
   async delete(id: EntityId): Promise<void> {
     await this.db.delete(topics).where(eq(topics.id, id));
+  }
+
+  // Both directions in one transaction: every row where the topic appears goes, then each pair comes
+  // back twice (A → B and B → A).
+  async setRelatedTopics(topicId: EntityId, relatedTopicIds: EntityId[]): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .delete(topicRelations)
+        .where(or(eq(topicRelations.topicId, topicId), eq(topicRelations.relatedTopicId, topicId)));
+      if (relatedTopicIds.length > 0) {
+        await tx.insert(topicRelations).values(
+          relatedTopicIds.flatMap((relatedTopicId) => [
+            { topicId, relatedTopicId },
+            { topicId: relatedTopicId, relatedTopicId: topicId },
+          ]),
+        );
+      }
+    });
   }
 
   // One extra query for all the relations of the loaded topics (not one per topic).

@@ -15,4 +15,7 @@ export interface TopicEditorRepository {
   // managed apart, in both directions).
   save(topic: HistoricalTopic): Promise<void>;
   delete(id: EntityId): Promise<void>;
+  // Relations go both ways: relating A to B also lists A in B, and removing it removes both sides.
+  // Replaces the whole list of the topic; the ids must be of existing topics (checked by the use case).
+  setRelatedTopics(topicId: EntityId, relatedTopicIds: EntityId[]): Promise<void>;
 }

@@ -3,7 +3,7 @@ import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { Quiz } from "@/domain/entities/Quiz";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { Database } from "./client";
-import { toQuiz } from "./mappers";
+import { toQuiz, toQuizRows } from "./mappers";
 import { quizQuestions, quizzes } from "./schema";
 
 export class PostgresQuizRepository implements QuizRepository {
@@ -19,5 +19,17 @@ export class PostgresQuizRepository implements QuizRepository {
       .where(eq(quizQuestions.quizId, quiz.id))
       .orderBy(asc(quizQuestions.position));
     return toQuiz(quiz, questions);
+  }
+
+  // In one transaction. Deleting the quiz deletes its questions (cascade); they come back in order.
+  async replaceForTopic(topicId: EntityId, quiz: Quiz | null): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(quizzes).where(eq(quizzes.topicId, topicId));
+      if (quiz) {
+        const rows = toQuizRows(quiz);
+        await tx.insert(quizzes).values(rows.quiz);
+        await tx.insert(quizQuestions).values(rows.questions);
+      }
+    });
   }
 }

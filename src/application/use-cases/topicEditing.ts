@@ -30,13 +30,12 @@ export async function saveValidTopic(
   return success(parsed.data);
 }
 
-// Admin, rate limit, input, the topic, the change, the domain rules, save: in that order.
-export async function editTopic<Schema extends z.ZodType<{ topicId: EntityId }>>(
+// The first steps of every change: admin, rate limit, input, and the topic it is about. In that order.
+export async function loadTopicToEdit<Schema extends z.ZodType<{ topicId: EntityId }>>(
   dependencies: TopicEditingDependencies,
   schema: Schema,
   input: unknown,
-  applyChange: (topic: HistoricalTopic, data: z.output<Schema>) => HistoricalTopic,
-): Promise<Result<HistoricalTopic, TopicEditingError>> {
+): Promise<Result<{ topic: HistoricalTopic; data: z.output<Schema> }, TopicEditingError>> {
   const access = await authorizeAdminWrite(dependencies);
   if (!access.success) return access;
 
@@ -49,7 +48,36 @@ export async function editTopic<Schema extends z.ZodType<{ topicId: EntityId }>>
   if (!topic) {
     return failure(new TopicNotFoundError(parsed.data.topicId));
   }
-  return saveValidTopic(dependencies.topicEditor, applyChange(topic, parsed.data));
+  return success({ topic, data: parsed.data });
+}
+
+// A change to the topic's own fields: loaded, changed, checked against the domain rules and saved.
+export async function editTopic<Schema extends z.ZodType<{ topicId: EntityId }>>(
+  dependencies: TopicEditingDependencies,
+  schema: Schema,
+  input: unknown,
+  applyChange: (topic: HistoricalTopic, data: z.output<Schema>) => HistoricalTopic,
+): Promise<Result<HistoricalTopic, TopicEditingError>> {
+  const loaded = await loadTopicToEdit(dependencies, schema, input);
+  if (!loaded.success) return loaded;
+  return saveValidTopic(dependencies.topicEditor, applyChange(loaded.data.topic, loaded.data.data));
+}
+
+// A list of the topic (events, recommendations…) checked with its domain schema before saving. The
+// errors go under the list's field, naming the row ("Evento 2: …").
+export function validateTopicList<Item>(
+  schema: z.ZodType<Item>,
+  rows: unknown[],
+  field: string,
+): Result<Item[], InvalidTopicError> {
+  const parsed = schema.array().safeParse(rows);
+  return parsed.success ? success(parsed.data) : failure(InvalidTopicError.fromIssues(parsed.error.issues, [field]));
+}
+
+// Keeps a row's id only if it already belonged to this topic; anything else gets a new id. So a request
+// that sends the id of another topic's row creates a new row instead of overwriting that one.
+export function keepOwnId(ownIds: Set<EntityId>, ids: { generate(): EntityId }) {
+  return (id: string | undefined): EntityId => (id !== undefined && ownIds.has(id) ? id : ids.generate());
 }
 
 // "viriato", and if taken "viriato-2", "viriato-3"… Slugs are unique across drafts and published topics.

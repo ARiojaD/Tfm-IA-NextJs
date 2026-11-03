@@ -62,7 +62,16 @@ describe("Editor de temas", () => {
     if (registered.ok) await roles.setRole(registered.user.id, "ADMIN");
   });
 
-  const deps = () => ({ topicEditor: topics, auth, roles, rateLimiter, ids });
+  const deps = () => ({
+    topicEditor: topics,
+    events: new InMemoryHistoricalEventRepository(),
+    quizzes: new InMemoryQuizRepository(),
+    recommendations: new InMemoryRecommendationRepository(),
+    auth,
+    roles,
+    rateLimiter,
+    ids,
+  });
 
   async function createViriato() {
     const created = await new CreateTopicUseCase(deps()).execute(viriato);
@@ -334,7 +343,7 @@ describe("Editor de temas", () => {
 
       const result = await new GetTopicForEditingUseCase(deps()).execute(id);
 
-      expect(result.success && result.data.title).toBe("Viriato");
+      expect(result.success && [result.data.topic.title, result.data.topic.status]).toEqual(["Viriato", "DRAFT"]);
     });
 
     it("ListTopicsForAdmin incluye los borradores en su civilización", async () => {

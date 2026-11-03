@@ -92,6 +92,50 @@ export async function updateTopicKeyFacts(_previous: AdminFormState, formData: F
   );
 }
 
+// The lists (timeline, quiz, recommendations, related topics) arrive as JSON in a hidden field. Parsing
+// only turns text into plain data; the use case validates it like any other input (it may be anything).
+const JSON_FIELD_MAX_LENGTH = 200_000;
+
+function jsonField(formData: FormData, name: string): unknown {
+  const raw = formData.get(name);
+  if (typeof raw !== "string" || raw.length > JSON_FIELD_MAX_LENGTH) return null;
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateTopicEvents(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  return toState(
+    await getContainer().updateTopicEvents.execute({ topicId: formData.get("topicId"), events: jsonField(formData, "events") }),
+  );
+}
+
+export async function updateTopicQuiz(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  return toState(
+    await getContainer().updateTopicQuiz.execute({ topicId: formData.get("topicId"), questions: jsonField(formData, "questions") }),
+  );
+}
+
+export async function updateTopicRecommendations(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  return toState(
+    await getContainer().updateTopicRecommendations.execute({
+      topicId: formData.get("topicId"),
+      recommendations: jsonField(formData, "recommendations"),
+    }),
+  );
+}
+
+export async function updateRelatedTopics(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  return toState(
+    await getContainer().updateRelatedTopics.execute({
+      topicId: formData.get("topicId"),
+      relatedTopicIds: jsonField(formData, "relatedTopicIds"),
+    }),
+  );
+}
+
 export async function changeTopicStatus(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   return toState(
     await getContainer().changeTopicStatus.execute({ topicId: formData.get("topicId"), status: formData.get("status") }),

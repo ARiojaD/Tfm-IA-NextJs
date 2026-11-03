@@ -57,6 +57,19 @@ export class InMemoryTopicRepository implements TopicRepository, TopicEditorRepo
     return Promise.resolve();
   }
 
+  setRelatedTopics(topicId: EntityId, relatedTopicIds: EntityId[]): Promise<void> {
+    for (const topic of this.topics) {
+      if (topic.id === topicId) {
+        topic.relatedTopicIds = [...relatedTopicIds];
+      } else if (relatedTopicIds.includes(topic.id)) {
+        if (!topic.relatedTopicIds.includes(topicId)) topic.relatedTopicIds.push(topicId);
+      } else {
+        topic.relatedTopicIds = topic.relatedTopicIds.filter((id) => id !== topicId);
+      }
+    }
+    return Promise.resolve();
+  }
+
   private published(): HistoricalTopic[] {
     return this.topics.filter((topic) => topic.status === "PUBLISHED");
   }

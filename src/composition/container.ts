@@ -28,9 +28,13 @@ import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
 import { UpdateEraFollowUseCase } from "@/application/use-cases/UpdateEraFollowUseCase";
 import { UpdateSavedTopicUseCase } from "@/application/use-cases/UpdateSavedTopicUseCase";
+import { UpdateRelatedTopicsUseCase } from "@/application/use-cases/UpdateRelatedTopicsUseCase";
 import { UpdateTopicBasicsUseCase } from "@/application/use-cases/UpdateTopicBasicsUseCase";
+import { UpdateTopicEventsUseCase } from "@/application/use-cases/UpdateTopicEventsUseCase";
 import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTopicIntroductionUseCase";
 import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
+import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizUseCase";
+import { UpdateTopicRecommendationsUseCase } from "@/application/use-cases/UpdateTopicRecommendationsUseCase";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
 import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
@@ -167,7 +171,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     getMyLibrary: new GetMyLibraryUseCase({ topics, library, auth }),
     getAdminAccess: new GetAdminAccessUseCase({ auth, roles }),
     listTopicsForAdmin: new ListTopicsForAdminUseCase({ topicEditor, auth, roles }),
-    getTopicForEditing: new GetTopicForEditingUseCase({ topicEditor, auth, roles }),
+    getTopicForEditing: new GetTopicForEditingUseCase({ ...repositories, auth, roles }),
     getTopicPreview: new GetTopicPreviewUseCase({ ...repositories, auth, roles }),
     createTopic: new CreateTopicUseCase({ ...editor, ids }),
     updateTopicBasics: new UpdateTopicBasicsUseCase(editor),
@@ -175,6 +179,10 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     updateTopicKeyFacts: new UpdateTopicKeyFactsUseCase(editor),
     changeTopicStatus: new ChangeTopicStatusUseCase(editor),
     deleteTopic: new DeleteTopicUseCase(editor),
+    updateTopicEvents: new UpdateTopicEventsUseCase({ ...editor, events: repositories.events, ids }),
+    updateTopicQuiz: new UpdateTopicQuizUseCase({ ...editor, quizzes, ids }),
+    updateTopicRecommendations: new UpdateTopicRecommendationsUseCase({ ...editor, recommendations: repositories.recommendations, ids }),
+    updateRelatedTopics: new UpdateRelatedTopicsUseCase(editor),
   };
 }
 

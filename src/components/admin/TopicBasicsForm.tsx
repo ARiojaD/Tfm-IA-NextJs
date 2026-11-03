@@ -6,6 +6,7 @@ import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_LABELS } from "@/lib/eraLabels";
+import { MONTHS } from "@/lib/formatHistoricalDate";
 import { AuthField } from "../auth/AuthField";
 import { SaveBar, SelectField, TextAreaField } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
@@ -24,7 +25,6 @@ export interface TopicBasicsValues {
   endMonth: string;
 }
 
-const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 // Title, civilization, category, summary and period: to create a topic and later to edit them. The inputs
 // are controlled, so a failed save never wipes what the admin typed. maxLength only helps: the server
