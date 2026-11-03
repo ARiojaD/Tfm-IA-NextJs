@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { TopicImage } from "@/domain/value-objects/TopicImage";
 
+// Keys use the position: an admin may write two equal paragraphs or labels.
 // The narrative of a topic next to its fact sheet, which stay balanced side by side; the image comes
 // after both, closing the introduction. A landscape image (a painting of a battle) spans the full width;
 // a portrait one (a bust) is centred at a contained width, so it does not tower over the page.
@@ -12,16 +13,16 @@ export function TopicIntroduction({ topic }: { topic: HistoricalTopic }) {
     <div className="space-y-12">
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-5 text-lg leading-8">
-          {introduction.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+          {introduction.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
           ))}
         </div>
 
         <aside className="rounded-2xl border border-border bg-surface p-6">
           <h3 className="mb-4 font-serif text-xl font-semibold">Datos clave</h3>
           <dl className="space-y-4">
-            {keyFacts.map((fact) => (
-              <div key={fact.label}>
+            {keyFacts.map((fact, index) => (
+              <div key={`${index}-${fact.label}`}>
                 <dt className="text-xs uppercase tracking-wider text-muted">{fact.label}</dt>
                 <dd className="mt-1 text-sm leading-6">{fact.value}</dd>
               </div>

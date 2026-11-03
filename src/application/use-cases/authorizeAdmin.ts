@@ -1,7 +1,9 @@
 import { failure, success, type Result } from "@/shared/Result";
 import { AdminRequiredError } from "../errors/AdminRequiredError";
 import { AuthenticationRequiredError } from "../errors/AuthenticationRequiredError";
+import { RateLimitExceededError } from "../errors/RateLimitExceededError";
 import type { AuthenticatedUser, AuthService } from "../ports/AuthService";
+import type { RateLimiter } from "../ports/RateLimiter";
 import type { UserRoleRepository } from "../ports/UserRoleRepository";
 
 export interface AdminAuthorizationDependencies {
@@ -25,4 +27,25 @@ export async function authorizeAdmin({
     return failure(new AdminRequiredError());
   }
   return success(user);
+}
+
+export interface AdminWriteDependencies extends AdminAuthorizationDependencies {
+  rateLimiter: RateLimiter;
+}
+
+export type AdminWriteError = AdminAuthorizationError | RateLimitExceededError;
+
+// For the admin use cases that change data: authorized first, then rate-limited per admin (OWASP API4),
+// before validating, so every attempt counts.
+export async function authorizeAdminWrite(
+  dependencies: AdminWriteDependencies,
+): Promise<Result<AuthenticatedUser, AdminWriteError>> {
+  const access = await authorizeAdmin(dependencies);
+  if (!access.success) return access;
+
+  const decision = await dependencies.rateLimiter.consume(`user:${access.data.id}`);
+  if (!decision.allowed) {
+    return failure(new RateLimitExceededError(decision.retryAfterSeconds));
+  }
+  return access;
 }

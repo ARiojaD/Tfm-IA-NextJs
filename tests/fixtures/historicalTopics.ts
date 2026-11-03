@@ -18,6 +18,7 @@ export function aTopic(overrides: Partial<HistoricalTopic> = {}): HistoricalTopi
     introduction: ["Introducción del tema de prueba."],
     keyFacts: [{ label: "Dato", value: "Valor del dato de prueba" }],
     relatedTopicIds: [],
+    status: "PUBLISHED",
     ...overrides,
   };
 }

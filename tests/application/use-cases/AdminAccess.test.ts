@@ -65,7 +65,7 @@ describe("Acceso al panel de administración", () => {
     it("una administradora ve todos los temas, por civilización y en orden cronológico", async () => {
       await roles.setRole(user.id, "ADMIN");
 
-      const result = await new ListTopicsForAdminUseCase({ topics, auth, roles }).execute();
+      const result = await new ListTopicsForAdminUseCase({ topicEditor: topics, auth, roles }).execute();
 
       expect(result.success && result.data).toEqual([
         { era: "ANCIENT_GREECE", topics: [pericles] },
@@ -75,7 +75,7 @@ describe("Acceso al panel de administración", () => {
     });
 
     it("un usuario normal no puede listarlos", async () => {
-      const result = await new ListTopicsForAdminUseCase({ topics, auth, roles }).execute();
+      const result = await new ListTopicsForAdminUseCase({ topicEditor: topics, auth, roles }).execute();
 
       expect(!result.success && result.error).toBeInstanceOf(AdminRequiredError);
     });

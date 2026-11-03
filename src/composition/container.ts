@@ -6,15 +6,21 @@ import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
 import type { RecommendationRepository } from "@/application/ports/RecommendationRepository";
+import type { TopicEditorRepository } from "@/application/ports/TopicEditorRepository";
 import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { UserRoleRepository } from "@/application/ports/UserRoleRepository";
 import { AddCommentUseCase } from "@/application/use-cases/AddCommentUseCase";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
+import { ChangeTopicStatusUseCase } from "@/application/use-cases/ChangeTopicStatusUseCase";
+import { CreateTopicUseCase } from "@/application/use-cases/CreateTopicUseCase";
+import { DeleteTopicUseCase } from "@/application/use-cases/DeleteTopicUseCase";
 import { GetAdminAccessUseCase } from "@/application/use-cases/GetAdminAccessUseCase";
 import { GetCurrentUserUseCase } from "@/application/use-cases/GetCurrentUserUseCase";
 import { GetLibraryStatusUseCase } from "@/application/use-cases/GetLibraryStatusUseCase";
 import { GetMyLibraryUseCase } from "@/application/use-cases/GetMyLibraryUseCase";
 import { GetTopicDetailUseCase } from "@/application/use-cases/GetTopicDetailUseCase";
+import { GetTopicForEditingUseCase } from "@/application/use-cases/GetTopicForEditingUseCase";
+import { GetTopicPreviewUseCase } from "@/application/use-cases/GetTopicPreviewUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
@@ -22,6 +28,9 @@ import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
 import { UpdateEraFollowUseCase } from "@/application/use-cases/UpdateEraFollowUseCase";
 import { UpdateSavedTopicUseCase } from "@/application/use-cases/UpdateSavedTopicUseCase";
+import { UpdateTopicBasicsUseCase } from "@/application/use-cases/UpdateTopicBasicsUseCase";
+import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTopicIntroductionUseCase";
+import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
 import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
@@ -60,8 +69,12 @@ export const SIGN_UP_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 15 * 60
 // Following and saving share one budget per user: plenty for clicking around, not for a script.
 export const LIBRARY_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000 };
 
+// Every change in the admin panel, per admin: generous for editing by hand, a brake on a stolen session.
+export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 };
+
 interface Repositories {
   topics: TopicRepository;
+  topicEditor: TopicEditorRepository;
   events: HistoricalEventRepository;
   quizzes: QuizRepository;
   comments: CommentRepository;
@@ -72,9 +85,13 @@ interface Repositories {
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
 // tests use the in-memory repositories. Use cases and pages never know which one they get.
+// One topic store behind both topic ports, so what the editor saves is what the public side reads.
 function inMemoryRepositories(seed: Seed): Repositories {
+  const topics = new InMemoryTopicRepository(seed.topics);
+
   return {
-    topics: new InMemoryTopicRepository(seed.topics),
+    topics,
+    topicEditor: topics,
     events: new InMemoryHistoricalEventRepository(seed.events),
     quizzes: new InMemoryQuizRepository(seed.quizzes),
     comments: new InMemoryCommentRepository(seed.comments),
@@ -85,8 +102,11 @@ function inMemoryRepositories(seed: Seed): Repositories {
 }
 
 function postgresRepositories(db: Database): Repositories {
+  const topics = new PostgresTopicRepository(db);
+
   return {
-    topics: new PostgresTopicRepository(db),
+    topics,
+    topicEditor: topics,
     events: new PostgresHistoricalEventRepository(db),
     quizzes: new PostgresQuizRepository(db),
     comments: new PostgresCommentRepository(db),
@@ -111,6 +131,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       signIn: new InMemoryRateLimiter(SIGN_IN_RATE_LIMIT, clock),
       signUp: new InMemoryRateLimiter(SIGN_UP_RATE_LIMIT, clock),
       library: new InMemoryRateLimiter(LIBRARY_RATE_LIMIT, clock),
+      admin: new InMemoryRateLimiter(ADMIN_RATE_LIMIT, clock),
     },
   };
 }
@@ -120,7 +141,9 @@ type State = ReturnType<typeof createState>;
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
 function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }: State, auth: AuthService) {
-  const { topics, quizzes, comments, library, roles } = repositories;
+  const { topics, topicEditor, quizzes, comments, library, roles } = repositories;
+  const ids = new RandomUuidGenerator();
+  const editor = { topicEditor, auth, roles, rateLimiter: rateLimiters.admin };
 
   return {
     listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
@@ -130,7 +153,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
       comments,
       auth,
       clock,
-      ids: new RandomUuidGenerator(),
+      ids,
       rateLimiter: rateLimiters.comments,
     }),
     answerQuizQuestion: new AnswerQuizQuestionUseCase({ topics, quizzes, rateLimiter: rateLimiters.quizAnswers }),
@@ -143,7 +166,15 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     getLibraryStatus: new GetLibraryStatusUseCase({ library, auth }),
     getMyLibrary: new GetMyLibraryUseCase({ topics, library, auth }),
     getAdminAccess: new GetAdminAccessUseCase({ auth, roles }),
-    listTopicsForAdmin: new ListTopicsForAdminUseCase({ topics, auth, roles }),
+    listTopicsForAdmin: new ListTopicsForAdminUseCase({ topicEditor, auth, roles }),
+    getTopicForEditing: new GetTopicForEditingUseCase({ topicEditor, auth, roles }),
+    getTopicPreview: new GetTopicPreviewUseCase({ ...repositories, auth, roles }),
+    createTopic: new CreateTopicUseCase({ ...editor, ids }),
+    updateTopicBasics: new UpdateTopicBasicsUseCase(editor),
+    updateTopicIntroduction: new UpdateTopicIntroductionUseCase(editor),
+    updateTopicKeyFacts: new UpdateTopicKeyFactsUseCase(editor),
+    changeTopicStatus: new ChangeTopicStatusUseCase(editor),
+    deleteTopic: new DeleteTopicUseCase(editor),
   };
 }
 
@@ -215,6 +246,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&
     rateLimiters.signUp instanceof InMemoryRateLimiter &&
-    rateLimiters.library instanceof InMemoryRateLimiter
+    rateLimiters.library instanceof InMemoryRateLimiter &&
+    rateLimiters.admin instanceof InMemoryRateLimiter
   );
 }

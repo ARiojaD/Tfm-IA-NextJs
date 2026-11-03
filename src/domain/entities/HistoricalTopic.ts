@@ -6,6 +6,7 @@ import { KeyFactSchema } from "../value-objects/KeyFact";
 import { SlugSchema } from "../value-objects/Slug";
 import { TopicCategorySchema } from "../value-objects/TopicCategory";
 import { TopicImageSchema } from "../value-objects/TopicImage";
+import { TopicStatusSchema } from "../value-objects/TopicStatus";
 
 // A historical case (e.g. "Julio César") within an era (civilization) and a category (people,
 // battles…). Events, quiz, comments and recommendations all hang from a topic, so every topic
@@ -19,11 +20,22 @@ export const HistoricalTopicSchema = z
     category: TopicCategorySchema,
     summary: z.string().trim().min(1),
     period: HistoricalPeriodSchema,
-    introduction: z.array(z.string().trim().min(1)).min(1),
-    keyFacts: z.array(KeyFactSchema).min(1),
+    // May be empty while the topic is a draft; required to publish (see below).
+    introduction: z.array(z.string().trim().min(1)),
+    keyFacts: z.array(KeyFactSchema),
     image: TopicImageSchema.optional(),
     // Links in both directions are stored on each topic (a join table in PostgreSQL).
     relatedTopicIds: z.array(EntityIdSchema),
+    status: TopicStatusSchema,
+  })
+  // What a published topic needs so its page is complete. A draft can be saved half-written.
+  .refine(({ status, introduction }) => status === "DRAFT" || introduction.length > 0, {
+    message: "Escribe la introducción antes de publicar",
+    path: ["introduction"],
+  })
+  .refine(({ status, keyFacts }) => status === "DRAFT" || keyFacts.length > 0, {
+    message: "Añade al menos un dato clave antes de publicar",
+    path: ["keyFacts"],
   })
   .refine(({ relatedTopicIds }) => new Set(relatedTopicIds).size === relatedTopicIds.length, {
     message: "Los temas relacionados no pueden repetirse",

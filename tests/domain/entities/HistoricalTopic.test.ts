@@ -18,6 +18,7 @@ const validTopic = {
     { label: "Muerte", value: "44 a.C., Roma" },
   ],
   relatedTopicIds: ["topic-siege-of-alesia"],
+  status: "PUBLISHED",
 };
 
 const image = {
@@ -87,19 +88,36 @@ describe("HistoricalTopicSchema", () => {
     });
   });
 
-  describe("contenido", () => {
-    it("rechaza un tema sin introducción", () => {
-      expect(HistoricalTopicSchema.safeParse({ ...validTopic, introduction: [] }).success).toBe(false);
+  describe("estado: borrador o publicado", () => {
+    it("rechaza un estado desconocido", () => {
+      expect(HistoricalTopicSchema.safeParse({ ...validTopic, status: "ARCHIVED" }).success).toBe(false);
     });
+
+    it("un borrador puede estar a medias: sin introducción ni datos clave", () => {
+      const draft = { ...validTopic, status: "DRAFT", introduction: [], keyFacts: [] };
+
+      expect(HistoricalTopicSchema.safeParse(draft).success).toBe(true);
+    });
+
+    it("un tema publicado necesita introducción, con un mensaje que lo explica", () => {
+      const result = HistoricalTopicSchema.safeParse({ ...validTopic, introduction: [] });
+
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual(["Escribe la introducción antes de publicar"]);
+    });
+
+    it("un tema publicado necesita al menos un dato clave, con un mensaje que lo explica", () => {
+      const result = HistoricalTopicSchema.safeParse({ ...validTopic, keyFacts: [] });
+
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual(["Añade al menos un dato clave antes de publicar"]);
+    });
+  });
+
+  describe("contenido", () => {
 
     it("rechaza párrafos vacíos en la introducción", () => {
       const introduction = ["Primer párrafo.", " "];
 
       expect(HistoricalTopicSchema.safeParse({ ...validTopic, introduction }).success).toBe(false);
-    });
-
-    it("rechaza un tema sin datos clave", () => {
-      expect(HistoricalTopicSchema.safeParse({ ...validTopic, keyFacts: [] }).success).toBe(false);
     });
 
     it("rechaza datos clave mal formados", () => {

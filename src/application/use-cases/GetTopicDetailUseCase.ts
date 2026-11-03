@@ -47,24 +47,32 @@ export class GetTopicDetailUseCase {
     if (!topic) {
       return failure(new TopicNotFoundError(slug));
     }
-
-    const [events, quiz, comments, recommendations, relatedTopics] = await Promise.all([
-      this.repositories.events.listByTopic(topic.id),
-      this.repositories.quizzes.findByTopic(topic.id),
-      this.repositories.comments.listByTopic(topic.id),
-      this.repositories.recommendations.listByTopic(topic.id),
-      this.repositories.topics.findByIds(topic.relatedTopicIds),
-    ]);
-
-    return success({
-      topic,
-      events: events.toSorted(chronologically),
-      quiz: quiz ? toPublicQuiz(quiz) : null,
-      comments: comments.toSorted(newestFirst),
-      recommendations: recommendations.toSorted(byTypeThenYear),
-      relatedTopics: relatedTopics.toSorted(byPeriod),
-    });
+    return success(await loadTopicDetail(topic, this.repositories));
   }
+}
+
+// Shared with the admin preview, so a draft is previewed exactly as its public page will look. Related
+// topics come from the public side: only the published ones are shown.
+export async function loadTopicDetail(
+  topic: HistoricalTopic,
+  repositories: GetTopicDetailDependencies,
+): Promise<TopicDetail> {
+  const [events, quiz, comments, recommendations, relatedTopics] = await Promise.all([
+    repositories.events.listByTopic(topic.id),
+    repositories.quizzes.findByTopic(topic.id),
+    repositories.comments.listByTopic(topic.id),
+    repositories.recommendations.listByTopic(topic.id),
+    repositories.topics.findByIds(topic.relatedTopicIds),
+  ]);
+
+  return {
+    topic,
+    events: events.toSorted(chronologically),
+    quiz: quiz ? toPublicQuiz(quiz) : null,
+    comments: comments.toSorted(newestFirst),
+    recommendations: recommendations.toSorted(byTypeThenYear),
+    relatedTopics: relatedTopics.toSorted(byPeriod),
+  };
 }
 
 function chronologically(a: HistoricalEvent, b: HistoricalEvent): number {

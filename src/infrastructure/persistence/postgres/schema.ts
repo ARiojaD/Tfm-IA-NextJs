@@ -20,6 +20,7 @@ import type { TopicImage } from "../../../domain/value-objects/TopicImage";
 import { HISTORICAL_ERAS } from "../../../domain/value-objects/HistoricalEra";
 import { RECOMMENDATION_TYPES } from "../../../domain/value-objects/RecommendationType";
 import { TOPIC_CATEGORIES } from "../../../domain/value-objects/TopicCategory";
+import { TOPIC_STATUSES } from "../../../domain/value-objects/TopicStatus";
 import { USER_ROLES } from "../../../domain/value-objects/UserRole";
 
 // PostgreSQL tables for the domain entities. The domain (Zod schemas) stays the source of truth: the
@@ -30,6 +31,7 @@ export const historicalEra = pgEnum("historical_era", HISTORICAL_ERAS);
 export const topicCategory = pgEnum("topic_category", TOPIC_CATEGORIES);
 export const recommendationType = pgEnum("recommendation_type", RECOMMENDATION_TYPES);
 export const userRole = pgEnum("user_role", USER_ROLES);
+export const topicStatus = pgEnum("topic_status", TOPIC_STATUSES);
 
 // Historical dates: negative years are BC, year 0 does not exist, the month is optional.
 const validYear = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} <> 0`;
@@ -53,6 +55,8 @@ export const topics = pgTable(
     introduction: text("introduction").array().notNull(),
     keyFacts: jsonb("key_facts").$type<KeyFact[]>().notNull(),
     image: jsonb("image").$type<TopicImage>(),
+    // New topics are drafts unless said otherwise: the safe default is "not public".
+    status: topicStatus("status").notNull().default("DRAFT"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -65,7 +69,15 @@ export const topics = pgTable(
       "topics_period_end_after_start",
       sql`${table.periodEndYear} IS NULL OR ${table.periodEndYear} >= ${table.periodStartYear}`,
     ),
-    check("topics_introduction_not_empty", sql`cardinality(${table.introduction}) > 0`),
+    // Same rule as the domain: a draft can be half-written, a published topic cannot.
+    check(
+      "topics_published_has_introduction",
+      sql`${table.status} = 'DRAFT' OR cardinality(${table.introduction}) > 0`,
+    ),
+    check(
+      "topics_published_has_key_facts",
+      sql`${table.status} = 'DRAFT' OR jsonb_array_length(${table.keyFacts}) > 0`,
+    ),
   ],
 );
 

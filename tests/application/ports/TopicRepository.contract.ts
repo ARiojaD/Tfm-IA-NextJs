@@ -3,7 +3,7 @@ import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import { aTopic } from "../../fixtures/historicalTopics";
 
-// Contract every TopicRepository implementation must pass (in-memory today, PostgreSQL later).
+// Contract every TopicRepository implementation must pass. The public side: only PUBLISHED topics.
 export function describeTopicRepositoryContract(
   name: string,
   createRepository: (topics: HistoricalTopic[]) => TopicRepository | Promise<TopicRepository>,
@@ -69,6 +69,28 @@ export function describeTopicRepositoryContract(
       found!.title = "Modificado";
 
       expect((await repository.findBySlug("julio-cesar"))?.title).toBe("Julio César");
+    });
+
+    describe("los borradores no son públicos", () => {
+      const draft = aTopic({ id: "topic-draft", slug: "borrador", title: "Borrador", status: "DRAFT" });
+
+      it("findBySlug no encuentra un borrador", async () => {
+        const repository = await createRepository([caesar, draft]);
+
+        expect(await repository.findBySlug("borrador")).toBeNull();
+      });
+
+      it("listByEra no incluye los borradores", async () => {
+        const repository = await createRepository([caesar, draft]);
+
+        expect(await repository.listByEra("ROMAN")).toEqual([caesar]);
+      });
+
+      it("findByIds ignora los borradores", async () => {
+        const repository = await createRepository([caesar, draft]);
+
+        expect(await repository.findByIds(["topic-caesar", "topic-draft"])).toEqual([caesar]);
+      });
     });
   });
 }

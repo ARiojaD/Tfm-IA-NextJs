@@ -51,6 +51,7 @@ export function toTopic(row: TopicRow, relatedTopicIds: string[]): HistoricalTop
     keyFacts: row.keyFacts,
     ...(row.image !== null && { image: row.image }),
     relatedTopicIds,
+    status: row.status,
   });
 }
 
@@ -69,6 +70,7 @@ export function toTopicRow(topic: HistoricalTopic): typeof topics.$inferInsert {
     introduction: topic.introduction,
     keyFacts: topic.keyFacts,
     image: topic.image ?? null,
+    status: topic.status,
   };
 }
 
