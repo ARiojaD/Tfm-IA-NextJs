@@ -20,6 +20,7 @@ import type { TopicImage } from "../../../domain/value-objects/TopicImage";
 import { HISTORICAL_ERAS } from "../../../domain/value-objects/HistoricalEra";
 import { RECOMMENDATION_TYPES } from "../../../domain/value-objects/RecommendationType";
 import { TOPIC_CATEGORIES } from "../../../domain/value-objects/TopicCategory";
+import { USER_ROLES } from "../../../domain/value-objects/UserRole";
 
 // PostgreSQL tables for the domain entities. The domain (Zod schemas) stays the source of truth: the
 // enums reuse its constants, and the CHECK constraints repeat its key rules as a second line of defence,
@@ -28,6 +29,7 @@ import { TOPIC_CATEGORIES } from "../../../domain/value-objects/TopicCategory";
 export const historicalEra = pgEnum("historical_era", HISTORICAL_ERAS);
 export const topicCategory = pgEnum("topic_category", TOPIC_CATEGORIES);
 export const recommendationType = pgEnum("recommendation_type", RECOMMENDATION_TYPES);
+export const userRole = pgEnum("user_role", USER_ROLES);
 
 // Historical dates: negative years are BC, year 0 does not exist, the month is optional.
 const validYear = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} <> 0`;
@@ -173,6 +175,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  // Not a Better Auth field: it never sets it, so every new account starts as USER. Only the
+  // admin:grant script changes it.
+  role: userRole("role").notNull().default("USER"),
   ...timestamps,
 });
 

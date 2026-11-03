@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GetCurrentUserUseCase } from "@/application/use-cases/GetCurrentUserUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
+import { InMemoryUserRoleRepository } from "@/infrastructure/persistence/in-memory/InMemoryUserRoleRepository";
 
 const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
 
@@ -10,11 +11,15 @@ describe("GetCurrentUserUseCase", () => {
     const auth = new InMemoryAuthService();
     const registered = await auth.register(livia);
 
-    expect(await new GetCurrentUserUseCase({ auth }).execute()).toEqual(registered.ok && registered.user);
+    expect(await new GetCurrentUserUseCase({ auth, roles: new InMemoryUserRoleRepository() }).execute()).toEqual(
+      registered.ok && { ...registered.user, isAdmin: false },
+    );
   });
 
   it("devuelve null si nadie ha iniciado sesión", async () => {
-    expect(await new GetCurrentUserUseCase({ auth: new InMemoryAuthService() }).execute()).toBeNull();
+    const useCase = new GetCurrentUserUseCase({ auth: new InMemoryAuthService(), roles: new InMemoryUserRoleRepository() });
+
+    expect(await useCase.execute()).toBeNull();
   });
 });
 

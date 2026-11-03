@@ -7,13 +7,16 @@ import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
 import type { RecommendationRepository } from "@/application/ports/RecommendationRepository";
 import type { TopicRepository } from "@/application/ports/TopicRepository";
+import type { UserRoleRepository } from "@/application/ports/UserRoleRepository";
 import { AddCommentUseCase } from "@/application/use-cases/AddCommentUseCase";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
+import { GetAdminAccessUseCase } from "@/application/use-cases/GetAdminAccessUseCase";
 import { GetCurrentUserUseCase } from "@/application/use-cases/GetCurrentUserUseCase";
 import { GetLibraryStatusUseCase } from "@/application/use-cases/GetLibraryStatusUseCase";
 import { GetMyLibraryUseCase } from "@/application/use-cases/GetMyLibraryUseCase";
 import { GetTopicDetailUseCase } from "@/application/use-cases/GetTopicDetailUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
+import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
 import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
@@ -31,6 +34,7 @@ import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memor
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
 import { InMemoryRecommendationRepository } from "@/infrastructure/persistence/in-memory/InMemoryRecommendationRepository";
 import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
+import { InMemoryUserRoleRepository } from "@/infrastructure/persistence/in-memory/InMemoryUserRoleRepository";
 import { SEED, type Seed } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase, type Database } from "@/infrastructure/persistence/postgres/client";
 import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
@@ -39,6 +43,7 @@ import { PostgresLibraryRepository } from "@/infrastructure/persistence/postgres
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
 import { PostgresRecommendationRepository } from "@/infrastructure/persistence/postgres/PostgresRecommendationRepository";
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
+import { PostgresUserRoleRepository } from "@/infrastructure/persistence/postgres/PostgresUserRoleRepository";
 import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 import { RandomUuidGenerator } from "@/infrastructure/system/RandomUuidGenerator";
 import { SystemClock } from "@/infrastructure/system/SystemClock";
@@ -62,6 +67,7 @@ interface Repositories {
   comments: CommentRepository;
   recommendations: RecommendationRepository;
   library: LibraryRepository;
+  roles: UserRoleRepository;
 }
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
@@ -74,6 +80,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     comments: new InMemoryCommentRepository(seed.comments),
     recommendations: new InMemoryRecommendationRepository(seed.recommendations),
     library: new InMemoryLibraryRepository(),
+    roles: new InMemoryUserRoleRepository(),
   };
 }
 
@@ -85,6 +92,7 @@ function postgresRepositories(db: Database): Repositories {
     comments: new PostgresCommentRepository(db),
     recommendations: new PostgresRecommendationRepository(db),
     library: new PostgresLibraryRepository(db),
+    roles: new PostgresUserRoleRepository(db),
   };
 }
 
@@ -112,7 +120,7 @@ type State = ReturnType<typeof createState>;
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
 function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }: State, auth: AuthService) {
-  const { topics, quizzes, comments, library } = repositories;
+  const { topics, quizzes, comments, library, roles } = repositories;
 
   return {
     listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
@@ -129,11 +137,13 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     registerUser: new RegisterUserUseCase({ auth, rateLimiter: rateLimiters.signUp, breachedPasswords }),
     signIn: new SignInUseCase({ auth, rateLimiter: rateLimiters.signIn }),
     signOut: new SignOutUseCase({ auth }),
-    getCurrentUser: new GetCurrentUserUseCase({ auth }),
+    getCurrentUser: new GetCurrentUserUseCase({ auth, roles }),
     updateEraFollow: new UpdateEraFollowUseCase({ library, auth, rateLimiter: rateLimiters.library }),
     updateSavedTopic: new UpdateSavedTopicUseCase({ topics, library, auth, clock, rateLimiter: rateLimiters.library }),
     getLibraryStatus: new GetLibraryStatusUseCase({ library, auth }),
     getMyLibrary: new GetMyLibraryUseCase({ topics, library, auth }),
+    getAdminAccess: new GetAdminAccessUseCase({ auth, roles }),
+    listTopicsForAdmin: new ListTopicsForAdminUseCase({ topics, auth, roles }),
   };
 }
 
@@ -200,6 +210,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.comments instanceof PostgresCommentRepository &&
     repositories.recommendations instanceof PostgresRecommendationRepository &&
     repositories.library instanceof PostgresLibraryRepository &&
+    repositories.roles instanceof PostgresUserRoleRepository &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&

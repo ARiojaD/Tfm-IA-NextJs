@@ -4,6 +4,7 @@ import { createDatabase } from "@/infrastructure/persistence/postgres/client";
 import { insertSeed } from "@/infrastructure/persistence/postgres/insertSeed";
 import { users } from "@/infrastructure/persistence/postgres/schema";
 import { LIBRARY_CONTRACT_TOPICS, LIBRARY_CONTRACT_USERS } from "../../../application/ports/LibraryRepository.contract";
+import { ROLE_CONTRACT_USERS } from "../../../application/ports/UserRoleRepository.contract";
 import { aTopic } from "../../../fixtures/historicalTopics";
 import { truncateAllTables } from "./prepareTestDatabase";
 import { testDatabaseUrl } from "./testDatabaseUrl";
@@ -18,7 +19,7 @@ export const testDb = connection.db;
 const CONTRACT_TOPIC_IDS = [...new Set(["topic-1", "topic-caesar", "topic-pericles", "topic-persian-wars", ...LIBRARY_CONTRACT_TOPICS])];
 
 // Users the contract tests attach comments and libraries to (user_id is a foreign key to users).
-const CONTRACT_USER_IDS = [...new Set(["user-1", ...LIBRARY_CONTRACT_USERS])];
+const CONTRACT_USER_IDS = [...new Set(["user-1", ...LIBRARY_CONTRACT_USERS, ...ROLE_CONTRACT_USERS])];
 
 // Empties every table and loads the given data. Without topics, the placeholder topics are created.
 export async function resetDatabase(seed: Partial<Seed> = {}) {

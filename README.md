@@ -65,8 +65,8 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
 
 - **Cuentas de usuario:** registro e inicio de sesión con email y contraseña (`/registro`, `/iniciar-sesion`). En público solo se muestra el nombre visible, nunca el email. Comentar requiere sesión: el comentario se firma con el nombre de la cuenta.
 - **Mi biblioteca** (`/mi-biblioteca`): cada usuario puede **seguir civilizaciones** (le aparecen todos sus temas, también los que se añadan después) y **guardar temas** sueltos con ☆ Guardar. Sin sesión, los botones se ven igual y llevan a iniciar sesión. Cada usuario solo ve y cambia su propia biblioteca.
-- **Contenido propio** (en desarrollo): cada usuario accederá únicamente a sus propios eventos, fuentes y notas.
-- **Panel privado** para gestionar la biblioteca personal.
+- **Panel de administración** (`/admin`, en desarrollo): los administradores gestionarán los temas (crear, editar, publicar), su cronología, quiz y recomendaciones, y revisarán las propuestas de los usuarios. Sin sesión lleva a iniciar sesión; a una cuenta normal le responde 404.
+- **Propuestas** (próximamente): desde Mi biblioteca, los usuarios podrán proponer eventos, recomendaciones, correcciones o temas nuevos, que un administrador revisa antes de publicarlos.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
 - **Modo claro y oscuro:** sigue la preferencia del sistema y recuerda la elección del usuario.
 - **Diseño adaptado a móvil** e interfaz en español.
@@ -244,7 +244,8 @@ La aplicación lee y guarda los datos en PostgreSQL, así que Docker Desktop tie
 | `npm run db:up` / `db:down` | Levanta o para PostgreSQL en Docker (los datos se conservan en un volumen) |
 | `npm run db:generate` | Genera una migración SQL a partir de los cambios del esquema |
 | `npm run db:migrate` | Aplica las migraciones pendientes |
-| `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos) |
+| `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos ni pisa lo editado desde el panel) |
+| `npm run admin:grant -- email` | Nombra administrador a una cuenta ya registrada (`admin:revoke` lo quita). Es la única forma de dar el rol: desde la web no se puede |
 | `npm run auth:secret` | Genera un secreto aleatorio para `BETTER_AUTH_SECRET` |
 | `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100), contra la base de datos de test. Requiere `npm run db:up`. La primera vez, instalar el navegador con `npx playwright install chromium` |
 
@@ -289,7 +290,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión y Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión, Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) y acceso al panel de administración (admin, cuenta normal y sin sesión) |
 
 > _Por completar con el resumen final de tests y cobertura._
 
@@ -300,7 +301,7 @@ npm run test
 El desarrollo sigue tres guías OWASP:
 
 - **OWASP Top 10 (web):**
-  - control de acceso por usuario en cada endpoint (A01);
+  - control de acceso por usuario en cada endpoint (A01), y rol de administrador comprobado en el servidor, en cada caso de uso del panel, leído de la base de datos en cada petición;
   - consultas parametrizadas mediante ORM (A03);
   - variables de entorno validadas con Zod (A05).
 - **OWASP API Security Top 10:**

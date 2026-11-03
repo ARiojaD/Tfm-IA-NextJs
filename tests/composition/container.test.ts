@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AdminRequiredError } from "@/application/errors/AdminRequiredError";
 import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
 import { createContainer, LIBRARY_RATE_LIMIT, SIGN_IN_RATE_LIMIT } from "@/composition/container";
@@ -87,7 +88,7 @@ describe("createContainer (en memoria)", () => {
     const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
 
     const registered = await container.registerUser.execute(livia, VISITOR);
-    expect(await container.getCurrentUser.execute()).toEqual(registered.success && registered.data);
+    expect(await container.getCurrentUser.execute()).toEqual(registered.success && { ...registered.data, isAdmin: false });
 
     await container.signOut.execute();
     expect(await container.getCurrentUser.execute()).toBeNull();
@@ -134,6 +135,16 @@ describe("createContainer (en memoria)", () => {
 
     expect(LIBRARY_RATE_LIMIT.limit).toBe(30);
     expect(!next.success && next.error).toBeInstanceOf(RateLimitExceededError);
+  });
+
+  it("una cuenta recién creada no es administradora y no puede entrar en el panel", async () => {
+    const container = await containerWithLivia();
+
+    const access = await container.getAdminAccess.execute();
+    const topics = await container.listTopicsForAdmin.execute();
+
+    expect(!access.success && access.error).toBeInstanceOf(AdminRequiredError);
+    expect(!topics.success && topics.error).toBeInstanceOf(AdminRequiredError);
   });
 
   it("conecta ListTopicsByEra: el asedio de Alesia aparece en las guerras y batallas de Roma", async () => {

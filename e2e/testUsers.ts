@@ -15,5 +15,13 @@ export const READER = {
   password: "frase larga del lector para los tests",
 };
 
-// Where Playwright keeps the author's session cookies between the setup and the tests (git-ignored).
+// Made an administrator by globalSetup; signs in once (auth.setup.ts) for the admin panel tests.
+export const ADMIN = {
+  name: "Admin E2E",
+  email: "admin.e2e@example.com",
+  password: "frase larga de la administradora para los tests",
+};
+
+// Where Playwright keeps each session's cookies between the setup and the tests (git-ignored).
 export const AUTHOR_STORAGE_STATE = "e2e/.auth/autora.json";
+export const ADMIN_STORAGE_STATE = "e2e/.auth/admin.json";

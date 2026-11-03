@@ -34,6 +34,12 @@ export async function SiteHeader() {
             <Link href="/mi-biblioteca" className="font-medium hover:text-accent">
               Mi biblioteca
             </Link>
+            {/* Only a shortcut: the panel's use cases check the role on their own. */}
+            {user.isAdmin && (
+              <Link href="/admin" className="font-medium hover:text-accent">
+                Panel
+              </Link>
+            )}
             <form action={signOut}>
               <button
                 type="submit"

@@ -22,6 +22,13 @@
       "when": 1793358183151,
       "tag": "0002_library_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793709361513,
+      "tag": "0003_user_roles",
+      "breakpoints": true
     }
   ]
 }
