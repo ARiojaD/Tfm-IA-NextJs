@@ -1,8 +1,8 @@
 # MemnonHistory AI
 
-**Gestor inteligente de conocimiento histórico con RAG.**
+**Enciclopedia histórica ordenada, con contribuciones verificadas y RAG.**
 
-Plataforma web *fullstack* para organizar lecturas, eventos y cronologías históricas (Grecia, Roma, Hispania…) y consultar las notas personales y fuentes secundarias mediante un sistema RAG (*Retrieval-Augmented Generation*) que responde citando el origen de cada dato.
+Plataforma web *fullstack* que ordena el conocimiento histórico (Grecia, Roma, Hispania…) por civilizaciones, categorías y temas, con cronologías, quiz y recomendaciones. Los usuarios proponen mejoras que un administrador verifica antes de publicarlas, y un sistema RAG (*Retrieval-Augmented Generation*) responderá preguntas sobre el contenido citando dónde se habla de cada dato.
 
 > Trabajo Fin de Máster · Máster en Desarrollo con IA · BigSchool
 > Autor: Alejandro ([@ARiojaD](https://github.com/ARiojaD))
@@ -26,12 +26,13 @@ Plataforma web *fullstack* para organizar lecturas, eventos y cronologías hist�
 
 ## 1. Descripción del proyecto
 
-Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libros, documentos y notas sueltas. **MemnonHistory AI** reúne todo ese conocimiento en un solo lugar:
+Quien estudia historia acumula lecturas, fechas y personajes repartidos entre muchos libros, y le cuesta ordenarlo y recordarlo. **MemnonHistory AI** lo reúne en una enciclopedia ordenada:
 
-- **Organiza** eventos históricos con fecha, época y descripción, y los muestra en líneas del tiempo.
-- **Relaciona** cada evento con las fuentes y notas personales de las que procede.
-- **Responde preguntas** en lenguaje natural usando solo la biblioteca del usuario, con citas a las fuentes, gracias a un pipeline RAG sobre PostgreSQL + pgvector y la API de Anthropic Claude.
-- **Estructura automáticamente** fragmentos de lectura en fichas de eventos mediante *Structured Outputs* validados con Zod.
+- **Ordena** el conocimiento por civilización → categoría → tema, y cada tema con su introducción, datos clave, cronología, quiz, recomendaciones y temas relacionados.
+- **Personaliza** el estudio con *Mi biblioteca*: seguir civilizaciones y guardar temas.
+- **Crece con verificación:** los usuarios proponen eventos, recomendaciones, correcciones o temas nuevos (siempre con su fuente) y un administrador los revisa en su panel antes de publicarlos; el panel también permite crear y editar temas sin tocar el código.
+- **Responderá preguntas** (fase 5) en lenguaje natural sobre el contenido de la web, citando y enlazando dónde se habla de ello, gracias a un pipeline RAG sobre PostgreSQL + pgvector y la API de Anthropic Claude.
+- **Ayudará a redactar con IA** (fase 5): propuestas de cronología, quiz y fichas mediante *Structured Outputs* validados con Zod, siempre revisadas por una persona.
 
 **Origen del nombre.** Memnón de Etiopía, héroe de la Guerra de Troya e hijo de Eos (la Aurora), simboliza el amanecer del conocimiento histórico y la épica clásica. La identidad visual de la aplicación parte de esa idea: paleta de amanecer y tipografía clásica.
 
@@ -75,9 +76,9 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
     - El admin elige una imagen del catálogo (generales por civilización o específicas) o ninguna. Sin imagen, la página no muestra nada en su lugar.
     - **No se suben archivos desde la web:** las imágenes se añaden al catálogo desde el código, con su licencia revisada.
     - El panel avisa al publicar sin imagen y marca los temas que no la tienen, solo para los administradores.
-  - **Próximamente:** la revisión de las propuestas de los usuarios.
+  - **Propuestas:** bandeja `/admin/propuestas` con las pendientes; aprobar aplica la propuesta (el evento o la recomendación se añaden al tema, un tema nuevo se crea como borrador, una corrección se marca como resuelta) y rechazar exige un motivo.
   - **Acceso:** sin sesión lleva a iniciar sesión; a una cuenta normal le responde 404.
-- **Propuestas** (próximamente): desde Mi biblioteca, los usuarios podrán proponer eventos, recomendaciones, correcciones o temas nuevos, que un administrador revisa antes de publicarlos.
+- **Propuestas** (`/mi-biblioteca/propuestas`, y "Proponer una mejora" en cada tema): los usuarios proponen eventos, recomendaciones, correcciones o temas nuevos, solo texto y siempre con su fuente. Ven el estado de cada una (pendiente, aprobada o rechazada con su motivo). Como mucho 10 propuestas por hora.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
 - **Modo claro y oscuro:** sigue la preferencia del sistema y recuerda la elección del usuario.
 - **Diseño adaptado a móvil** e interfaz en español.
@@ -301,7 +302,7 @@ npm run test
 | --- | --- | --- |
 | Unitarios | `tests/domain/`, `tests/application/` y `tests/lib/` | Vitest con repositorios en memoria, mocks y stubs; objetivo de cobertura del 100 % en dominio y casos de uso |
 | Integración | `tests/**/*.integration.test.ts` y endpoints de `app/api/` | Vitest contra PostgreSQL real: los repositorios PostgreSQL pasan **los mismos tests de contrato** que los de memoria, y el seed completo se escribe y se lee sin perder datos |
-| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y dos cuentas de prueba en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión, Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) y panel de administración (acceso de admin, cuenta normal y sin sesión; un tema de principio a fin: crear, completar con cronología y quiz, publicar y jugar su quiz en la web, despublicar y borrar) |
+| End-to-end | `e2e/` | Playwright sobre una compilación de producción conectada a la base de datos de test (reiniciada con el seed y tres cuentas de prueba, una administradora, en cada ejecución): navegación hasta un tema, 404, quiz corregido en el servidor (sin soluciones en el HTML), registro, inicio y cierre de sesión, redirección abierta bloqueada, comentarios con y sin sesión, Mi biblioteca (seguir, guardar y quitar; sin sesión, a iniciar sesión) y panel de administración (acceso de admin, cuenta normal y sin sesión; un tema de principio a fin: crear, completar con cronología y quiz, publicar y jugar su quiz en la web, elegir su imagen, despublicar y borrar) y propuestas (proponer, aprobar o rechazar con motivo, con la cuenta de la autora y la de la administradora a la vez) |
 
 > _Por completar con el resumen final de tests y cobertura._
 
@@ -318,7 +319,7 @@ El desarrollo sigue tres guías OWASP:
 - **OWASP API Security Top 10:**
   - comprobación de propiedad de cada recurso (BOLA, API1);
   - validación estricta del cuerpo de las peticiones contra *Mass Assignment* (API3);
-  - *rate limiting* en comentarios, respuestas del quiz, registro, inicio de sesión y Mi biblioteca (API4).
+  - *rate limiting* en comentarios, respuestas del quiz, registro, inicio de sesión, Mi biblioteca, panel y propuestas (API4).
 - **OWASP Top 10 for LLM Applications:**
   - separación entre instrucciones del sistema y contenido del usuario contra la inyección de prompts (LLM01);
   - salidas del modelo estructuradas y validadas con Zod (LLM02);

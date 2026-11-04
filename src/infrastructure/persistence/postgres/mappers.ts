@@ -1,6 +1,7 @@
 import { type Comment, CommentSchema } from "@/domain/entities/Comment";
 import { type HistoricalEvent, HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 import { type HistoricalTopic, HistoricalTopicSchema } from "@/domain/entities/HistoricalTopic";
+import { type Proposal, ProposalSchema } from "@/domain/entities/Proposal";
 import { type Quiz, QuizSchema } from "@/domain/entities/Quiz";
 import { type Recommendation, RecommendationSchema } from "@/domain/entities/Recommendation";
 import { type EntityId, EntityIdSchema } from "@/domain/value-objects/EntityId";
@@ -10,6 +11,7 @@ import type {
   comments,
   eraFollows,
   historicalEvents,
+  proposals,
   quizQuestions,
   quizzes,
   recommendations,
@@ -158,4 +160,56 @@ export function toRecommendation(row: RecommendationRow): Recommendation {
 
 export function toRecommendationRow(recommendation: Recommendation): typeof recommendations.$inferInsert {
   return { ...recommendation };
+}
+
+type ProposalRow = typeof proposals.$inferSelect;
+
+// What each kind proposes, kept in `payload`; the common fields are columns.
+function proposalPayload(proposal: Proposal): Record<string, unknown> {
+  switch (proposal.kind) {
+    case "EVENT":
+      return { event: proposal.event };
+    case "RECOMMENDATION":
+      return { recommendation: proposal.recommendation };
+    case "CORRECTION":
+      return { message: proposal.message };
+    case "NEW_TOPIC":
+      return { newTopic: proposal.newTopic };
+  }
+}
+
+export function toProposal(row: ProposalRow): Proposal {
+  return ProposalSchema.parse({
+    id: row.id,
+    userId: row.userId,
+    authorName: row.authorName,
+    kind: row.kind,
+    ...(row.topicId !== null && { topicId: row.topicId }),
+    ...(row.topicTitle !== null && { topicTitle: row.topicTitle }),
+    ...row.payload,
+    source: row.source,
+    status: row.status,
+    ...(row.reviewNote !== null && { reviewNote: row.reviewNote }),
+    createdAt: row.createdAt,
+    ...(row.reviewedAt !== null && { reviewedAt: row.reviewedAt }),
+    ...(row.reviewedBy !== null && { reviewedBy: row.reviewedBy }),
+  });
+}
+
+export function toProposalRow(proposal: Proposal): typeof proposals.$inferInsert {
+  return {
+    id: proposal.id,
+    userId: proposal.userId,
+    authorName: proposal.authorName,
+    kind: proposal.kind,
+    topicId: proposal.kind === "NEW_TOPIC" ? null : proposal.topicId,
+    topicTitle: proposal.kind === "NEW_TOPIC" ? null : proposal.topicTitle,
+    payload: proposalPayload(proposal),
+    source: proposal.source,
+    status: proposal.status,
+    reviewNote: proposal.reviewNote ?? null,
+    createdAt: proposal.createdAt,
+    reviewedAt: proposal.reviewedAt ?? null,
+    reviewedBy: proposal.reviewedBy ?? null,
+  };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { TOPIC_SUMMARY_MAX_LENGTH, TOPIC_TITLE_MAX_LENGTH } from "@/application/dto/TopicEditorInputs";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
@@ -10,6 +10,7 @@ import { MONTHS } from "@/lib/formatHistoricalDate";
 import { AuthField } from "../auth/AuthField";
 import { SaveBar, SelectField, TextAreaField } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
+import { useFormAction } from "./useFormAction";
 
 // The form values: what the inputs hold, all strings (years without sign, plus a.C./d.C.).
 export interface TopicBasicsValues {
@@ -41,7 +42,7 @@ export function TopicBasicsForm({
   submitLabel: string;
 }) {
   const [values, setValues] = useState(initialValues);
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors ?? {};
   const field = (name: keyof TopicBasicsValues) => ({
     name,
@@ -50,7 +51,7 @@ export function TopicBasicsForm({
   });
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {topicId && <input type="hidden" name="topicId" value={topicId} />}
 
       <AuthField id="topic-title" label="Título" maxLength={TOPIC_TITLE_MAX_LENGTH} errors={errors.title} {...field("title")} />

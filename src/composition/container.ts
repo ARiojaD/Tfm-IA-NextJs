@@ -4,6 +4,7 @@ import type { CommentRepository } from "@/application/ports/CommentRepository";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
+import type { ProposalRepository } from "@/application/ports/ProposalRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
 import type { RecommendationRepository } from "@/application/ports/RecommendationRepository";
@@ -22,11 +23,15 @@ import { GetMyLibraryUseCase } from "@/application/use-cases/GetMyLibraryUseCase
 import { GetTopicDetailUseCase } from "@/application/use-cases/GetTopicDetailUseCase";
 import { GetTopicForEditingUseCase } from "@/application/use-cases/GetTopicForEditingUseCase";
 import { GetTopicPreviewUseCase } from "@/application/use-cases/GetTopicPreviewUseCase";
+import { ListMyProposalsUseCase } from "@/application/use-cases/ListMyProposalsUseCase";
+import { ListPendingProposalsUseCase } from "@/application/use-cases/ListPendingProposalsUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
+import { ReviewProposalUseCase } from "@/application/use-cases/ReviewProposalUseCase";
 import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
 import { SignOutUseCase } from "@/application/use-cases/SignOutUseCase";
+import { SubmitProposalUseCase } from "@/application/use-cases/SubmitProposalUseCase";
 import { UpdateEraFollowUseCase } from "@/application/use-cases/UpdateEraFollowUseCase";
 import { UpdateSavedTopicUseCase } from "@/application/use-cases/UpdateSavedTopicUseCase";
 import { UpdateRelatedTopicsUseCase } from "@/application/use-cases/UpdateRelatedTopicsUseCase";
@@ -48,6 +53,7 @@ import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memory/InMemoryLibraryRepository";
+import { InMemoryProposalRepository } from "@/infrastructure/persistence/in-memory/InMemoryProposalRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
 import { InMemoryRecommendationRepository } from "@/infrastructure/persistence/in-memory/InMemoryRecommendationRepository";
 import { InMemoryTopicRepository } from "@/infrastructure/persistence/in-memory/InMemoryTopicRepository";
@@ -57,6 +63,7 @@ import { createDatabase, type Database } from "@/infrastructure/persistence/post
 import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
 import { PostgresHistoricalEventRepository } from "@/infrastructure/persistence/postgres/PostgresHistoricalEventRepository";
 import { PostgresLibraryRepository } from "@/infrastructure/persistence/postgres/PostgresLibraryRepository";
+import { PostgresProposalRepository } from "@/infrastructure/persistence/postgres/PostgresProposalRepository";
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
 import { PostgresRecommendationRepository } from "@/infrastructure/persistence/postgres/PostgresRecommendationRepository";
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
@@ -78,6 +85,8 @@ export const SIGN_UP_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 15 * 60
 export const LIBRARY_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000 };
 
 // Every change in the admin panel, per admin: generous for editing by hand, a brake on a stolen session.
+// Proposals per user: enough to contribute, not to flood the admins' inbox.
+export const PROPOSAL_RATE_LIMIT: RateLimitPolicy = { limit: 10, windowMs: 60 * 60_000 };
 export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 };
 
 interface Repositories {
@@ -91,6 +100,7 @@ interface Repositories {
   roles: UserRoleRepository;
   // Not a database table: the images are files of the project (see infrastructure/images/imageCatalog.ts).
   images: ImageCatalog;
+  proposals: ProposalRepository;
 }
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
@@ -109,6 +119,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     library: new InMemoryLibraryRepository(),
     roles: new InMemoryUserRoleRepository(),
     images: new StaticImageCatalog(IMAGE_CATALOG),
+    proposals: new InMemoryProposalRepository(),
   };
 }
 
@@ -125,6 +136,7 @@ function postgresRepositories(db: Database): Repositories {
     library: new PostgresLibraryRepository(db),
     roles: new PostgresUserRoleRepository(db),
     images: new StaticImageCatalog(IMAGE_CATALOG),
+    proposals: new PostgresProposalRepository(db),
   };
 }
 
@@ -144,6 +156,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       signUp: new InMemoryRateLimiter(SIGN_UP_RATE_LIMIT, clock),
       library: new InMemoryRateLimiter(LIBRARY_RATE_LIMIT, clock),
       admin: new InMemoryRateLimiter(ADMIN_RATE_LIMIT, clock),
+      proposals: new InMemoryRateLimiter(PROPOSAL_RATE_LIMIT, clock),
     },
   };
 }
@@ -192,6 +205,17 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     updateTopicRecommendations: new UpdateTopicRecommendationsUseCase({ ...editor, recommendations: repositories.recommendations, ids }),
     updateRelatedTopics: new UpdateRelatedTopicsUseCase(editor),
     updateTopicImage: new UpdateTopicImageUseCase({ ...editor, images: repositories.images }),
+    submitProposal: new SubmitProposalUseCase({
+      auth,
+      topics,
+      proposals: repositories.proposals,
+      ids,
+      clock,
+      rateLimiter: rateLimiters.proposals,
+    }),
+    listMyProposals: new ListMyProposalsUseCase({ auth, proposals: repositories.proposals }),
+    listPendingProposals: new ListPendingProposalsUseCase({ auth, roles, proposals: repositories.proposals }),
+    reviewProposal: new ReviewProposalUseCase({ ...editor, ...repositories, ids, clock }),
   };
 }
 
@@ -260,11 +284,13 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.library instanceof PostgresLibraryRepository &&
     repositories.roles instanceof PostgresUserRoleRepository &&
     repositories.images instanceof StaticImageCatalog &&
+    repositories.proposals instanceof PostgresProposalRepository &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&
     rateLimiters.signUp instanceof InMemoryRateLimiter &&
     rateLimiters.library instanceof InMemoryRateLimiter &&
-    rateLimiters.admin instanceof InMemoryRateLimiter
+    rateLimiters.admin instanceof InMemoryRateLimiter &&
+    rateLimiters.proposals instanceof InMemoryRateLimiter
   );
 }

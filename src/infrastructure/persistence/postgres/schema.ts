@@ -15,6 +15,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 // Relative imports: drizzle-kit loads this file on its own and does not know the "@/" alias.
+import { PROPOSAL_KINDS, PROPOSAL_STATUSES } from "../../../domain/entities/Proposal";
 import type { KeyFact } from "../../../domain/value-objects/KeyFact";
 import type { TopicImage } from "../../../domain/value-objects/TopicImage";
 import { HISTORICAL_ERAS } from "../../../domain/value-objects/HistoricalEra";
@@ -32,6 +33,8 @@ export const topicCategory = pgEnum("topic_category", TOPIC_CATEGORIES);
 export const recommendationType = pgEnum("recommendation_type", RECOMMENDATION_TYPES);
 export const userRole = pgEnum("user_role", USER_ROLES);
 export const topicStatus = pgEnum("topic_status", TOPIC_STATUSES);
+export const proposalKind = pgEnum("proposal_kind", PROPOSAL_KINDS);
+export const proposalStatus = pgEnum("proposal_status", PROPOSAL_STATUSES);
 
 // Historical dates: negative years are BC, year 0 does not exist, the month is optional.
 const validYear = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} <> 0`;
@@ -244,6 +247,38 @@ export const verifications = pgTable(
     ...timestamps,
   },
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
+);
+
+// --- Proposals (users' contributions, reviewed by an admin) ---
+// The common fields are columns (to list and filter); what each kind proposes (an event, a
+// recommendation, a correction, a new topic) goes in `payload`, parsed with the domain schema on read.
+export const proposals = pgTable(
+  "proposals",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    authorName: text("author_name").notNull(),
+    kind: proposalKind("kind").notNull(),
+    // Empty for a new topic. Deleting the topic deletes the proposals about it.
+    topicId: text("topic_id").references(() => topics.id, { onDelete: "cascade" }),
+    topicTitle: text("topic_title"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    source: text("source").notNull(),
+    status: proposalStatus("status").notNull().default("PENDING"),
+    reviewNote: text("review_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: text("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (table) => [
+    index("proposals_user_created_idx").on(table.userId, table.createdAt.desc()),
+    index("proposals_status_created_idx").on(table.status, table.createdAt),
+    // Same rules as the domain: a proposal about a topic names it; a rejection says why.
+    check("proposals_topic_matches_kind", sql`(${table.kind} = 'NEW_TOPIC') = (${table.topicId} IS NULL)`),
+    check("proposals_rejection_has_note", sql`${table.status} <> 'REJECTED' OR ${table.reviewNote} IS NOT NULL`),
+  ],
 );
 
 // --- Mi biblioteca ---

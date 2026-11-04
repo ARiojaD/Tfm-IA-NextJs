@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { KEY_FACTS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { KeyFact } from "@/domain/value-objects/KeyFact";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
+import { useFormAction } from "./useFormAction";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent";
@@ -25,14 +26,14 @@ export function KeyFactsForm({
   const [rows, setRows] = useState(() =>
     (keyFacts.length > 0 ? keyFacts : [{ label: "", value: "" }]).map((fact, index) => ({ ...fact, key: `row-${index}` })),
   );
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.keyFacts;
 
   const update = (key: string, change: Partial<KeyFact>) =>
     setRows(rows.map((row) => (row.key === key ? { ...row, ...change } : row)));
 
   return (
-    <form action={formAction} className="space-y-4" noValidate aria-describedby={errors ? "key-facts-errors" : undefined}>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate aria-describedby={errors ? "key-facts-errors" : undefined}>
       <input type="hidden" name="topicId" value={topicId} />
 
       <ul className="space-y-3">

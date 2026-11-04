@@ -36,6 +36,13 @@
       "when": 1793710367404,
       "tag": "0004_topic_status",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793788824262,
+      "tag": "0005_proposals",
+      "breakpoints": true
     }
   ]
 }

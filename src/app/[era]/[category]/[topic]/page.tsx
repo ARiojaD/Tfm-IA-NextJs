@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { SaveTopicButton } from "@/components/library/SaveTopicButton";
@@ -59,7 +60,15 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
       <SiteHeader />
       <TopicView
         detail={detail}
-        actions={<SaveTopicButton topic={topic} status={libraryStatus} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <SaveTopicButton topic={topic} status={libraryStatus} />
+            {/* Without a session, the proposals page asks to sign in and comes back with the topic chosen. */}
+            <Link href={`/mi-biblioteca/propuestas?tema=${topic.slug}`} className="text-sm font-medium text-accent hover:underline">
+              Proponer una mejora
+            </Link>
+          </div>
+        }
         quiz={
           quiz ? (
             <QuizGame quiz={quiz} topicSlug={topic.slug} answerQuestion={answerQuizQuestion} />

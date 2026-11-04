@@ -42,6 +42,9 @@ export default async function MyLibraryPage() {
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
               Las civilizaciones que sigues, con todos sus temas, y los temas que has guardado.
             </p>
+            <Link href="/mi-biblioteca/propuestas" className="mt-4 inline-block text-sm font-medium text-accent hover:underline">
+              Mis propuestas: ayuda a completar la enciclopedia →
+            </Link>
           </div>
         </section>
 

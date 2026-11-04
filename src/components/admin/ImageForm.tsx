@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import type { CatalogImage } from "@/domain/entities/CatalogImage";
 import type { TopicImage } from "@/domain/value-objects/TopicImage";
 import { AuthField } from "../auth/AuthField";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
+import { useFormAction } from "./useFormAction";
 
 const OPTION_CLASS =
   "flex cursor-pointer flex-col gap-2 rounded-2xl border border-border p-2 text-xs transition-colors has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent";
@@ -29,7 +30,7 @@ export function ImageForm({
   const [imageId, setImageId] = useState(selectedImageId ?? "");
   const [alt, setAlt] = useState(currentImage?.alt ?? "");
   const [caption, setCaption] = useState(currentImage?.caption ?? "");
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors ?? {};
 
   const choose = (image: CatalogImage | null) => {
@@ -39,7 +40,7 @@ export function ImageForm({
   };
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       <input type="hidden" name="topicId" value={topicId} />
 
       <fieldset>

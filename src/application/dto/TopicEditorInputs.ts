@@ -9,7 +9,8 @@ import { TopicStatusSchema } from "@/domain/value-objects/TopicStatus";
 
 // What the admin editor's forms send. Every value of a form is a string, so years and months arrive as
 // text and are turned into numbers here; dates BC become negative years, as the domain expects. All the
-// schemas are strict: id, slug and status are never taken from a form that edits the content.
+// schemas are strict: id, slug and status are never taken from a form that edits the content. The field
+// schemas are exported for the other forms that ask for the same data (the users' proposals).
 
 export const TOPIC_TITLE_MAX_LENGTH = 120;
 export const TOPIC_SUMMARY_MAX_LENGTH = 300;
@@ -18,7 +19,7 @@ export const KEY_FACTS_MAX = 20;
 
 const topicId = EntityIdSchema;
 
-const year = (missing: string) =>
+export const year = (missing: string) =>
   z
     .string({ error: missing })
     .trim()
@@ -34,15 +35,15 @@ const optionalYear = z
   .transform((value) => (value === "" ? undefined : Number(value)))
   .refine((value) => value !== 0, { error: "El año 0 no existe: al 1 a.C. le sigue el 1 d.C." });
 
-const optionalMonth = z
+export const optionalMonth = z
   .string({ error: "Mes no válido" })
   .trim()
   .refine((value) => value === "" || /^(?:[1-9]|1[0-2])$/.test(value), { error: "Elige un mes del 1 al 12" })
   .transform((value) => (value === "" ? undefined : Number(value)));
 
-const calendarEra = z.enum(["BC", "AD"], { error: "Elige a.C. o d.C." });
+export const calendarEra = z.enum(["BC", "AD"], { error: "Elige a.C. o d.C." });
 
-const basicsShape = {
+export const basicsShape = {
   title: z
     .string({ error: "Escribe el título" })
     .trim()
@@ -63,9 +64,9 @@ const basicsShape = {
   endMonth: optionalMonth,
 };
 
-type BasicsFields = z.output<z.ZodObject<typeof basicsShape>>;
+export type BasicsFields = z.output<z.ZodObject<typeof basicsShape>>;
 
-function toDate(yearNumber: number, era: "BC" | "AD", month: number | undefined): HistoricalDate {
+export function toDate(yearNumber: number, era: "BC" | "AD", month: number | undefined): HistoricalDate {
   return { year: era === "BC" ? -yearNumber : yearNumber, ...(month !== undefined && { month }) };
 }
 
@@ -76,14 +77,14 @@ function toPeriod(fields: BasicsFields): HistoricalPeriod {
     : { start, end: toDate(fields.endYear, fields.endEra, fields.endMonth) };
 }
 
-function checkPeriodOrder(fields: BasicsFields, context: z.RefinementCtx) {
+export function checkPeriodOrder(fields: BasicsFields, context: z.RefinementCtx) {
   const { start, end } = toPeriod(fields);
   if (end && compareHistoricalDates(start, end) > 0) {
     context.addIssue({ code: "custom", path: ["endYear"], message: "El fin no puede ser anterior al inicio" });
   }
 }
 
-function toBasics({ title, era, category, summary, ...dates }: BasicsFields) {
+export function toBasics({ title, era, category, summary, ...dates }: BasicsFields) {
   return { title, era, category, summary, period: toPeriod({ title, era, category, summary, ...dates }) };
 }
 

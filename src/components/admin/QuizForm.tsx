@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
 import { QUIZ_OPTIONS_MAX, QUIZ_OPTIONS_MIN, QUIZ_QUESTIONS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { Quiz } from "@/domain/entities/Quiz";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { AddRowButton, ListErrors, RemoveRowButton, ROW_INPUT_CLASS, useRows } from "./listEditing";
+import { useFormAction } from "./useFormAction";
 
 interface QuestionRow {
   id: string;
@@ -31,11 +31,11 @@ export function QuizForm({
   const { rows, add, remove, update, json } = useRows<QuestionRow>(
     (quiz?.questions ?? []).map((question) => ({ ...question, explanation: question.explanation ?? "" })),
   );
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.questions;
 
   return (
-    <form action={formAction} className="space-y-4" noValidate aria-describedby={errors ? "quiz-errors" : undefined}>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate aria-describedby={errors ? "quiz-errors" : undefined}>
       <input type="hidden" name="topicId" value={topicId} />
       <input type="hidden" name="questions" value={json} />
 

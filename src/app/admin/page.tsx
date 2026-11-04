@@ -17,10 +17,15 @@ export function generateMetadata(): Promise<Metadata> {
 // The admin panel's home: every civilization with its topics, drafts included. The use case checks the
 // ADMIN role itself.
 export default async function AdminPage() {
-  const result = await getContainer().listTopicsForAdmin.execute();
+  const container = getContainer();
+  const [result, pending] = await Promise.all([
+    container.listTopicsForAdmin.execute(),
+    container.listPendingProposals.execute(),
+  ]);
   if (!result.success) {
     denyAdminPage(result.error, "/admin");
   }
+  const pendingCount = pending.success ? pending.data.length : 0;
 
   // A reminder for the admins only: the public pages never say "no image", they just show none.
   const withoutImage = result.data.flatMap(({ topics }) => topics).filter((topic) => !topic.image).length;
@@ -44,6 +49,12 @@ export default async function AdminPage() {
           <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">
             Los temas de cada civilización. Los borradores solo los ven los administradores.
           </p>
+          <Link href="/admin/propuestas" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
+            Propuestas de los usuarios
+            <span className={pendingCount > 0 ? "rounded-full bg-accent px-2 py-0.5 text-xs text-background" : "text-muted"}>
+              {pendingCount > 0 ? `${pendingCount} pendiente${pendingCount === 1 ? "" : "s"}` : "ninguna pendiente"}
+            </span>
+          </Link>
           {withoutImage > 0 && (
             <p className="mt-2 text-sm text-muted">
               {withoutImage} {withoutImage === 1 ? "tema sin imagen" : "temas sin imagen"}: puedes elegirla en su editor cuando la haya en el catálogo.

@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
 import { RECOMMENDATIONS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { Recommendation } from "@/domain/entities/Recommendation";
 import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType";
+import { RECOMMENDATION_TYPE_SINGULAR_LABELS } from "@/lib/recommendationTypeLabels";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { AddRowButton, ListErrors, RemoveRowButton, ROW_INPUT_CLASS, useRows } from "./listEditing";
+import { useFormAction } from "./useFormAction";
 
-const TYPE_NAMES: Record<(typeof RECOMMENDATION_TYPES)[number], string> = { BOOK: "Libro", FILM: "Película", SERIES: "Serie" };
 
 const EMPTY_RECOMMENDATION = { id: "", type: "BOOK", title: "", creator: "", year: "", description: "" };
 
@@ -32,11 +32,11 @@ export function RecommendationsForm({
       description,
     })),
   );
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.recommendations;
 
   return (
-    <form action={formAction} className="space-y-4" noValidate aria-describedby={errors ? "recommendations-errors" : undefined}>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate aria-describedby={errors ? "recommendations-errors" : undefined}>
       <input type="hidden" name="topicId" value={topicId} />
       <input type="hidden" name="recommendations" value={json} />
 
@@ -57,7 +57,7 @@ export function RecommendationsForm({
               >
                 {RECOMMENDATION_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {TYPE_NAMES[type]}
+                    {RECOMMENDATION_TYPE_SINGULAR_LABELS[type]}
                   </option>
                 ))}
               </select>

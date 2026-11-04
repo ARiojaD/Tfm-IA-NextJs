@@ -37,6 +37,6 @@ export async function prepareTestDatabase(): Promise<void> {
 export async function truncateAllTables(db: Database): Promise<void> {
   await db.execute(
     sql`TRUNCATE topics, topic_relations, historical_events, quizzes, quiz_questions, comments, recommendations,
-      users, sessions, accounts, verifications, era_follows, saved_topics`,
+      users, sessions, accounts, verifications, era_follows, saved_topics, proposals`,
   );
 }

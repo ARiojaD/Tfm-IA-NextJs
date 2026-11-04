@@ -1,6 +1,5 @@
 "use client";
 
-import { useActionState } from "react";
 import { EVENTS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
 import { MONTHS } from "@/lib/formatHistoricalDate";
@@ -8,6 +7,7 @@ import { toDateFields } from "@/lib/topicBasicsValues";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { AddRowButton, ListErrors, RemoveRowButton, ROW_INPUT_CLASS, useRows } from "./listEditing";
+import { useFormAction } from "./useFormAction";
 
 const EMPTY_EVENT = { id: "", title: "", year: "", era: "BC", month: "", description: "" };
 
@@ -27,11 +27,11 @@ export function EventsForm({
       return { id: event.id, title: event.title, year: date.year, era: date.era, month: date.month, description: event.description };
     }),
   );
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.events;
 
   return (
-    <form action={formAction} className="space-y-4" noValidate aria-describedby={errors ? "events-errors" : undefined}>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate aria-describedby={errors ? "events-errors" : undefined}>
       <input type="hidden" name="topicId" value={topicId} />
       <input type="hidden" name="events" value={json} />
 

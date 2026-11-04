@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { RELATED_TOPICS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { TopicOption } from "@/application/use-cases/GetTopicForEditingUseCase";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
@@ -8,6 +8,7 @@ import { ERA_LABELS } from "@/lib/eraLabels";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { ListErrors } from "./listEditing";
+import { useFormAction } from "./useFormAction";
 
 // "Sigue explorando": the other topics, by civilization, to tick. The link is saved in both directions.
 // Drafts can be ticked; the public page shows a related topic only once it is published.
@@ -23,13 +24,13 @@ export function RelatedTopicsForm({
   otherTopics: TopicOption[];
 }) {
   const [selected, setSelected] = useState(relatedTopicIds);
-  const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
+  const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.relatedTopicIds;
   const toggle = (id: string, checked: boolean) =>
     setSelected(checked ? [...selected, id] : selected.filter((candidate) => candidate !== id));
 
   return (
-    <form action={formAction} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <input type="hidden" name="topicId" value={topicId} />
       <input type="hidden" name="relatedTopicIds" value={JSON.stringify(selected)} />
 
