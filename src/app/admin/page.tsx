@@ -22,6 +22,9 @@ export default async function AdminPage() {
     denyAdminPage(result.error, "/admin");
   }
 
+  // A reminder for the admins only: the public pages never say "no image", they just show none.
+  const withoutImage = result.data.flatMap(({ topics }) => topics).filter((topic) => !topic.image).length;
+
   return (
     <>
       <SiteHeader />
@@ -41,6 +44,11 @@ export default async function AdminPage() {
           <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">
             Los temas de cada civilización. Los borradores solo los ven los administradores.
           </p>
+          {withoutImage > 0 && (
+            <p className="mt-2 text-sm text-muted">
+              {withoutImage} {withoutImage === 1 ? "tema sin imagen" : "temas sin imagen"}: puedes elegirla en su editor cuando la haya en el catálogo.
+            </p>
+          )}
 
           <div className="mt-12 space-y-12">
             {result.data.map(({ era, topics }) => (
@@ -66,6 +74,7 @@ export default async function AdminPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-medium">{topic.title}</p>
                             <TopicStatusBadge status={topic.status} />
+                            {!topic.image && <span className="text-xs text-muted">Sin imagen</span>}
                           </div>
                           <p className="text-sm text-muted">
                             {CATEGORY_LABELS[topic.category]} · {formatHistoricalPeriod(topic.period)}

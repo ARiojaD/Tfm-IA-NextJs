@@ -10,6 +10,7 @@ import { UpdateTopicEventsUseCase } from "@/application/use-cases/UpdateTopicEve
 import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizUseCase";
 import { UpdateTopicRecommendationsUseCase } from "@/application/use-cases/UpdateTopicRecommendationsUseCase";
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
+import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
 import { InMemoryRecommendationRepository } from "@/infrastructure/persistence/in-memory/InMemoryRecommendationRepository";
@@ -67,6 +68,7 @@ describe("Editor de temas: cronología, quiz, recomendaciones y relacionados", (
     events,
     quizzes,
     recommendations,
+    images: new StaticImageCatalog([]),
     auth,
     roles,
     ids,
@@ -271,6 +273,8 @@ describe("Editor de temas: cronología, quiz, recomendaciones y relacionados", (
           { id: "topic-alesia", title: "Asedio de Alesia", era: "ROMAN", status: "PUBLISHED" },
           { id: "topic-viriato", title: "Viriato", era: "HISPANIA", status: "DRAFT" },
         ],
+        imageOptions: [],
+        selectedImageId: null,
       });
     });
   });

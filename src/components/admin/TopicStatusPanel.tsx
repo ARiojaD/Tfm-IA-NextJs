@@ -89,6 +89,13 @@ export function TopicStatusPanel({
           ))}
       </div>
 
+      {statusState.notices && (
+        <ul aria-live="polite" className="mt-4 space-y-1 text-sm text-muted">
+          {statusState.notices.map((notice) => (
+            <li key={notice}>ℹ️ {notice}</li>
+          ))}
+        </ul>
+      )}
       {messages.length > 0 && (
         <ul aria-live="polite" className="mt-4 space-y-1 text-sm text-danger">
           {messages.map((message) => (

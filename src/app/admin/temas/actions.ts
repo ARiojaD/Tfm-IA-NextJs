@@ -136,10 +136,29 @@ export async function updateRelatedTopics(_previous: AdminFormState, formData: F
   );
 }
 
-export async function changeTopicStatus(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+export async function updateTopicImage(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   return toState(
-    await getContainer().changeTopicStatus.execute({ topicId: formData.get("topicId"), status: formData.get("status") }),
+    await getContainer().updateTopicImage.execute({
+      topicId: formData.get("topicId"),
+      imageId: formData.get("imageId"),
+      alt: formData.get("alt"),
+      caption: formData.get("caption"),
+    }),
   );
+}
+
+// Publishing without an image is allowed (the page simply shows none); the admin is only told, so it is
+// a choice and not an oversight.
+export async function changeTopicStatus(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  const result = await getContainer().changeTopicStatus.execute({
+    topicId: formData.get("topicId"),
+    status: formData.get("status"),
+  });
+  const state = toState(result);
+  if (result.success && result.data.status === "PUBLISHED" && !result.data.image) {
+    return { ...state, notices: ["Publicado sin imagen. Puedes elegir una más adelante."] };
+  }
+  return state;
 }
 
 export async function deleteTopic(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {

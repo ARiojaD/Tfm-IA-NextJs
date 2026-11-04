@@ -235,3 +235,19 @@ export const UpdateRelatedTopicsInputSchema = z.strictObject({
     .max(RELATED_TOPICS_MAX, { error: `Como máximo ${RELATED_TOPICS_MAX} temas relacionados` })
     .refine((ids) => new Set(ids).size === ids.length, { error: "Un tema no puede estar repetido" }),
 });
+
+// --- The topic's image ---
+// Only a catalog id: the file, its size and its credit come from the catalog, never from the form. An
+// empty id leaves the topic without image (nothing is shown on its page).
+export const UpdateTopicImageInputSchema = z
+  .strictObject({
+    topicId,
+    imageId: z.string({ error: "Elige una imagen" }).trim().max(100, { error: "Elige una imagen del catálogo" }),
+    alt: z.string({ error: "Describe la imagen" }).trim().max(200, { error: "El texto alternativo no puede superar los 200 caracteres" }),
+    caption: z.string({ error: "Escribe un pie de foto" }).trim().max(100, { error: "El pie no puede superar los 100 caracteres" }),
+  })
+  .superRefine(({ imageId, alt, caption }, context) => {
+    if (imageId === "") return;
+    if (alt === "") context.addIssue({ code: "custom", path: ["alt"], message: "Describe la imagen para quien no puede verla" });
+    if (caption === "") context.addIssue({ code: "custom", path: ["caption"], message: "Escribe un pie de foto" });
+  });

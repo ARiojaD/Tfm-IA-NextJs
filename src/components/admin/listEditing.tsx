@@ -12,7 +12,10 @@ export const ROW_INPUT_CLASS =
 type Keyed<Row> = Row & { key: string };
 
 export function useRows<Row extends object>(initial: Row[]) {
-  const [rows, setRows] = useState<Keyed<Row>[]>(() => initial.map((row) => ({ ...row, key: crypto.randomUUID() })));
+  // The initial rows are rendered on the server too: their keys must be the same there and in the browser
+  // (a random one would differ and break hydration), so they use their position. Rows added later exist
+  // only in the browser and get a random key.
+  const [rows, setRows] = useState<Keyed<Row>[]>(() => initial.map((row, index) => ({ ...row, key: `row-${index}` })));
 
   return {
     rows,

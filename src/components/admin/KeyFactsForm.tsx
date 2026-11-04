@@ -20,9 +20,10 @@ export function KeyFactsForm({
   topicId: string;
   keyFacts: KeyFact[];
 }) {
-  // Each row keeps a stable key, so removing one row does not shift the text typed in the others.
+  // Each row keeps a stable key, so removing one row does not shift the text typed in the others. The
+  // initial rows use their position (the same on the server and in the browser); added rows a random one.
   const [rows, setRows] = useState(() =>
-    (keyFacts.length > 0 ? keyFacts : [{ label: "", value: "" }]).map((fact) => ({ ...fact, key: crypto.randomUUID() })),
+    (keyFacts.length > 0 ? keyFacts : [{ label: "", value: "" }]).map((fact, index) => ({ ...fact, key: `row-${index}` })),
   );
   const [state, formAction, isPending] = useActionState(action, INITIAL_ADMIN_FORM_STATE);
   const errors = state.fieldErrors?.keyFacts;

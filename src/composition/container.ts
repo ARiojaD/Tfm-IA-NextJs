@@ -2,6 +2,7 @@ import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
+import type { ImageCatalog } from "@/application/ports/ImageCatalog";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
@@ -31,6 +32,7 @@ import { UpdateSavedTopicUseCase } from "@/application/use-cases/UpdateSavedTopi
 import { UpdateRelatedTopicsUseCase } from "@/application/use-cases/UpdateRelatedTopicsUseCase";
 import { UpdateTopicBasicsUseCase } from "@/application/use-cases/UpdateTopicBasicsUseCase";
 import { UpdateTopicEventsUseCase } from "@/application/use-cases/UpdateTopicEventsUseCase";
+import { UpdateTopicImageUseCase } from "@/application/use-cases/UpdateTopicImageUseCase";
 import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTopicIntroductionUseCase";
 import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
 import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizUseCase";
@@ -41,6 +43,8 @@ import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedCheck
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
 import { InMemoryBreachedPasswordChecker } from "@/infrastructure/auth/InMemoryBreachedPasswordChecker";
 import { NextSessionCookies } from "@/infrastructure/auth/NextSessionCookies";
+import { IMAGE_CATALOG } from "@/infrastructure/images/imageCatalog";
+import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memory/InMemoryLibraryRepository";
@@ -85,6 +89,8 @@ interface Repositories {
   recommendations: RecommendationRepository;
   library: LibraryRepository;
   roles: UserRoleRepository;
+  // Not a database table: the images are files of the project (see infrastructure/images/imageCatalog.ts).
+  images: ImageCatalog;
 }
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
@@ -102,6 +108,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     recommendations: new InMemoryRecommendationRepository(seed.recommendations),
     library: new InMemoryLibraryRepository(),
     roles: new InMemoryUserRoleRepository(),
+    images: new StaticImageCatalog(IMAGE_CATALOG),
   };
 }
 
@@ -117,6 +124,7 @@ function postgresRepositories(db: Database): Repositories {
     recommendations: new PostgresRecommendationRepository(db),
     library: new PostgresLibraryRepository(db),
     roles: new PostgresUserRoleRepository(db),
+    images: new StaticImageCatalog(IMAGE_CATALOG),
   };
 }
 
@@ -183,6 +191,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     updateTopicQuiz: new UpdateTopicQuizUseCase({ ...editor, quizzes, ids }),
     updateTopicRecommendations: new UpdateTopicRecommendationsUseCase({ ...editor, recommendations: repositories.recommendations, ids }),
     updateRelatedTopics: new UpdateRelatedTopicsUseCase(editor),
+    updateTopicImage: new UpdateTopicImageUseCase({ ...editor, images: repositories.images }),
   };
 }
 
@@ -250,6 +259,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.recommendations instanceof PostgresRecommendationRepository &&
     repositories.library instanceof PostgresLibraryRepository &&
     repositories.roles instanceof PostgresUserRoleRepository &&
+    repositories.images instanceof StaticImageCatalog &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&

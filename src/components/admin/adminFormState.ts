@@ -4,6 +4,8 @@ export interface AdminFormState {
   status: "idle" | "success" | "error";
   fieldErrors?: Record<string, string[]>;
   formErrors?: string[];
+  // Information after a successful action that is worth knowing (e.g. "published without image").
+  notices?: string[];
 }
 
 export const INITIAL_ADMIN_FORM_STATE: AdminFormState = { status: "idle" };

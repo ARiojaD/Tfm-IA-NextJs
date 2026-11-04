@@ -71,7 +71,11 @@ Quien estudia historia acumula lecturas, apuntes y fechas repartidos entre libro
   - **Vista previa:** muestra el tema con la misma plantilla que la página pública.
   - **Publicar:** solo se puede con la introducción y al menos un dato clave. Si falta algo, se indica qué.
   - **Despublicar y borrar:** despublicar lo devuelve a borrador; solo los borradores se pueden borrar.
-  - **Próximamente:** la imagen del tema y la revisión de las propuestas de los usuarios.
+  - **Imagen (opcional), de un catálogo controlado:**
+    - El admin elige una imagen del catálogo (generales por civilización o específicas) o ninguna. Sin imagen, la página no muestra nada en su lugar.
+    - **No se suben archivos desde la web:** las imágenes se añaden al catálogo desde el código, con su licencia revisada.
+    - El panel avisa al publicar sin imagen y marca los temas que no la tienen, solo para los administradores.
+  - **Próximamente:** la revisión de las propuestas de los usuarios.
   - **Acceso:** sin sesión lleva a iniciar sesión; a una cuenta normal le responde 404.
 - **Propuestas** (próximamente): desde Mi biblioteca, los usuarios podrán proponer eventos, recomendaciones, correcciones o temas nuevos, que un administrador revisa antes de publicarlos.
 - **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.

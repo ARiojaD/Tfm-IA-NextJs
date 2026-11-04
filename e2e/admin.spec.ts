@@ -80,6 +80,10 @@ test.describe("Panel de administración", () => {
 
       await page.getByRole("button", { name: "Publicar" }).click();
       await expect(page.getByText("Visible para todo el mundo.")).toBeVisible();
+      // Without an image it is published anyway; the admin is only told.
+      await expect(page.getByText("Publicado sin imagen. Puedes elegir una más adelante.")).toBeVisible();
+      await page.goto("/admin");
+      await expect(page.getByRole("region", { name: "Antigua Grecia" }).getByText("Sin imagen")).toBeVisible();
       await page.goto("/grecia");
       await page.getByRole("link", { name: /Leónidas/ }).click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Leónidas");
@@ -89,7 +93,18 @@ test.describe("Panel de administración", () => {
       await page.locator("#quiz").getByRole("button", { name: "Termópilas" }).click();
       await expect(page.locator("#quiz").getByText("¡Correcto!")).toBeVisible();
 
-      await page.goBack();
+      await expect(page.locator("#introduccion figure")).toHaveCount(0); // published without image: none shown
+
+      await page.goto("/admin");
+      await page.getByRole("link", { name: "Editar Leónidas" }).click();
+      // Later, a general image of its civilization from the catalog.
+      const imageSection = page.getByRole("region", { name: "Imagen" });
+      await imageSection.getByRole("img", { name: /La Acrópolis de Atenas/ }).click();
+      await imageSection.getByRole("button", { name: "Guardar" }).click();
+      await expect(imageSection.getByText("Guardado ✓")).toBeVisible();
+      await page.goto("/grecia/personajes/leonidas");
+      await expect(page.locator("#introduccion figure")).toContainText("Foto: Jebulon · CC0");
+
       await page.goto("/admin");
       await page.getByRole("link", { name: "Editar Leónidas" }).click();
       await page.getByRole("button", { name: "Despublicar" }).click();
@@ -100,6 +115,33 @@ test.describe("Panel de administración", () => {
       await page.getByRole("button", { name: "Sí, borrar" }).click();
       await expect(page).toHaveURL("/admin");
       await expect(page.getByText("Leónidas")).toHaveCount(0);
+    });
+  });
+
+  test.describe("la imagen de un tema", () => {
+    test.use({ storageState: ADMIN_STORAGE_STATE });
+
+    // Julio César starts with its bust. Without image, its page shows nothing in its place (no gap, no
+    // "no image" text); choosing it again from the catalog brings it back.
+    test("se quita y se vuelve a elegir del catálogo", async ({ page }) => {
+      const imageSection = page.getByRole("region", { name: "Imagen" });
+      await page.goto("/admin/temas/topic-julius-caesar");
+      await imageSection.getByText("Sin imagen", { exact: true }).click();
+      await imageSection.getByRole("button", { name: "Guardar" }).click();
+      await expect(imageSection.getByText("Guardado ✓")).toBeVisible();
+
+      await page.goto("/roma/personajes/julio-cesar");
+      await expect(page.locator("#introduccion figure")).toHaveCount(0);
+      await expect(page.locator("#introduccion")).not.toContainText("Sin imagen");
+
+      await page.goto("/admin/temas/topic-julius-caesar");
+      await imageSection.getByRole("img", { name: /Busto de mármol de Julio César/ }).click();
+      await expect(imageSection.getByLabel("Pie de foto")).toHaveValue("Retrato de Túsculo. Museo de Antigüedades de Turín.");
+      await imageSection.getByRole("button", { name: "Guardar" }).click();
+      await expect(imageSection.getByText("Guardado ✓")).toBeVisible();
+
+      await page.goto("/roma/personajes/julio-cesar");
+      await expect(page.locator("#introduccion figure img")).toHaveAttribute("alt", /Busto de mármol de Julio César/);
     });
   });
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EventsForm } from "@/components/admin/EventsForm";
+import { ImageForm } from "@/components/admin/ImageForm";
 import { IntroductionForm } from "@/components/admin/IntroductionForm";
 import { KeyFactsForm } from "@/components/admin/KeyFactsForm";
 import { QuizForm } from "@/components/admin/QuizForm";
@@ -18,6 +19,7 @@ import {
   updateRelatedTopics,
   updateTopicBasics,
   updateTopicEvents,
+  updateTopicImage,
   updateTopicIntroduction,
   updateTopicKeyFacts,
   updateTopicQuiz,
@@ -36,7 +38,7 @@ export default async function EditTopicPage({ params }: PageProps<"/admin/temas/
   if (!result.success) {
     denyAdminPage(result.error, `/admin/temas/${id}`);
   }
-  const { topic, events, quiz, recommendations, otherTopics } = result.data;
+  const { topic, events, quiz, recommendations, otherTopics, imageOptions, selectedImageId } = result.data;
 
   return (
     <AdminPageLayout title={topic.title} intro={<span className="font-mono text-sm">{topicPath(topic)}</span>}>
@@ -65,6 +67,16 @@ export default async function EditTopicPage({ params }: PageProps<"/admin/temas/
 
       <AdminSection title="Datos clave" description="La ficha que acompaña a la introducción: etiqueta y valor.">
         <KeyFactsForm action={updateTopicKeyFacts} topicId={topic.id} keyFacts={topic.keyFacts} />
+      </AdminSection>
+
+      <AdminSection title="Imagen" description="Opcional. Si no eliges ninguna, la página del tema no muestra imagen.">
+        <ImageForm
+          action={updateTopicImage}
+          topicId={topic.id}
+          options={imageOptions}
+          selectedImageId={selectedImageId}
+          currentImage={topic.image}
+        />
       </AdminSection>
 
       <AdminSection title="Cronología" description="Los momentos clave del tema. En la página se ordenan solos por fecha.">

@@ -78,6 +78,13 @@ tests/                      # Tests, fuera de src/, replicando su estructura
     - **Quiz:** sin preguntas, se borra.
     - **Relacionados:** van en los dos sentidos.
     - **Respuestas correctas:** el editor sí las recibe (`GetTopicForEditingUseCase`, solo admin); la web pública nunca.
+  - **Imagen del tema (catálogo controlado):**
+    - **Decisión:** no se suben archivos desde la web, para eliminar esa superficie de ataque y garantizar que toda imagen tiene licencia revisada.
+    - **Catálogo:** las imágenes están en `infrastructure/images/imageCatalog.ts`, validadas con `CatalogImageSchema`. Son `GENERAL` (cualquier tema de su civilización) o `SPECIFIC`, y los archivos están en `public/images/catalog` o `public/images/topics`. Un test comprueba que cada archivo existe, que su ancho y alto reales coinciden con lo declarado y que cada civilización tiene al menos una imagen general.
+    - **Port `ImageCatalog`:** `UpdateTopicImageUseCase` solo acepta ids del catálogo. El archivo, el tamaño y el crédito salen siempre del catálogo (`toTopicImage`); el admin solo escribe el texto alternativo y el pie. Un id vacío deja el tema sin imagen, y la página no muestra nada en su lugar.
+    - **Avisos:** publicar sin imagen está permitido; el panel lo avisa y marca los temas "Sin imagen" (solo administradores).
+    - **Añadir una imagen al catálogo:** elegirla en Wikimedia Commons con licencia libre, guardarla como .jpg y registrarla con su ancho, alto y crédito (autor y licencia).
+  - **Listas editables en el navegador:** las filas iniciales usan su posición como clave (`row-0`…), igual en el servidor y en el navegador, para no romper la hidratación. Solo las filas añadidas después reciben una clave aleatoria.
   - **Borrado:** solo se borran los borradores (`TopicIsPublishedError`).
   - **Vista previa:** `/admin/temas/[id]/vista-previa` usa el mismo componente `TopicView` que la página pública y `loadTopicDetail()`, el mismo que `GetTopicDetailUseCase`.
   - **Metadatos:** las páginas de `/admin` calculan su título con `adminPageMetadata()`, para que el 404 de un no-admin no delate el panel.

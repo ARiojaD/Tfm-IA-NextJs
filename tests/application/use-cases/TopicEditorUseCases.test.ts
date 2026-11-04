@@ -16,6 +16,7 @@ import { UpdateTopicBasicsUseCase } from "@/application/use-cases/UpdateTopicBas
 import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTopicIntroductionUseCase";
 import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
 import { InMemoryAuthService } from "@/infrastructure/auth/InMemoryAuthService";
+import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
@@ -67,6 +68,7 @@ describe("Editor de temas", () => {
     events: new InMemoryHistoricalEventRepository(),
     quizzes: new InMemoryQuizRepository(),
     recommendations: new InMemoryRecommendationRepository(),
+    images: new StaticImageCatalog([]),
     auth,
     roles,
     rateLimiter,
