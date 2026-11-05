@@ -16,3 +16,26 @@ export type HistoricalDate = z.infer<typeof HistoricalDateSchema>;
 export function compareHistoricalDates(a: HistoricalDate, b: HistoricalDate): number {
   return a.year - b.year || (a.month ?? 0) - (b.month ?? 0);
 }
+
+export const MONTHS = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+] as const;
+
+// "490 a.C.", "marzo de 44 a.C.". In the domain because the encyclopedia is in Spanish and its text for
+// the RAG needs the dates written as people ask about them, not only the pages.
+export function formatHistoricalDate({ year, month }: HistoricalDate): string {
+  const yearLabel = year < 0 ? `${-year} a.C.` : `${year} d.C.`;
+
+  return month ? `${MONTHS[month - 1]} de ${yearLabel}` : yearLabel;
+}

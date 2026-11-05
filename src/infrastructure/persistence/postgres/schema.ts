@@ -13,8 +13,10 @@ import {
   text,
   timestamp,
   unique,
+  vector,
 } from "drizzle-orm/pg-core";
 // Relative imports: drizzle-kit loads this file on its own and does not know the "@/" alias.
+import { KNOWLEDGE_SOURCES } from "../../../domain/entities/KnowledgeChunk";
 import { PROPOSAL_KINDS, PROPOSAL_STATUSES } from "../../../domain/entities/Proposal";
 import type { KeyFact } from "../../../domain/value-objects/KeyFact";
 import type { TopicImage } from "../../../domain/value-objects/TopicImage";
@@ -23,6 +25,7 @@ import { RECOMMENDATION_TYPES } from "../../../domain/value-objects/Recommendati
 import { TOPIC_CATEGORIES } from "../../../domain/value-objects/TopicCategory";
 import { TOPIC_STATUSES } from "../../../domain/value-objects/TopicStatus";
 import { USER_ROLES } from "../../../domain/value-objects/UserRole";
+import { EMBEDDING_DIMENSIONS } from "../../ai/embeddingModel";
 
 // PostgreSQL tables for the domain entities. The domain (Zod schemas) stays the source of truth: the
 // enums reuse its constants, and the CHECK constraints repeat its key rules as a second line of defence,
@@ -35,6 +38,7 @@ export const userRole = pgEnum("user_role", USER_ROLES);
 export const topicStatus = pgEnum("topic_status", TOPIC_STATUSES);
 export const proposalKind = pgEnum("proposal_kind", PROPOSAL_KINDS);
 export const proposalStatus = pgEnum("proposal_status", PROPOSAL_STATUSES);
+export const knowledgeSource = pgEnum("knowledge_source", KNOWLEDGE_SOURCES);
 
 // Historical dates: negative years are BC, year 0 does not exist, the month is optional.
 const validYear = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} <> 0`;
@@ -327,4 +331,28 @@ export const recommendations = pgTable(
     description: text("description").notNull(),
   },
   (table) => [index("recommendations_topic_idx").on(table.topicId)],
+);
+
+// --- RAG ---
+// The fragments of the published topics with their vector (pgvector). A topic is always replaced whole,
+// and deleting it deletes its fragments. The HNSW index finds the nearest vectors without reading them all.
+export const knowledgeChunks = pgTable(
+  "knowledge_chunks",
+  {
+    topicId: text("topic_id")
+      .notNull()
+      .references(() => topics.id, { onDelete: "cascade" }),
+    source: knowledgeSource("source").notNull(),
+    position: integer("position").notNull(),
+    // No foreign key: the timeline is replaced on every edit, and the topic is reindexed right after.
+    eventId: text("event_id"),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: EMBEDDING_DIMENSIONS }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.topicId, table.source, table.position] }),
+    index("knowledge_chunks_embedding_idx").using("hnsw", table.embedding.op("vector_cosine_ops")),
+    check("knowledge_chunks_position_valid", sql`${table.position} >= 0`),
+    check("knowledge_chunks_event_matches_source", sql`(${table.source} = 'EVENT') = (${table.eventId} IS NOT NULL)`),
+  ],
 );

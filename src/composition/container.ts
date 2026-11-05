@@ -1,8 +1,10 @@
 import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
+import type { EmbeddingService } from "@/application/ports/EmbeddingService";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
+import type { KnowledgeIndex } from "@/application/ports/KnowledgeIndex";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { ProposalRepository } from "@/application/ports/ProposalRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
@@ -27,6 +29,9 @@ import { ListMyProposalsUseCase } from "@/application/use-cases/ListMyProposalsU
 import { ListPendingProposalsUseCase } from "@/application/use-cases/ListPendingProposalsUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
+import { RebuildKnowledgeIndexUseCase } from "@/application/use-cases/RebuildKnowledgeIndexUseCase";
+import { RefreshTopicIndexUseCase } from "@/application/use-cases/RefreshTopicIndexUseCase";
+import { refreshingTopicIndex } from "@/application/use-cases/refreshingTopicIndex";
 import { RegisterUserUseCase } from "@/application/use-cases/RegisterUserUseCase";
 import { ReviewProposalUseCase } from "@/application/use-cases/ReviewProposalUseCase";
 import { SignInUseCase } from "@/application/use-cases/SignInUseCase";
@@ -42,6 +47,9 @@ import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTo
 import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
 import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizUseCase";
 import { UpdateTopicRecommendationsUseCase } from "@/application/use-cases/UpdateTopicRecommendationsUseCase";
+import { EMBEDDING_DIMENSIONS } from "@/infrastructure/ai/embeddingModel";
+import { HashingEmbeddingService } from "@/infrastructure/ai/HashingEmbeddingService";
+import { TransformersEmbeddingService } from "@/infrastructure/ai/TransformersEmbeddingService";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
 import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
@@ -52,6 +60,7 @@ import { IMAGE_CATALOG } from "@/infrastructure/images/imageCatalog";
 import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
+import { InMemoryKnowledgeIndex } from "@/infrastructure/persistence/in-memory/InMemoryKnowledgeIndex";
 import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memory/InMemoryLibraryRepository";
 import { InMemoryProposalRepository } from "@/infrastructure/persistence/in-memory/InMemoryProposalRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
@@ -62,6 +71,7 @@ import { SEED, type Seed } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase, type Database } from "@/infrastructure/persistence/postgres/client";
 import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
 import { PostgresHistoricalEventRepository } from "@/infrastructure/persistence/postgres/PostgresHistoricalEventRepository";
+import { PostgresKnowledgeIndex } from "@/infrastructure/persistence/postgres/PostgresKnowledgeIndex";
 import { PostgresLibraryRepository } from "@/infrastructure/persistence/postgres/PostgresLibraryRepository";
 import { PostgresProposalRepository } from "@/infrastructure/persistence/postgres/PostgresProposalRepository";
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
@@ -71,6 +81,8 @@ import { PostgresUserRoleRepository } from "@/infrastructure/persistence/postgre
 import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 import { RandomUuidGenerator } from "@/infrastructure/system/RandomUuidGenerator";
 import { SystemClock } from "@/infrastructure/system/SystemClock";
+import type { EntityId } from "@/domain/value-objects/EntityId";
+import type { Result } from "@/shared/Result";
 import { parseAuthEnv, parseDatabaseEnv } from "./env";
 
 // Rate limits per requester (OWASP API4). Generous for a person, tight for a script.
@@ -101,6 +113,8 @@ interface Repositories {
   // Not a database table: the images are files of the project (see infrastructure/images/imageCatalog.ts).
   images: ImageCatalog;
   proposals: ProposalRepository;
+  // The RAG: the fragments of the published topics with their vectors.
+  knowledge: KnowledgeIndex;
 }
 
 // The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
@@ -120,6 +134,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     roles: new InMemoryUserRoleRepository(),
     images: new StaticImageCatalog(IMAGE_CATALOG),
     proposals: new InMemoryProposalRepository(),
+    knowledge: new InMemoryKnowledgeIndex(),
   };
 }
 
@@ -137,18 +152,21 @@ function postgresRepositories(db: Database): Repositories {
     roles: new PostgresUserRoleRepository(db),
     images: new StaticImageCatalog(IMAGE_CATALOG),
     proposals: new PostgresProposalRepository(db),
+    knowledge: new PostgresKnowledgeIndex(db),
   };
 }
 
 // The rate-limit counters stay in memory: valid for a single server process. With several instances
 // they must move to a shared store (PostgreSQL or Redis).
-function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker) {
+// The embedding model is part of the state: it is loaded once per process, not once per request.
+function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker, embeddings: EmbeddingService) {
   const clock = new SystemClock();
 
   return {
     clock,
     repositories,
     breachedPasswords,
+    embeddings,
     rateLimiters: {
       comments: new InMemoryRateLimiter(COMMENT_RATE_LIMIT, clock),
       quizAnswers: new InMemoryRateLimiter(QUIZ_ANSWER_RATE_LIMIT, clock),
@@ -165,10 +183,16 @@ type State = ReturnType<typeof createState>;
 
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
-function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }: State, auth: AuthService) {
+function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, embeddings }: State, auth: AuthService) {
   const { topics, topicEditor, quizzes, comments, library, roles } = repositories;
   const ids = new RandomUuidGenerator();
   const editor = { topicEditor, auth, roles, rateLimiter: rateLimiters.admin };
+  const refreshIndex = new RefreshTopicIndexUseCase({ topicEditor, events: repositories.events, embeddings, index: repositories.knowledge });
+  // The admin edits that change what the RAG indexes reindex their topic when they succeed.
+  const indexed = <Output, Failure extends Error>(
+    useCase: { execute(input: unknown): Promise<Result<Output, Failure>> },
+    topicIdOf?: (input: unknown, output: Output) => EntityId | undefined,
+  ) => refreshingTopicIndex(useCase, refreshIndex, { onFailure: reportIndexFailure, topicIdOf });
 
   return {
     listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
@@ -195,12 +219,12 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     getTopicForEditing: new GetTopicForEditingUseCase({ ...repositories, auth, roles }),
     getTopicPreview: new GetTopicPreviewUseCase({ ...repositories, auth, roles }),
     createTopic: new CreateTopicUseCase({ ...editor, ids }),
-    updateTopicBasics: new UpdateTopicBasicsUseCase(editor),
-    updateTopicIntroduction: new UpdateTopicIntroductionUseCase(editor),
-    updateTopicKeyFacts: new UpdateTopicKeyFactsUseCase(editor),
-    changeTopicStatus: new ChangeTopicStatusUseCase(editor),
-    deleteTopic: new DeleteTopicUseCase(editor),
-    updateTopicEvents: new UpdateTopicEventsUseCase({ ...editor, events: repositories.events, ids }),
+    updateTopicBasics: indexed(new UpdateTopicBasicsUseCase(editor)),
+    updateTopicIntroduction: indexed(new UpdateTopicIntroductionUseCase(editor)),
+    updateTopicKeyFacts: indexed(new UpdateTopicKeyFactsUseCase(editor)),
+    changeTopicStatus: indexed(new ChangeTopicStatusUseCase(editor)),
+    deleteTopic: indexed(new DeleteTopicUseCase(editor)),
+    updateTopicEvents: indexed(new UpdateTopicEventsUseCase({ ...editor, events: repositories.events, ids })),
     updateTopicQuiz: new UpdateTopicQuizUseCase({ ...editor, quizzes, ids }),
     updateTopicRecommendations: new UpdateTopicRecommendationsUseCase({ ...editor, recommendations: repositories.recommendations, ids }),
     updateRelatedTopics: new UpdateRelatedTopicsUseCase(editor),
@@ -215,8 +239,19 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords }
     }),
     listMyProposals: new ListMyProposalsUseCase({ auth, proposals: repositories.proposals }),
     listPendingProposals: new ListPendingProposalsUseCase({ auth, roles, proposals: repositories.proposals }),
-    reviewProposal: new ReviewProposalUseCase({ ...editor, ...repositories, ids, clock }),
+    // An approved event joins the timeline of its topic.
+    reviewProposal: indexed(new ReviewProposalUseCase({ ...editor, ...repositories, ids, clock }), (_input, { proposal }) =>
+      proposal.status === "APPROVED" && proposal.kind === "EVENT" ? proposal.topicId : undefined,
+    ),
+    rebuildKnowledgeIndex: new RebuildKnowledgeIndexUseCase({ topicEditor, refresh: refreshIndex }),
   };
+}
+
+// Only the topic id and the message: the edit itself was saved, and `npm run rag:index` repairs the index.
+function reportIndexFailure(topicId: EntityId, error: unknown) {
+  console.error(
+    `No se pudo actualizar el índice del RAG del tema ${topicId}: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 
 export type Container = ReturnType<typeof createUseCases>;
@@ -224,7 +259,7 @@ export type Container = ReturnType<typeof createUseCases>;
 // A fresh, isolated container over in-memory data and accounts (used by the unit tests; no database needed).
 export function createContainer(seed: Seed = SEED): Container {
   return createUseCases(
-    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker()),
+    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), new HashingEmbeddingService(EMBEDDING_DIMENSIONS)),
     new InMemoryAuthService(),
   );
 }
@@ -241,7 +276,11 @@ const globalForApp = globalThis as typeof globalThis & {
 
 export function getContainer(): Container {
   if (!isBuiltWithCurrentClasses(globalForApp.__memnonState)) {
-    globalForApp.__memnonState = createState(postgresRepositories(getDatabase()), new HaveIBeenPwnedChecker());
+    globalForApp.__memnonState = createState(
+      postgresRepositories(getDatabase()),
+      new HaveIBeenPwnedChecker(),
+      new TransformersEmbeddingService(),
+    );
   }
   return createUseCases(globalForApp.__memnonState, new BetterAuthService(getBetterAuth(), new NextSessionCookies()));
 }
@@ -272,7 +311,7 @@ export async function closeContainer(): Promise<void> {
 // connection pool is reused. Only happens in development.
 function isBuiltWithCurrentClasses(state: State | undefined): state is State {
   if (!state) return false;
-  const { clock, repositories, rateLimiters } = state;
+  const { clock, repositories, rateLimiters, embeddings } = state;
 
   return (
     clock instanceof SystemClock &&
@@ -285,6 +324,8 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.roles instanceof PostgresUserRoleRepository &&
     repositories.images instanceof StaticImageCatalog &&
     repositories.proposals instanceof PostgresProposalRepository &&
+    repositories.knowledge instanceof PostgresKnowledgeIndex &&
+    embeddings instanceof TransformersEmbeddingService &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&

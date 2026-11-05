@@ -18,9 +18,11 @@
     "db:seed": "tsx scripts/db-seed.ts",
     "admin:grant": "tsx scripts/admin-role.ts grant",
     "admin:revoke": "tsx scripts/admin-role.ts revoke",
+    "rag:index": "tsx scripts/rag-index.ts",
     "auth:secret": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('base64'))\""
   },
   "dependencies": {
+    "@huggingface/transformers": "4.3.1",
     "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",

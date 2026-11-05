@@ -153,4 +153,12 @@ describe("createContainer (en memoria)", () => {
     const battles = overview.categories.find((group) => group.category === "WARS_AND_BATTLES");
     expect(battles?.topics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
   });
+
+  it("conecta el índice del RAG: lo rehace con todos los temas publicados del seed", async () => {
+    const summary = await createContainer().rebuildKnowledgeIndex.execute();
+
+    expect(summary.indexedTopics).toBeGreaterThanOrEqual(2);
+    expect(summary.removedTopics).toBe(0);
+    expect(summary.chunks).toBeGreaterThan(summary.indexedTopics);
+  });
 });

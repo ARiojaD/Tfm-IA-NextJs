@@ -1,6 +1,7 @@
 import { type Comment, CommentSchema } from "@/domain/entities/Comment";
 import { type HistoricalEvent, HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 import { type HistoricalTopic, HistoricalTopicSchema } from "@/domain/entities/HistoricalTopic";
+import { type KnowledgeChunk, KnowledgeChunkSchema } from "@/domain/entities/KnowledgeChunk";
 import { type Proposal, ProposalSchema } from "@/domain/entities/Proposal";
 import { type Quiz, QuizSchema } from "@/domain/entities/Quiz";
 import { type Recommendation, RecommendationSchema } from "@/domain/entities/Recommendation";
@@ -11,6 +12,7 @@ import type {
   comments,
   eraFollows,
   historicalEvents,
+  knowledgeChunks,
   proposals,
   quizQuestions,
   quizzes,
@@ -31,6 +33,7 @@ type CommentRow = typeof comments.$inferSelect;
 type RecommendationRow = typeof recommendations.$inferSelect;
 type EraFollowRow = typeof eraFollows.$inferSelect;
 type SavedTopicRow = typeof savedTopics.$inferSelect;
+type KnowledgeChunkRow = typeof knowledgeChunks.$inferSelect;
 
 // SQL NULL becomes a missing property, as optional fields are absent (not null) in the domain.
 function toDate(year: number, month: number | null): HistoricalDate {
@@ -211,5 +214,26 @@ export function toProposalRow(proposal: Proposal): typeof proposals.$inferInsert
     createdAt: proposal.createdAt,
     reviewedAt: proposal.reviewedAt ?? null,
     reviewedBy: proposal.reviewedBy ?? null,
+  };
+}
+
+export function toKnowledgeChunk(row: Omit<KnowledgeChunkRow, "embedding">): KnowledgeChunk {
+  return KnowledgeChunkSchema.parse({
+    topicId: row.topicId,
+    source: row.source,
+    position: row.position,
+    ...(row.eventId !== null && { eventId: row.eventId }),
+    content: row.content,
+  });
+}
+
+export function toKnowledgeChunkRow(chunk: KnowledgeChunk, embedding: number[]): typeof knowledgeChunks.$inferInsert {
+  return {
+    topicId: chunk.topicId,
+    source: chunk.source,
+    position: chunk.position,
+    eventId: chunk.eventId ?? null,
+    content: chunk.content,
+    embedding,
   };
 }

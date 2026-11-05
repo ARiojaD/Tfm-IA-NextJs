@@ -43,6 +43,13 @@
       "when": 1793788824262,
       "tag": "0005_proposals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793879821145,
+      "tag": "0006_knowledge_chunks",
+      "breakpoints": true
     }
   ]
 }
