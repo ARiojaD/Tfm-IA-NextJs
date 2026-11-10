@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { InvalidEnvironmentError, parseAuthEnv, parseDatabaseEnv } from "@/composition/env";
+import { InvalidEnvironmentError, parseAuthEnv, parseDatabaseEnv, parseLlmEnv } from "@/composition/env";
 
 const DATABASE_URL = "postgresql://memnon:clave-secreta@localhost:5432/memnon";
 
@@ -84,5 +84,22 @@ describe("parseAuthEnv", () => {
       expect(String(error)).not.toContain(shortSecret);
       expect(JSON.stringify(error)).not.toContain(shortSecret);
     }
+  });
+});
+
+describe("parseLlmEnv", () => {
+  it("sin variables usa el Ollama local y no necesita clave", () => {
+    expect(parseLlmEnv({})).toEqual({ LLM_BASE_URL: "http://127.0.0.1:11434/v1", LLM_MODEL: "qwen2.5:7b" });
+  });
+
+  it("acepta otro servidor con su clave", () => {
+    const env = { LLM_BASE_URL: "https://api.groq.com/openai/v1", LLM_MODEL: "modelo", LLM_API_KEY: "clave" };
+
+    expect(parseLlmEnv(env)).toEqual(env);
+  });
+
+  it("rechaza una dirección que no sea http o https y no muestra su valor", () => {
+    expect(() => parseLlmEnv({ LLM_BASE_URL: "ftp://secreto.example.com" })).toThrow(/LLM_BASE_URL/);
+    expect(() => parseLlmEnv({ LLM_BASE_URL: "ftp://secreto.example.com" })).not.toThrow(/secreto/);
   });
 });

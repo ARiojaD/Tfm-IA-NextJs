@@ -14,7 +14,9 @@ export function TopicIntroduction({ topic }: { topic: HistoricalTopic }) {
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-5 text-lg leading-8">
           {introduction.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index} id={`introduccion-${index}`} className="scroll-mt-8 rounded-lg target:bg-accent-soft">
+              {paragraph}
+            </p>
           ))}
         </div>
 
@@ -22,7 +24,7 @@ export function TopicIntroduction({ topic }: { topic: HistoricalTopic }) {
           <h3 className="mb-4 font-serif text-xl font-semibold">Datos clave</h3>
           <dl className="space-y-4">
             {keyFacts.map((fact, index) => (
-              <div key={`${index}-${fact.label}`}>
+              <div key={`${index}-${fact.label}`} id={`dato-clave-${index}`} className="scroll-mt-8 rounded-lg target:bg-accent-soft">
                 <dt className="text-xs uppercase tracking-wider text-muted">{fact.label}</dt>
                 <dd className="mt-1 text-sm leading-6">{fact.value}</dd>
               </div>

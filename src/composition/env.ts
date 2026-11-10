@@ -15,8 +15,17 @@ export const AuthEnvSchema = z.object({
   BETTER_AUTH_URL: z.url({ protocol: /^https?$/ }),
 });
 
+// The language model of the RAG: any server that speaks the OpenAI protocol. The defaults are a local
+// Ollama; once deployed these point to a free API, which is the only case that needs a key.
+export const LlmEnvSchema = z.object({
+  LLM_BASE_URL: z.url({ protocol: /^https?$/ }).default("http://127.0.0.1:11434/v1"),
+  LLM_MODEL: z.string().trim().min(1).default("qwen2.5:7b"),
+  LLM_API_KEY: z.string().trim().min(1).optional(),
+});
+
 export type DatabaseEnv = z.infer<typeof DatabaseEnvSchema>;
 export type AuthEnv = z.infer<typeof AuthEnvSchema>;
+export type LlmEnv = z.infer<typeof LlmEnvSchema>;
 
 // Names the variables that failed and why, never their values: they carry passwords and secrets.
 export class InvalidEnvironmentError extends Error {
@@ -36,6 +45,10 @@ export function parseDatabaseEnv(source: Source): DatabaseEnv {
 
 export function parseAuthEnv(source: Source): AuthEnv {
   return parseWith(AuthEnvSchema, source);
+}
+
+export function parseLlmEnv(source: Source): LlmEnv {
+  return parseWith(LlmEnvSchema, source);
 }
 
 function parseWith<Schema extends z.ZodObject>(schema: Schema, source: Source): z.infer<Schema> {

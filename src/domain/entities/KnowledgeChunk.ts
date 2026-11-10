@@ -31,7 +31,7 @@ export const KnowledgeChunkSchema = z
 
 export type KnowledgeChunk = z.infer<typeof KnowledgeChunkSchema>;
 
-const SOURCE_NAMES: Record<KnowledgeSource, string> = {
+export const KNOWLEDGE_SOURCE_NAMES: Record<KnowledgeSource, string> = {
   INTRODUCTION: "Introducción",
   KEY_FACT: "Dato clave",
   EVENT: "Cronología",
@@ -70,5 +70,5 @@ export function buildTopicChunks(topic: HistoricalTopic, events: HistoricalEvent
 // What is turned into a vector: the fragment with its topic's title and summary in front. A paragraph
 // rarely repeats the topic's name, and without it a question about "Julio César" would miss it.
 export function chunkEmbeddingText(topic: Pick<HistoricalTopic, "title" | "summary">, chunk: KnowledgeChunk): string {
-  return `${topic.title}. ${topic.summary}\n${SOURCE_NAMES[chunk.source]}: ${chunk.content}`;
+  return `${topic.title}. ${topic.summary}\n${KNOWLEDGE_SOURCE_NAMES[chunk.source]}: ${chunk.content}`;
 }

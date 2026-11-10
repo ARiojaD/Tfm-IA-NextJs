@@ -13,13 +13,16 @@ import { submitProposal } from "./actions";
 export const metadata: Metadata = { title: "Mis propuestas · MemnonHistory AI" };
 
 // "Mis propuestas": propose an event, a recommendation, a correction or a new topic, and follow how
-// each one was reviewed. ?tema=julio-cesar comes from a topic's "Proponer una mejora" link.
+// each one was reviewed. ?tema=julio-cesar comes from a topic's "Proponer una mejora" link, and
+// ?tipo=tema-nuevo from the "Proponer un tema nuevo" of a question without an answer.
 export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-biblioteca/propuestas">) {
-  const tema = SlugSchema.safeParse((await searchParams).tema);
+  const { tema: rawTopic, tipo } = await searchParams;
+  const tema = SlugSchema.safeParse(rawTopic);
+  const proposesNewTopic = tipo === "tema-nuevo";
   const container = getContainer();
   const mine = await container.listMyProposals.execute();
   if (!mine.success) {
-    const back = `/mi-biblioteca/propuestas${tema.success ? `?tema=${tema.data}` : ""}`;
+    const back = `/mi-biblioteca/propuestas${proposesNewTopic ? "?tipo=tema-nuevo" : tema.success ? `?tema=${tema.data}` : ""}`;
     redirect(`/iniciar-sesion?volver=${encodeURIComponent(back)}`);
   }
 
@@ -47,7 +50,7 @@ export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-b
             <h2 id="nueva-propuesta" className="mb-6 font-serif text-2xl font-semibold">
               Nueva propuesta
             </h2>
-            <ProposalForm action={submitProposal} topics={topics} initialTopicSlug={initialTopic} />
+            <ProposalForm action={submitProposal} topics={topics} initialTopicSlug={initialTopic} initialKind={proposesNewTopic ? "NEW_TOPIC" : undefined} />
           </section>
 
           <section aria-labelledby="enviadas" className="mt-12">

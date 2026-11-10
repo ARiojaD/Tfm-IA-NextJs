@@ -1,4 +1,5 @@
 import { CivilizationCard } from "@/components/era/CivilizationCard";
+import Link from "next/link";
 import { RagPreview } from "@/components/RagPreview";
 import { SectionHeading } from "@/components/SectionHeading";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -145,10 +146,18 @@ export default async function Home() {
           <div className="mx-auto max-w-4xl px-4 sm:px-6">
             <SectionHeading
               eyebrow="Consulta"
-              title="Pregunta a tu biblioteca"
-              text="Las respuestas se apoyan solo en tus notas y fuentes, y cada afirmación enlaza a su origen."
+              title="Pregunta a la enciclopedia"
+              text="Las respuestas se apoyan solo en el contenido revisado de la web, y cada afirmación enlaza al sitio donde se habla de ello."
             />
             <RagPreview />
+            <div className="mt-8 text-center">
+              <Link
+                href="/preguntar"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-85"
+              >
+                Hacer una pregunta
+              </Link>
+            </div>
           </div>
         </section>
 

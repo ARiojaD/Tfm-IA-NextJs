@@ -1,13 +1,13 @@
 const SOURCES = [
-  { id: 1, kind: "Nota personal", label: "Heródoto, Historias, libro VI" },
-  { id: 2, kind: "Ficha de evento", label: "Batalla de Maratón (490 a.C.)" },
+  { id: 1, kind: "Introducción", label: "Guerras Médicas" },
+  { id: 2, kind: "Cronología", label: "Batalla de Maratón (490 a.C.)" },
 ];
 
 export function RagPreview() {
   return (
     <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm sm:p-8">
       <p className="mb-6 inline-block rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
-        Ejemplo ilustrativo · el motor RAG llegará en próximas fases
+        Ejemplo ilustrativo
       </p>
 
       <div className="mb-6 flex justify-end">
@@ -18,7 +18,7 @@ export function RagPreview() {
 
       <div className="max-w-2xl space-y-4 text-sm leading-7">
         <p>
-          Según tus notas, Maratón fue la primera gran victoria de los hoplitas atenienses frente
+          Maratón fue la primera gran victoria de los hoplitas atenienses frente
           a un ejército persa en campo abierto
           <sup className="ml-0.5 font-medium text-accent">[1]</sup>. Reforzó el prestigio de la
           joven democracia y del propio Milcíades, y demostró que los persas no eran invencibles

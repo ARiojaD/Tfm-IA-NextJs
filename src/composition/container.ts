@@ -1,3 +1,4 @@
+import type { AnswerGenerator } from "@/application/ports/AnswerGenerator";
 import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
@@ -15,6 +16,7 @@ import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { UserRoleRepository } from "@/application/ports/UserRoleRepository";
 import { AddCommentUseCase } from "@/application/use-cases/AddCommentUseCase";
 import { AnswerQuizQuestionUseCase } from "@/application/use-cases/AnswerQuizQuestionUseCase";
+import { AskEncyclopediaUseCase } from "@/application/use-cases/AskEncyclopediaUseCase";
 import { ChangeTopicStatusUseCase } from "@/application/use-cases/ChangeTopicStatusUseCase";
 import { CreateTopicUseCase } from "@/application/use-cases/CreateTopicUseCase";
 import { DeleteTopicUseCase } from "@/application/use-cases/DeleteTopicUseCase";
@@ -47,8 +49,10 @@ import { UpdateTopicIntroductionUseCase } from "@/application/use-cases/UpdateTo
 import { UpdateTopicKeyFactsUseCase } from "@/application/use-cases/UpdateTopicKeyFactsUseCase";
 import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizUseCase";
 import { UpdateTopicRecommendationsUseCase } from "@/application/use-cases/UpdateTopicRecommendationsUseCase";
-import { EMBEDDING_DIMENSIONS } from "@/infrastructure/ai/embeddingModel";
+import { EchoAnswerGenerator } from "@/infrastructure/ai/EchoAnswerGenerator";
+import { EMBEDDING_DIMENSIONS, MIN_RELEVANT_SIMILARITY } from "@/infrastructure/ai/embeddingModel";
 import { HashingEmbeddingService } from "@/infrastructure/ai/HashingEmbeddingService";
+import { OpenAiCompatibleAnswerGenerator } from "@/infrastructure/ai/OpenAiCompatibleAnswerGenerator";
 import { TransformersEmbeddingService } from "@/infrastructure/ai/TransformersEmbeddingService";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
@@ -83,7 +87,7 @@ import { RandomUuidGenerator } from "@/infrastructure/system/RandomUuidGenerator
 import { SystemClock } from "@/infrastructure/system/SystemClock";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { Result } from "@/shared/Result";
-import { parseAuthEnv, parseDatabaseEnv } from "./env";
+import { parseAuthEnv, parseDatabaseEnv, parseLlmEnv } from "./env";
 
 // Rate limits per requester (OWASP API4). Generous for a person, tight for a script.
 export const COMMENT_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 60_000 };
@@ -100,6 +104,10 @@ export const LIBRARY_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000
 // Proposals per user: enough to contribute, not to flood the admins' inbox.
 export const PROPOSAL_RATE_LIMIT: RateLimitPolicy = { limit: 10, windowMs: 60 * 60_000 };
 export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 };
+// Questions to the RAG, per user: each one runs a language model, so this also protects a free API's quota (OWASP LLM10).
+export const QUESTION_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60 * 60_000 };
+// How long a local model may take to load and answer before the visitor gets the fragments instead.
+const LLM_TIMEOUT_MS = 90_000;
 
 interface Repositories {
   topics: TopicRepository;
@@ -158,15 +166,22 @@ function postgresRepositories(db: Database): Repositories {
 
 // The rate-limit counters stay in memory: valid for a single server process. With several instances
 // they must move to a shared store (PostgreSQL or Redis).
+// The models of the RAG. `minSimilarity` goes with the embedding model: it only makes sense for that one.
+interface Ai {
+  embeddings: EmbeddingService;
+  answers: AnswerGenerator;
+  minSimilarity: number;
+}
+
 // The embedding model is part of the state: it is loaded once per process, not once per request.
-function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker, embeddings: EmbeddingService) {
+function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker, ai: Ai) {
   const clock = new SystemClock();
 
   return {
     clock,
     repositories,
     breachedPasswords,
-    embeddings,
+    ai,
     rateLimiters: {
       comments: new InMemoryRateLimiter(COMMENT_RATE_LIMIT, clock),
       quizAnswers: new InMemoryRateLimiter(QUIZ_ANSWER_RATE_LIMIT, clock),
@@ -175,6 +190,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       library: new InMemoryRateLimiter(LIBRARY_RATE_LIMIT, clock),
       admin: new InMemoryRateLimiter(ADMIN_RATE_LIMIT, clock),
       proposals: new InMemoryRateLimiter(PROPOSAL_RATE_LIMIT, clock),
+      questions: new InMemoryRateLimiter(QUESTION_RATE_LIMIT, clock),
     },
   };
 }
@@ -183,11 +199,11 @@ type State = ReturnType<typeof createState>;
 
 // `auth` is passed apart from the state: in the app it is built per request (it reads that request's
 // cookies), in the unit tests it is a single in-memory double.
-function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, embeddings }: State, auth: AuthService) {
+function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, ai }: State, auth: AuthService) {
   const { topics, topicEditor, quizzes, comments, library, roles } = repositories;
   const ids = new RandomUuidGenerator();
   const editor = { topicEditor, auth, roles, rateLimiter: rateLimiters.admin };
-  const refreshIndex = new RefreshTopicIndexUseCase({ topicEditor, events: repositories.events, embeddings, index: repositories.knowledge });
+  const refreshIndex = new RefreshTopicIndexUseCase({ topicEditor, events: repositories.events, embeddings: ai.embeddings, index: repositories.knowledge });
   // The admin edits that change what the RAG indexes reindex their topic when they succeed.
   const indexed = <Output, Failure extends Error>(
     useCase: { execute(input: unknown): Promise<Result<Output, Failure>> },
@@ -244,6 +260,15 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
       proposal.status === "APPROVED" && proposal.kind === "EVENT" ? proposal.topicId : undefined,
     ),
     rebuildKnowledgeIndex: new RebuildKnowledgeIndexUseCase({ topicEditor, refresh: refreshIndex }),
+    askEncyclopedia: new AskEncyclopediaUseCase({
+      auth,
+      rateLimiter: rateLimiters.questions,
+      embeddings: ai.embeddings,
+      index: repositories.knowledge,
+      topics,
+      answers: ai.answers,
+      minSimilarity: ai.minSimilarity,
+    }),
   };
 }
 
@@ -259,7 +284,12 @@ export type Container = ReturnType<typeof createUseCases>;
 // A fresh, isolated container over in-memory data and accounts (used by the unit tests; no database needed).
 export function createContainer(seed: Seed = SEED): Container {
   return createUseCases(
-    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), new HashingEmbeddingService(EMBEDDING_DIMENSIONS)),
+    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), {
+      embeddings: new HashingEmbeddingService(EMBEDDING_DIMENSIONS),
+      answers: new EchoAnswerGenerator(),
+      // Word counts give low similarities: here every fragment is a candidate.
+      minSimilarity: 0,
+    }),
     new InMemoryAuthService(),
   );
 }
@@ -279,7 +309,11 @@ export function getContainer(): Container {
     globalForApp.__memnonState = createState(
       postgresRepositories(getDatabase()),
       new HaveIBeenPwnedChecker(),
-      new TransformersEmbeddingService(),
+      {
+        embeddings: new TransformersEmbeddingService(),
+        answers: createAnswerGenerator(),
+        minSimilarity: MIN_RELEVANT_SIMILARITY,
+      },
     );
   }
   return createUseCases(globalForApp.__memnonState, new BetterAuthService(getBetterAuth(), new NextSessionCookies()));
@@ -290,6 +324,11 @@ export function getContainer(): Container {
 function getDatabase(): Database {
   globalForApp.__memnonDatabase ??= createDatabase(parseDatabaseEnv(process.env).DATABASE_URL);
   return globalForApp.__memnonDatabase.db;
+}
+
+function createAnswerGenerator(): AnswerGenerator {
+  const { LLM_BASE_URL, LLM_MODEL, LLM_API_KEY } = parseLlmEnv(process.env);
+  return new OpenAiCompatibleAnswerGenerator({ baseURL: LLM_BASE_URL, model: LLM_MODEL, apiKey: LLM_API_KEY, timeoutMs: LLM_TIMEOUT_MS });
 }
 
 function getBetterAuth(): BetterAuth {
@@ -311,7 +350,7 @@ export async function closeContainer(): Promise<void> {
 // connection pool is reused. Only happens in development.
 function isBuiltWithCurrentClasses(state: State | undefined): state is State {
   if (!state) return false;
-  const { clock, repositories, rateLimiters, embeddings } = state;
+  const { clock, repositories, rateLimiters, ai } = state;
 
   return (
     clock instanceof SystemClock &&
@@ -325,13 +364,15 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.images instanceof StaticImageCatalog &&
     repositories.proposals instanceof PostgresProposalRepository &&
     repositories.knowledge instanceof PostgresKnowledgeIndex &&
-    embeddings instanceof TransformersEmbeddingService &&
+    ai.embeddings instanceof TransformersEmbeddingService &&
+    ai.answers instanceof OpenAiCompatibleAnswerGenerator &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&
     rateLimiters.signUp instanceof InMemoryRateLimiter &&
     rateLimiters.library instanceof InMemoryRateLimiter &&
     rateLimiters.admin instanceof InMemoryRateLimiter &&
-    rateLimiters.proposals instanceof InMemoryRateLimiter
+    rateLimiters.proposals instanceof InMemoryRateLimiter &&
+    rateLimiters.questions instanceof InMemoryRateLimiter
   );
 }

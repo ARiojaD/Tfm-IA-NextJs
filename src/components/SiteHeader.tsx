@@ -6,7 +6,7 @@ import { ThemeToggle } from "./ThemeToggle";
 const NAV_LINKS = [
   { href: "/#civilizaciones", label: "Civilizaciones" },
   { href: "/#cronologia", label: "Cronología" },
-  { href: "/#consulta", label: "Consulta" },
+  { href: "/preguntar", label: "Preguntar" },
 ];
 
 // Shows who is signed in (their display name, never the email) or the links to sign in and sign up.

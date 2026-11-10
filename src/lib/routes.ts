@@ -1,4 +1,5 @@
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
+import type { KnowledgeChunk } from "@/domain/entities/KnowledgeChunk";
 import { HISTORICAL_ERAS, type HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import { TOPIC_CATEGORIES, type TopicCategory } from "@/domain/value-objects/TopicCategory";
 
@@ -36,4 +37,17 @@ export function categoryPath(era: HistoricalEra, category: TopicCategory): strin
 
 export function topicPath(topic: Pick<HistoricalTopic, "era" | "category" | "slug">): string {
   return `${eraPath(topic.era)}/${CATEGORY_ROUTE_SLUGS[topic.category]}/${topic.slug}`;
+}
+
+// Where a citation of the RAG leads: the exact paragraph, fact or event of the topic page.
+export function knowledgeChunkPath(
+  topic: Pick<HistoricalTopic, "era" | "category" | "slug">,
+  chunk: Pick<KnowledgeChunk, "source" | "position" | "eventId">,
+): string {
+  const anchors = {
+    INTRODUCTION: `introduccion-${chunk.position}`,
+    KEY_FACT: `dato-clave-${chunk.position}`,
+    EVENT: `evento-${chunk.eventId}`,
+  };
+  return `${topicPath(topic)}#${anchors[chunk.source]}`;
 }

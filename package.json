@@ -22,7 +22,9 @@
     "auth:secret": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('base64'))\""
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.73",
     "@huggingface/transformers": "4.3.1",
+    "ai": "7.0.145",
     "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.4",
     "next": "16.4.3",

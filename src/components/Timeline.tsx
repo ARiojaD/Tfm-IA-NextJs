@@ -8,7 +8,8 @@ export function Timeline({ events }: { events: HistoricalEvent[] }) {
       {events.map((event) => (
         <li
           key={event.id}
-          className="relative grid gap-2 pl-8 md:grid-cols-[8rem_1fr] md:gap-8 md:pl-0"
+          id={`evento-${event.id}`}
+          className="relative grid scroll-mt-8 gap-2 rounded-2xl pl-8 target:bg-accent-soft md:grid-cols-[8rem_1fr] md:gap-8 md:pl-0"
         >
           <span
             className={`absolute left-0 top-2 size-[0.9375rem] rounded-full border-[3px] border-background ${eraDotClass(event.era)} md:left-[9rem]`}

@@ -49,12 +49,14 @@ export function ProposalForm({
   action,
   topics,
   initialTopicSlug,
+  initialKind,
 }: {
   action: (state: AdminFormState, formData: FormData) => Promise<AdminFormState>;
   topics: TopicChoice[];
   initialTopicSlug?: string;
+  initialKind?: ProposalKind;
 }) {
-  const [kind, setKind] = useState<ProposalKind>(initialTopicSlug ? "CORRECTION" : "EVENT");
+  const [kind, setKind] = useState<ProposalKind>(initialKind ?? (initialTopicSlug ? "CORRECTION" : "EVENT"));
   const [topicSlug, setTopicSlug] = useState(initialTopicSlug ?? topics[0]?.slug ?? "");
   const [values, setValues] = useState(EMPTY_VALUES);
   const { state, onSubmit, isPending } = useFormAction(async (previous: AdminFormState, formData: FormData) => {

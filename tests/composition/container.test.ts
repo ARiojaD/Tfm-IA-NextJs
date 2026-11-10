@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AdminRequiredError } from "@/application/errors/AdminRequiredError";
 import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
-import { createContainer, LIBRARY_RATE_LIMIT, SIGN_IN_RATE_LIMIT } from "@/composition/container";
+import { createContainer, LIBRARY_RATE_LIMIT, QUESTION_RATE_LIMIT, SIGN_IN_RATE_LIMIT } from "@/composition/container";
 
 const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", message: "Hola" };
@@ -152,6 +152,26 @@ describe("createContainer (en memoria)", () => {
 
     const battles = overview.categories.find((group) => group.category === "WARS_AND_BATTLES");
     expect(battles?.topics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
+  });
+
+  it("conecta el RAG: con el índice creado, una pregunta con sesión responde citando un tema", async () => {
+    const container = await containerWithLivia();
+    await container.rebuildKnowledgeIndex.execute();
+
+    const result = await container.askEncyclopedia.execute({ question: "¿Cuándo cruzó César el Rubicón?" });
+
+    expect(result.success && result.data.status).toBe("ANSWERED");
+  });
+
+  it("limita las preguntas al RAG por usuario", async () => {
+    const container = await containerWithLivia();
+    for (let i = 0; i < QUESTION_RATE_LIMIT.limit; i++) {
+      await container.askEncyclopedia.execute({ question: "¿Cuándo?" });
+    }
+
+    const result = await container.askEncyclopedia.execute({ question: "¿Cuándo?" });
+
+    expect(!result.success && result.error).toBeInstanceOf(RateLimitExceededError);
   });
 
   it("conecta el índice del RAG: lo rehace con todos los temas publicados del seed", async () => {

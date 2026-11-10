@@ -8,6 +8,7 @@ import {
   ERA_ROUTE_SLUGS,
   eraFromRouteSlug,
   eraPath,
+  knowledgeChunkPath,
   topicPath,
 } from "@/lib/routes";
 
@@ -53,6 +54,24 @@ describe("routes", () => {
     expect(new Set(HISTORICAL_ERAS.map((era) => ERA_ROUTE_SLUGS[era])).size).toBe(HISTORICAL_ERAS.length);
     expect(new Set(TOPIC_CATEGORIES.map((category) => CATEGORY_ROUTE_SLUGS[category])).size).toBe(
       TOPIC_CATEGORIES.length,
+    );
+  });
+});
+
+describe("knowledgeChunkPath", () => {
+  const topic = { era: "ROMAN", category: "PEOPLE", slug: "julio-cesar" } as const;
+
+  it("un párrafo de la introducción enlaza a ese párrafo", () => {
+    expect(knowledgeChunkPath(topic, { source: "INTRODUCTION", position: 2 })).toBe("/roma/personajes/julio-cesar#introduccion-2");
+  });
+
+  it("un dato clave enlaza a ese dato", () => {
+    expect(knowledgeChunkPath(topic, { source: "KEY_FACT", position: 1 })).toBe("/roma/personajes/julio-cesar#dato-clave-1");
+  });
+
+  it("un evento enlaza a ese evento de la cronología, por su id", () => {
+    expect(knowledgeChunkPath(topic, { source: "EVENT", position: 0, eventId: "event-rubicon" })).toBe(
+      "/roma/personajes/julio-cesar#evento-event-rubicon",
     );
   });
 });
