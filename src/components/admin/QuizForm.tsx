@@ -2,8 +2,10 @@
 
 import { QUIZ_OPTIONS_MAX, QUIZ_OPTIONS_MIN, QUIZ_QUESTIONS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { Quiz } from "@/domain/entities/Quiz";
+import type { QuestionDraftRow } from "@/domain/entities/TopicDrafts";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
+import { AiDraftButton, type AiDraftResult } from "./AiDraftButton";
 import { AddRowButton, ListErrors, RemoveRowButton, ROW_INPUT_CLASS, useRows } from "./listEditing";
 import { useFormAction } from "./useFormAction";
 
@@ -21,14 +23,16 @@ const EMPTY_QUESTION: QuestionRow = { id: "", question: "", options: ["", ""], c
 // answers stay on the server: the public page only gets the questions (PublicQuiz).
 export function QuizForm({
   action,
+  draftAction,
   topicId,
   quiz,
 }: {
   action: (state: AdminFormState, formData: FormData) => Promise<AdminFormState>;
+  draftAction: (topicId: string) => Promise<AiDraftResult<QuestionDraftRow>>;
   topicId: string;
   quiz: Quiz | null;
 }) {
-  const { rows, add, remove, update, json } = useRows<QuestionRow>(
+  const { rows, add, addMany, remove, update, json } = useRows<QuestionRow>(
     (quiz?.questions ?? []).map((question) => ({ ...question, explanation: question.explanation ?? "" })),
   );
   const { state, onSubmit, isPending } = useFormAction(action, INITIAL_ADMIN_FORM_STATE);
@@ -119,7 +123,18 @@ export function QuizForm({
       </ol>
 
       <ListErrors id="quiz-errors" errors={errors} />
-      <AddRowButton label="Añadir pregunta" disabled={rows.length >= QUIZ_QUESTIONS_MAX} onClick={() => add(EMPTY_QUESTION)} />
+      <div className="flex flex-wrap items-center gap-3">
+        <AddRowButton label="Añadir pregunta" disabled={rows.length >= QUIZ_QUESTIONS_MAX} onClick={() => add(EMPTY_QUESTION)} />
+        <AiDraftButton
+          action={draftAction}
+          topicId={topicId}
+          onDraft={(drafts) => {
+            const fitting = drafts.slice(0, QUIZ_QUESTIONS_MAX - rows.length);
+            addMany(fitting);
+            return fitting.length;
+          }}
+        />
+      </div>
       <SaveBar state={state} isPending={isPending} />
     </form>
   );

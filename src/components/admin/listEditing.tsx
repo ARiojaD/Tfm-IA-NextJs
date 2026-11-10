@@ -20,6 +20,8 @@ export function useRows<Row extends object>(initial: Row[]) {
   return {
     rows,
     add: (row: Row) => setRows([...rows, { ...row, key: crypto.randomUUID() }]),
+    // From the current rows, not this render's: the AI takes seconds and the admin may keep typing meanwhile.
+    addMany: (newRows: Row[]) => setRows((current) => [...current, ...newRows.map((row) => ({ ...row, key: crypto.randomUUID() }))]),
     remove: (key: string) => setRows(rows.filter((row) => row.key !== key)),
     update: (key: string, change: Partial<Row>) => setRows(rows.map((row) => (row.key === key ? { ...row, ...change } : row))),
     // What the hidden field sends: the rows without their React keys.

@@ -145,6 +145,41 @@ test.describe("Panel de administración", () => {
     });
   });
 
+  test.describe("las propuestas de la IA", () => {
+    test.use({ storageState: ADMIN_STORAGE_STATE });
+
+    // The proposal goes below the existing events and is not saved until the admin saves. By the last row,
+    // not its number: another test may have approved an event for this topic.
+    test("añaden filas a la cronología sin guardar nada", async ({ page }) => {
+      const timeline = page.getByRole("region", { name: "Cronología" });
+      const lastTitle = timeline.getByLabel(/^Título del evento/).last();
+      await page.goto("/admin/temas/topic-julius-caesar");
+
+      await timeline.getByRole("button", { name: "Proponer con IA" }).click();
+
+      await expect(timeline.getByText("Propuestas de la IA añadidas: 1.")).toBeVisible();
+      await expect(lastTitle).toHaveValue("Evento propuesto por la IA");
+      await expect(timeline.getByLabel(/^Año del evento/).last()).toHaveValue("44");
+      await expect(timeline.getByLabel("Título del evento 1", { exact: true })).not.toHaveValue("Evento propuesto por la IA");
+
+      await page.reload();
+      await expect(lastTitle).not.toHaveValue("Evento propuesto por la IA");
+    });
+
+    test("añaden preguntas al quiz sin guardar nada", async ({ page }) => {
+      const quiz = page.getByRole("region", { name: "Quiz" });
+      await page.goto("/admin/temas/topic-julius-caesar");
+
+      await quiz.getByRole("button", { name: "Proponer con IA" }).click();
+
+      await expect(quiz.getByLabel("Texto de la pregunta 6")).toHaveValue("Pregunta propuesta por la IA");
+      await expect(quiz.getByLabel("Marcar la opción 1 como correcta en la pregunta 6")).toBeChecked();
+
+      await page.reload();
+      await expect(quiz.getByLabel("Texto de la pregunta 6")).toHaveCount(0);
+    });
+  });
+
   test.describe("con una cuenta normal, las páginas del editor", () => {
     test.use({ storageState: AUTHOR_STORAGE_STATE });
 

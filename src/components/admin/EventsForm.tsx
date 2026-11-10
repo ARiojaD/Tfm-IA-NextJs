@@ -2,10 +2,12 @@
 
 import { EVENTS_MAX } from "@/application/dto/TopicEditorInputs";
 import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
+import type { EventDraftRow } from "@/domain/entities/TopicDrafts";
 import { MONTHS } from "@/lib/formatHistoricalDate";
 import { toDateFields } from "@/lib/topicBasicsValues";
 import { SaveBar } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
+import { AiDraftButton, type AiDraftResult } from "./AiDraftButton";
 import { AddRowButton, ListErrors, RemoveRowButton, ROW_INPUT_CLASS, useRows } from "./listEditing";
 import { useFormAction } from "./useFormAction";
 
@@ -14,14 +16,16 @@ const EMPTY_EVENT = { id: "", title: "", year: "", era: "BC", month: "", descrip
 // The topic's timeline. The order does not matter: the page sorts the events by date.
 export function EventsForm({
   action,
+  draftAction,
   topicId,
   events,
 }: {
   action: (state: AdminFormState, formData: FormData) => Promise<AdminFormState>;
+  draftAction: (topicId: string) => Promise<AiDraftResult<EventDraftRow>>;
   topicId: string;
   events: HistoricalEvent[];
 }) {
-  const { rows, add, remove, update, json } = useRows(
+  const { rows, add, addMany, remove, update, json } = useRows(
     events.map((event) => {
       const date = toDateFields(event.date);
       return { id: event.id, title: event.title, year: date.year, era: date.era, month: date.month, description: event.description };
@@ -98,7 +102,18 @@ export function EventsForm({
       </ol>
 
       <ListErrors id="events-errors" errors={errors} />
-      <AddRowButton label="Añadir evento" disabled={rows.length >= EVENTS_MAX} onClick={() => add(EMPTY_EVENT)} />
+      <div className="flex flex-wrap items-center gap-3">
+        <AddRowButton label="Añadir evento" disabled={rows.length >= EVENTS_MAX} onClick={() => add(EMPTY_EVENT)} />
+        <AiDraftButton
+          action={draftAction}
+          topicId={topicId}
+          onDraft={(drafts) => {
+            const fitting = drafts.slice(0, EVENTS_MAX - rows.length);
+            addMany(fitting);
+            return fitting.length;
+          }}
+        />
+      </div>
       <SaveBar state={state} isPending={isPending} />
     </form>
   );

@@ -144,6 +144,9 @@ export const ChangeTopicStatusInputSchema = z.strictObject({ topicId, status: To
 
 export const DeleteTopicInputSchema = z.strictObject({ topicId });
 
+// Asking the AI for a proposal: only the topic, whose saved text is what the model reads.
+export const DraftTopicInputSchema = z.strictObject({ topicId });
+
 // --- The topic's lists: timeline, quiz, recommendations and related topics ---
 // The editor sends each list whole (as JSON in a hidden field). `id` is the row's id when it already
 // existed: the use case keeps it only if it belongs to this topic, so nobody can overwrite another

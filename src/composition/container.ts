@@ -2,6 +2,7 @@ import type { AnswerGenerator } from "@/application/ports/AnswerGenerator";
 import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 import type { CommentRepository } from "@/application/ports/CommentRepository";
+import type { ContentDrafter } from "@/application/ports/ContentDrafter";
 import type { EmbeddingService } from "@/application/ports/EmbeddingService";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
@@ -20,6 +21,8 @@ import { AskEncyclopediaUseCase } from "@/application/use-cases/AskEncyclopediaU
 import { ChangeTopicStatusUseCase } from "@/application/use-cases/ChangeTopicStatusUseCase";
 import { CreateTopicUseCase } from "@/application/use-cases/CreateTopicUseCase";
 import { DeleteTopicUseCase } from "@/application/use-cases/DeleteTopicUseCase";
+import { DraftTopicEventsUseCase } from "@/application/use-cases/DraftTopicEventsUseCase";
+import { DraftTopicQuizUseCase } from "@/application/use-cases/DraftTopicQuizUseCase";
 import { GetAdminAccessUseCase } from "@/application/use-cases/GetAdminAccessUseCase";
 import { GetCurrentUserUseCase } from "@/application/use-cases/GetCurrentUserUseCase";
 import { GetLibraryStatusUseCase } from "@/application/use-cases/GetLibraryStatusUseCase";
@@ -51,8 +54,11 @@ import { UpdateTopicQuizUseCase } from "@/application/use-cases/UpdateTopicQuizU
 import { UpdateTopicRecommendationsUseCase } from "@/application/use-cases/UpdateTopicRecommendationsUseCase";
 import { EchoAnswerGenerator } from "@/infrastructure/ai/EchoAnswerGenerator";
 import { EMBEDDING_DIMENSIONS, MIN_RELEVANT_SIMILARITY } from "@/infrastructure/ai/embeddingModel";
+import { EmptyContentDrafter } from "@/infrastructure/ai/EmptyContentDrafter";
 import { HashingEmbeddingService } from "@/infrastructure/ai/HashingEmbeddingService";
+import type { LlmConfig } from "@/infrastructure/ai/languageModel";
 import { OpenAiCompatibleAnswerGenerator } from "@/infrastructure/ai/OpenAiCompatibleAnswerGenerator";
+import { OpenAiCompatibleContentDrafter } from "@/infrastructure/ai/OpenAiCompatibleContentDrafter";
 import { TransformersEmbeddingService } from "@/infrastructure/ai/TransformersEmbeddingService";
 import { BetterAuthService } from "@/infrastructure/auth/BetterAuthService";
 import { type BetterAuth, createBetterAuth } from "@/infrastructure/auth/createBetterAuth";
@@ -106,6 +112,8 @@ export const PROPOSAL_RATE_LIMIT: RateLimitPolicy = { limit: 10, windowMs: 60 * 
 export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 };
 // Questions to the RAG, per user: each one runs a language model, so this also protects a free API's quota (OWASP LLM10).
 export const QUESTION_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60 * 60_000 };
+// AI proposals in the panel, per admin: apart from the panel's budget, because each one runs the model.
+export const AI_DRAFT_RATE_LIMIT: RateLimitPolicy = { limit: 20, windowMs: 60 * 60_000 };
 // How long a local model may take to load and answer before the visitor gets the fragments instead.
 const LLM_TIMEOUT_MS = 90_000;
 
@@ -170,6 +178,7 @@ function postgresRepositories(db: Database): Repositories {
 interface Ai {
   embeddings: EmbeddingService;
   answers: AnswerGenerator;
+  drafter: ContentDrafter;
   minSimilarity: number;
 }
 
@@ -191,6 +200,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       admin: new InMemoryRateLimiter(ADMIN_RATE_LIMIT, clock),
       proposals: new InMemoryRateLimiter(PROPOSAL_RATE_LIMIT, clock),
       questions: new InMemoryRateLimiter(QUESTION_RATE_LIMIT, clock),
+      aiDrafts: new InMemoryRateLimiter(AI_DRAFT_RATE_LIMIT, clock),
     },
   };
 }
@@ -203,6 +213,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
   const { topics, topicEditor, quizzes, comments, library, roles } = repositories;
   const ids = new RandomUuidGenerator();
   const editor = { topicEditor, auth, roles, rateLimiter: rateLimiters.admin };
+  const drafting = { ...editor, rateLimiter: rateLimiters.aiDrafts, drafter: ai.drafter };
   const refreshIndex = new RefreshTopicIndexUseCase({ topicEditor, events: repositories.events, embeddings: ai.embeddings, index: repositories.knowledge });
   // The admin edits that change what the RAG indexes reindex their topic when they succeed.
   const indexed = <Output, Failure extends Error>(
@@ -244,6 +255,8 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
     updateTopicQuiz: new UpdateTopicQuizUseCase({ ...editor, quizzes, ids }),
     updateTopicRecommendations: new UpdateTopicRecommendationsUseCase({ ...editor, recommendations: repositories.recommendations, ids }),
     updateRelatedTopics: new UpdateRelatedTopicsUseCase(editor),
+    draftTopicEvents: new DraftTopicEventsUseCase(drafting),
+    draftTopicQuiz: new DraftTopicQuizUseCase(drafting),
     updateTopicImage: new UpdateTopicImageUseCase({ ...editor, images: repositories.images }),
     submitProposal: new SubmitProposalUseCase({
       auth,
@@ -287,6 +300,7 @@ export function createContainer(seed: Seed = SEED): Container {
     createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), {
       embeddings: new HashingEmbeddingService(EMBEDDING_DIMENSIONS),
       answers: new EchoAnswerGenerator(),
+      drafter: new EmptyContentDrafter(),
       // Word counts give low similarities: here every fragment is a candidate.
       minSimilarity: 0,
     }),
@@ -311,7 +325,8 @@ export function getContainer(): Container {
       new HaveIBeenPwnedChecker(),
       {
         embeddings: new TransformersEmbeddingService(),
-        answers: createAnswerGenerator(),
+        answers: new OpenAiCompatibleAnswerGenerator(llmConfig()),
+        drafter: new OpenAiCompatibleContentDrafter(llmConfig()),
         minSimilarity: MIN_RELEVANT_SIMILARITY,
       },
     );
@@ -326,9 +341,9 @@ function getDatabase(): Database {
   return globalForApp.__memnonDatabase.db;
 }
 
-function createAnswerGenerator(): AnswerGenerator {
+function llmConfig(): LlmConfig {
   const { LLM_BASE_URL, LLM_MODEL, LLM_API_KEY } = parseLlmEnv(process.env);
-  return new OpenAiCompatibleAnswerGenerator({ baseURL: LLM_BASE_URL, model: LLM_MODEL, apiKey: LLM_API_KEY, timeoutMs: LLM_TIMEOUT_MS });
+  return { baseURL: LLM_BASE_URL, model: LLM_MODEL, apiKey: LLM_API_KEY, timeoutMs: LLM_TIMEOUT_MS };
 }
 
 function getBetterAuth(): BetterAuth {
@@ -366,6 +381,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.knowledge instanceof PostgresKnowledgeIndex &&
     ai.embeddings instanceof TransformersEmbeddingService &&
     ai.answers instanceof OpenAiCompatibleAnswerGenerator &&
+    ai.drafter instanceof OpenAiCompatibleContentDrafter &&
     rateLimiters.comments instanceof InMemoryRateLimiter &&
     rateLimiters.quizAnswers instanceof InMemoryRateLimiter &&
     rateLimiters.signIn instanceof InMemoryRateLimiter &&
@@ -373,6 +389,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     rateLimiters.library instanceof InMemoryRateLimiter &&
     rateLimiters.admin instanceof InMemoryRateLimiter &&
     rateLimiters.proposals instanceof InMemoryRateLimiter &&
-    rateLimiters.questions instanceof InMemoryRateLimiter
+    rateLimiters.questions instanceof InMemoryRateLimiter &&
+    rateLimiters.aiDrafts instanceof InMemoryRateLimiter
   );
 }

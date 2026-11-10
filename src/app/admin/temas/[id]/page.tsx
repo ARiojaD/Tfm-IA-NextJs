@@ -18,6 +18,8 @@ import {
   deleteTopic,
   updateRelatedTopics,
   updateTopicBasics,
+  draftTopicEvents,
+  draftTopicQuiz,
   updateTopicEvents,
   updateTopicImage,
   updateTopicIntroduction,
@@ -80,11 +82,11 @@ export default async function EditTopicPage({ params }: PageProps<"/admin/temas/
       </AdminSection>
 
       <AdminSection title="Cronología" description="Los momentos clave del tema. En la página se ordenan solos por fecha.">
-        <EventsForm action={updateTopicEvents} topicId={topic.id} events={events} />
+        <EventsForm action={updateTopicEvents} draftAction={draftTopicEvents} topicId={topic.id} events={events} />
       </AdminSection>
 
       <AdminSection title="Quiz" description="Preguntas con 2 a 4 opciones. Las respuestas correctas nunca llegan al navegador del lector.">
-        <QuizForm action={updateTopicQuiz} topicId={topic.id} quiz={quiz} />
+        <QuizForm action={updateTopicQuiz} draftAction={draftTopicQuiz} topicId={topic.id} quiz={quiz} />
       </AdminSection>
 
       <AdminSection title="Recomendaciones" description="Libros, películas y series para seguir aprendiendo.">

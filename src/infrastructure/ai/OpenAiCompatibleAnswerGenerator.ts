@@ -1,31 +1,18 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText, type LanguageModel, Output } from "ai";
 import type { AnswerGenerator, AnswerSource } from "@/application/ports/AnswerGenerator";
 import { type GeneratedAnswer, GeneratedAnswerSchema } from "@/domain/entities/EncyclopediaAnswer";
 import { buildAnswerPrompt } from "./answerPrompt";
-
-export interface LlmConfig {
-  baseURL: string;
-  model: string;
-  apiKey?: string;
-  timeoutMs: number;
-}
+import { createLanguageModel, type LlmConfig } from "./languageModel";
 
 // A bound on what one answer can cost (OWASP LLM10).
 const MAX_OUTPUT_TOKENS = 700;
 
-// Writes the answers with any server that speaks the OpenAI protocol: Ollama in development and, by changing
-// LLM_BASE_URL, LLM_MODEL and LLM_API_KEY, a free API such as Groq or Gemini once deployed.
+// Writes the answers of the RAG with the configured language model.
 export class OpenAiCompatibleAnswerGenerator implements AnswerGenerator {
   private readonly model: LanguageModel;
 
   constructor(private readonly config: LlmConfig) {
-    this.model = createOpenAICompatible({
-      name: "llm",
-      baseURL: config.baseURL,
-      apiKey: config.apiKey,
-      supportsStructuredOutputs: true,
-    }).chatModel(config.model);
+    this.model = createLanguageModel(config);
   }
 
   // Output.object asks for the JSON schema and validates the reply with it; anything else rejects (OWASP LLM02).

@@ -1,7 +1,8 @@
 import type { AnswerSource } from "@/application/ports/AnswerGenerator";
+import { plainPromptText as plain } from "./languageModel";
 
 // OWASP LLM01: the instructions go in the system message and never mention the data; the question and the
-// fragments go in the user message, inside tags they cannot close (see `plain`).
+// fragments go in the user message, inside tags they cannot close (see plainPromptText).
 const SYSTEM_PROMPT = `Eres el asistente de MemnonHistory, una enciclopedia de historia antigua. Respondes en español, con frases breves y claras.
 
 Reglas:
@@ -14,11 +15,6 @@ Devuelve estos campos:
 - coverage: "FULL" si los fragmentos responden a la pregunta; "PARTIAL" si solo responden a una parte; "NONE" si no la responden.
 - answer: la respuesta con sus citas, en uno o dos párrafos, sin mencionar los fragmentos ni lo que no aparece en ellos. Vacío si coverage es "NONE".
 - missing: si coverage es "PARTIAL", una frase corta con lo que no aparece en los fragmentos. Vacío en los demás casos.`;
-
-// Removes what could close a tag or an attribute, so the text stays inside its delimiters.
-function plain(text: string): string {
-  return text.replace(/[<>]/g, " ").replace(/"/g, "'");
-}
 
 export function buildAnswerPrompt(question: string, sources: AnswerSource[]): { system: string; prompt: string } {
   const fragments = sources

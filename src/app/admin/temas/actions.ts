@@ -6,10 +6,13 @@ import { AdminRequiredError } from "@/application/errors/AdminRequiredError";
 import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { InvalidTopicError } from "@/application/errors/InvalidTopicError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
+import { TopicDraftError } from "@/application/errors/TopicDraftError";
 import { TopicIsPublishedError } from "@/application/errors/TopicIsPublishedError";
 import { TopicNotFoundError } from "@/application/errors/TopicNotFoundError";
 import type { AdminFormState } from "@/components/admin/adminFormState";
+import type { AiDraftResult } from "@/components/admin/AiDraftButton";
 import { getContainer } from "@/composition/container";
+import type { EventDraftRow, QuestionDraftRow } from "@/domain/entities/TopicDrafts";
 import type { Result } from "@/shared/Result";
 
 // Thin Server Actions for the topic editor. Like every Server Action they are public POST endpoints:
@@ -104,6 +107,25 @@ function jsonField(formData: FormData, name: string): unknown {
   } catch {
     return null;
   }
+}
+
+function draftResult<Row>(result: Result<Row[], Error>): AiDraftResult<Row> {
+  if (result.success) return { status: "success", rows: result.data };
+  const { error } = result;
+  if (error instanceof TopicDraftError) return { status: "error", message: error.message };
+  if (error instanceof RateLimitExceededError) {
+    return { status: "error", message: `Has pedido muchas propuestas seguidas. Espera ${Math.ceil(error.retryAfterSeconds / 60)} min y vuelve a intentarlo.` };
+  }
+  return { status: "error", message: errorState(error).formErrors?.[0] ?? "No se ha podido pedir la propuesta." };
+}
+
+// The AI's proposals only return rows for the form: nothing is saved until the administrator saves it.
+export async function draftTopicEvents(topicId: string): Promise<AiDraftResult<EventDraftRow>> {
+  return draftResult(await getContainer().draftTopicEvents.execute({ topicId }));
+}
+
+export async function draftTopicQuiz(topicId: string): Promise<AiDraftResult<QuestionDraftRow>> {
+  return draftResult(await getContainer().draftTopicQuiz.execute({ topicId }));
 }
 
 export async function updateTopicEvents(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
