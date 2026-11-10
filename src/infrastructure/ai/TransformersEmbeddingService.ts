@@ -46,6 +46,7 @@ export class TransformersEmbeddingService implements EmbeddingService {
       env.cacheDir = this.cacheDir;
       // 8-bit weights: about a quarter of the size, nearly the same quality.
       this.extractor = pipeline("feature-extraction", EMBEDDING_MODEL, { dtype: "q8" }).catch((error: unknown) => {
+        console.error(`No se pudo cargar el modelo de embeddings: ${error instanceof Error ? error.name : "error desconocido"}`);
         this.extractor = null;
         throw error;
       });

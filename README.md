@@ -31,8 +31,8 @@ Quien estudia historia acumula lecturas, fechas y personajes repartidos entre mu
 - **Ordena** el conocimiento por civilización → categoría → tema, y cada tema con su introducción, datos clave, cronología, quiz, recomendaciones y temas relacionados.
 - **Personaliza** el estudio con *Mi biblioteca*: seguir civilizaciones y guardar temas.
 - **Crece con verificación:** los usuarios proponen eventos, recomendaciones, correcciones o temas nuevos (siempre con su fuente) y un administrador los revisa en su panel antes de publicarlos; el panel también permite crear y editar temas sin tocar el código.
-- **Responderá preguntas** (fase 5) en lenguaje natural sobre el contenido de la web, citando y enlazando dónde se habla de ello, gracias a un pipeline RAG sobre PostgreSQL + pgvector y la API de Anthropic Claude.
-- **Ayudará a redactar con IA** (fase 5): propuestas de cronología, quiz y fichas mediante *Structured Outputs* validados con Zod, siempre revisadas por una persona.
+- **Responde preguntas** en lenguaje natural sobre el contenido de la web, citando y enlazando el párrafo, dato o evento exacto donde se habla de ello, gracias a un pipeline RAG sobre PostgreSQL + pgvector.
+- **Ayuda a redactar con IA:** propone cronologías y quiz en el panel y rellena propuestas desde un fragmento, con *Structured Outputs* validados con Zod y siempre revisado por una persona.
 
 **Origen del nombre.** Memnón de Etiopía, héroe de la Guerra de Troya e hijo de Eos (la Aurora), simboliza el amanecer del conocimiento histórico y la épica clásica. La identidad visual de la aplicación parte de esa idea: paleta de amanecer y tipografía clásica.
 
@@ -41,7 +41,7 @@ Quien estudia historia acumula lecturas, fechas y personajes repartidos entre mu
 | Bloque | Peso | Contenido |
 | --- | --- | --- |
 | Web *fullstack* | 70 % | PostgreSQL/pgvector, CRUD de eventos y fuentes, líneas del tiempo interactivas, autenticación y panel de usuario |
-| Inteligencia Artificial | 30 % | Pipeline RAG sobre notas, generación de embeddings y fichas históricas con *Structured Outputs* |
+| Inteligencia Artificial | 30 % | Pipeline RAG sobre el contenido de los temas, embeddings y borradores de cronología, quiz y propuestas con *Structured Outputs* |
 
 ---
 
@@ -52,15 +52,22 @@ Quien estudia historia acumula lecturas, fechas y personajes repartidos entre mu
 - **Eventos históricos** con título, fecha, época y descripción.
   - Las fechas están pensadas para la historia antigua: año entero (negativo = a.C.), sin año 0 y con mes opcional, porque de muchos eventos solo se conoce el año.
   - Las épocas son un catálogo cerrado (Grecia Antigua, Roma, Hispania…).
-- **Fuentes y notas personales** asociadas a cada evento, para saber siempre de dónde procede cada dato.
 - **Navegación por civilizaciones** (Roma, Antigua Grecia, Hispania) y, dentro de cada una, por categorías: personajes, guerras y batallas, etapas y ciudades. Los temas de cada categoría se ordenan cronológicamente.
 - **Temas históricos** (un personaje, una batalla, una etapa…) con periodo, introducción, datos clave, imagen opcional con su crédito, cronología, quiz, comentarios, recomendaciones y temas relacionados.
 - **Líneas del tiempo** que ordenan los eventos y los distinguen por época.
 
 ### Inteligencia Artificial
 
-- **Consultas con RAG:** preguntas en lenguaje natural respondidas solo con el contenido de la biblioteca del usuario, citando las fuentes.
-- **Fichas automáticas:** a partir de un fragmento de lectura, la IA propone una ficha estructurada del evento, que se valida antes de guardarse.
+Todo funciona **sin coste y sin enviar datos fuera** en desarrollo: los embeddings se calculan dentro de Node y el modelo de lenguaje corre en local con Ollama. Detrás de ports, cambiar a una API gratuita al desplegar solo requiere cambiar variables de entorno.
+
+- **Preguntar a la enciclopedia** (`/preguntar`, con sesión):
+  - La respuesta sale solo de los fragmentos encontrados (introducción, datos clave y cronología de los temas publicados) y cita cada dato con [1], [2].
+  - Cada cita lleva al párrafo, dato o evento exacto y lo resalta.
+  - Si solo hay parte de la información, indica qué no aparece. Si no hay nada, lo dice y ofrece **proponer un tema nuevo**.
+  - Si el modelo no está disponible, muestra los fragmentos encontrados.
+- **Índice automático:** al publicar o editar un tema se reindexa solo ese tema; al pasarlo a borrador o borrarlo, sale del índice. `npm run rag:index` lo rehace entero.
+- **Proponer con IA** (panel, cronología y quiz): lee el texto guardado del tema y añade filas al formulario **sin guardar nada**. Los años que no aparecen en el texto se descartan.
+- **Rellenar con IA** (propuestas de evento y tema nuevo): completa el formulario desde un fragmento pegado. **La fuente nunca la pone la IA**, y no envía nada.
 
 ### Usuarios e interfaz
 
@@ -101,8 +108,9 @@ Quien estudia historia acumula lecturas, fechas y personajes repartidos entre mu
 | [ESLint](https://eslint.org) (`eslint-config-next`) | 9.39.5 | Linter |
 | PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) | 17 + 0.8.7 (Docker) | Base de datos relacional y vectorial |
 | [Drizzle ORM](https://orm.drizzle.team) (+ `drizzle-kit`) | 0.45.4 | Consultas parametrizadas, esquema y migraciones |
-| [Anthropic Claude API](https://docs.anthropic.com) vía [Vercel AI SDK](https://sdk.vercel.ai) | _Por completar_ | Generación de respuestas y *Structured Outputs* |
-| Modelo de embeddings | _Por completar_ | Vectorización de notas para el RAG |
+| [Ollama](https://ollama.com) con `qwen2.5:7b` | 0.40.16 | Modelo de lenguaje local: respuestas y borradores con *Structured Outputs* |
+| [Vercel AI SDK](https://sdk.vercel.ai) (`@ai-sdk/openai-compatible`) | 7.0.145 | Llamadas al modelo por el protocolo de OpenAI (Ollama, Groq, Gemini…) |
+| [Transformers.js](https://huggingface.co/docs/transformers.js) con `multilingual-e5-small` | 4.3.1 | Embeddings dentro de Node, para el RAG |
 | [Better Auth](https://www.better-auth.com) | 1.7.14 | Registro, inicio de sesión y sesiones (en nuestra PostgreSQL) |
 | Despliegue | _Por completar_ | Alojamiento de la aplicación y la base de datos |
 
@@ -116,7 +124,7 @@ El proyecto sigue una **Clean Architecture pragmática**, orientada al dominio. 
 | --- | --- | --- |
 | 🔴 Dominio | `domain/` | Reglas del negocio: entidades y *value objects*. TypeScript puro, sin dependencias de Next.js, base de datos ni IA |
 | 🟠 Aplicación | `application/` | Casos de uso que orquestan el dominio, y *ports* (interfaces) con lo que necesitan del exterior |
-| 🔵 Infraestructura | `infrastructure/` | Implementación de los *ports*: PostgreSQL + pgvector, Claude y embeddings |
+| 🔵 Infraestructura | `infrastructure/` | Implementación de los *ports*: PostgreSQL + pgvector, modelo de lenguaje y embeddings |
 | 🟢 Composición | `composition/` | Conecta cada caso de uso con sus implementaciones reales y valida la configuración |
 | 🟤 Compartido | `shared/` | Utilidades transversales sin lógica de negocio |
 | ⚪ Presentación | `app/`, `components/`, `lib/` | Páginas, *Route Handlers* (entrada HTTP) y componentes de Next.js |
@@ -128,7 +136,7 @@ El proyecto sigue una **Clean Architecture pragmática**, orientada al dominio. 
    application/use-cases ──usa──► application/ports  (interfaces)
         │                                ▲
         ▼                                │ implementa
-      domain/                    infrastructure/  (PostgreSQL, Claude)
+      domain/                    infrastructure/  (PostgreSQL, IA)
 
    composition/ une cada caso de uso con su implementación real
 ```
@@ -158,7 +166,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 │   │   │   └── postgres/         # PostgreSQL: cliente, esquema, migraciones, mappers, seed y repositorios
 │   │   ├── system/               # Reloj y generador de identificadores
 │   │   ├── rate-limiting/        # Limitadores de frecuencia
-│   │   └── ai/                   # Adaptadores de Claude y embeddings
+│   │   └── ai/                   # Adaptadores del modelo de lenguaje y de embeddings
 │   ├── composition/              # 🟢 Conexión de piezas (container) y configuración
 │   ├── shared/                   # 🟤 Utilidades transversales
 │   ├── app/                      # ⚪ Presentación (Next.js App Router)
@@ -206,6 +214,7 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
 - npm 11 o superior
 - Git
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ejecuta PostgreSQL 17 con pgvector; no hace falta instalar PostgreSQL)
+- [Ollama](https://ollama.com), para que la IA redacte (opcional: sin él, `/preguntar` muestra solo los fragmentos encontrados y las propuestas con IA no están disponibles)
 
 ### Pasos
 
@@ -232,13 +241,25 @@ Los tests viven en `tests/` y replican la ruta del código que prueban: `src/dom
    npm run db:seed
    ```
 
-5. Arrancar el servidor de desarrollo:
+5. Crear el índice del RAG (la primera vez descarga el modelo de embeddings, unos 130 MB):
+
+   ```bash
+   npm run rag:index
+   ```
+
+6. Con Ollama instalado, descargar el modelo de lenguaje (unos 4,7 GB):
+
+   ```bash
+   ollama pull qwen2.5:7b
+   ```
+
+7. Arrancar el servidor de desarrollo:
 
    ```bash
    npm run dev
    ```
 
-6. Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
+8. Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
 
 La aplicación lee y guarda los datos en PostgreSQL, así que Docker Desktop tiene que estar abierto y la base de datos levantada (`npm run db:up`) mientras se usa. Los datos se conservan entre reinicios.
 
@@ -258,6 +279,7 @@ La aplicación lee y guarda los datos en PostgreSQL, así que Docker Desktop tie
 | `npm run db:migrate` | Aplica las migraciones pendientes |
 | `npm run db:seed` | Carga los temas de ejemplo (se puede relanzar: no duplica datos ni pisa lo editado desde el panel) |
 | `npm run admin:grant -- email` | Nombra administrador a una cuenta ya registrada (`admin:revoke` lo quita). Es la única forma de dar el rol: desde la web no se puede |
+| `npm run rag:index` | Rehace el índice del RAG con todos los temas publicados (tras `db:seed`, tras cambiar el modelo de embeddings o si un reindexado automático falló) |
 | `npm run auth:secret` | Genera un secreto aleatorio para `BETTER_AUTH_SECRET` |
 | `npm run test:e2e` | Tests end-to-end con Playwright: compila la app y la prueba en Chromium (puerto 3100), contra la base de datos de test. Requiere `npm run db:up`. La primera vez, instalar el navegador con `npx playwright install chromium` |
 
@@ -278,7 +300,8 @@ cp .env.example .env.local
 | `TEST_DATABASE_URL` | Opcional. Base de datos de los tests de integración; por defecto, la de `DATABASE_URL` con `_test` al final del nombre |
 | `BETTER_AUTH_SECRET` | Firma las cookies de sesión. Al menos 32 caracteres aleatorios: `npm run auth:secret` |
 | `BETTER_AUTH_URL` | Dirección de la aplicación (`http://localhost:3000` en desarrollo; la URL pública con https en producción) |
-| _Por completar_ | _Clave de la API de Anthropic…_ |
+| `LLM_BASE_URL`, `LLM_MODEL` | Opcionales. Servidor y modelo de lenguaje, con protocolo OpenAI. Por defecto, Ollama en local con `qwen2.5:7b` |
+| `LLM_API_KEY` | Opcional. Solo si el servidor del modelo la pide (Groq, Gemini…); Ollama no la necesita |
 
 Las variables se validan con Zod al arrancar la aplicación: si falta alguna o tiene un formato incorrecto, la aplicación no arranca (OWASP A05). Los archivos `.env*` con valores reales nunca se suben al repositorio.
 
@@ -319,12 +342,13 @@ El desarrollo sigue tres guías OWASP:
 - **OWASP API Security Top 10:**
   - comprobación de propiedad de cada recurso (BOLA, API1);
   - validación estricta del cuerpo de las peticiones contra *Mass Assignment* (API3);
-  - *rate limiting* en comentarios, respuestas del quiz, registro, inicio de sesión, Mi biblioteca, panel y propuestas (API4).
+  - *rate limiting* en comentarios, respuestas del quiz, registro, inicio de sesión, Mi biblioteca, panel, propuestas y cada uso de la IA (API4).
 - **OWASP Top 10 for LLM Applications:**
-  - separación entre instrucciones del sistema y contenido del usuario contra la inyección de prompts (LLM01);
-  - salidas del modelo estructuradas y validadas con Zod (LLM02);
-  - filtrado de datos sensibles (LLM06);
-  - límites de tokens y *timeouts* (LLM10).
+  - inyección de prompts (LLM01): instrucciones separadas de los datos, que van delimitados y no pueden cerrar sus etiquetas;
+  - salidas del modelo estructuradas y validadas con Zod, y nunca interpretadas como HTML (LLM02);
+  - al modelo solo llega contenido público y revisado o el texto que el propio usuario pega, y los fallos se registran sin ese texto (LLM06);
+  - límites de longitud, tokens, tiempo y peticiones por usuario (LLM10);
+  - la IA no escribe en la base de datos: lo que propone pasa siempre por una persona (LLM08), y las respuestas enlazan sus fuentes y avisan de que se comprueben (LLM09).
 
 Algunos ejemplos ya aplicados, todos cubiertos por tests:
 
@@ -339,6 +363,7 @@ Algunos ejemplos ya aplicados, todos cubiertos por tests:
   - el autor de un comentario sale de la sesión, nunca del formulario: nadie puede comentar en nombre de otro;
   - tras iniciar sesión solo se vuelve a rutas de la propia web (sin redirecciones abiertas);
   - la ruta HTTP de Better Auth no se expone: todo pasa por Server Actions que validan y limitan.
+- **Límite conocido de la IA:** un modelo pequeño no resiste todas las inyecciones de prompts (medido en el relleno de propuestas: 1 de 8 intentos pasa). El daño posible se limita por diseño: el modelo no tiene herramientas ni datos privados, su salida tiene esquema y solo rellena el formulario de quien pegó el texto, que después revisa un administrador.
 - Las imágenes de los temas solo pueden ser archivos locales de `/images` (JPG, PNG, WebP o AVIF): ni dominios externos, ni rutas con `..`, ni SVG, que puede contener scripts.
 
 El detalle completo está en [`AGENTS.md`](AGENTS.md#3-directivas-de-seguridad-owasp-triléctica-de-seguridad).

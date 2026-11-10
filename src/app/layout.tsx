@@ -22,7 +22,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "MemnonHistory AI",
   description:
-    "Gestor inteligente de conocimiento histórico: organiza lecturas, eventos y cronologías y consulta tus notas con IA.",
+    "Enciclopedia histórica ordenada, con contribuciones verificadas y una IA que responde citando de dónde sale cada dato.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

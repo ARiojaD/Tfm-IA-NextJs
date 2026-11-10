@@ -13,26 +13,26 @@ import { SAMPLE_EVENTS } from "@/lib/sampleEvents";
 const FEATURES = [
   {
     title: "Cronologías vivas",
-    text: "Registra eventos con fecha, época y descripción, y míralos ordenados en una línea del tiempo que crece con tus lecturas.",
+    text: "Cada tema reúne sus eventos con fecha y descripción, ordenados en una línea del tiempo.",
   },
   {
-    title: "Fuentes y notas",
-    text: "Asocia cada evento a tus notas personales y a fuentes primarias o secundarias, para saber siempre de dónde sale cada dato.",
+    title: "Contribuciones verificadas",
+    text: "Los usuarios proponen eventos y temas con su fuente, y un administrador los revisa antes de publicarlos.",
   },
   {
     title: "Consultas con RAG",
-    text: "Pregunta en lenguaje natural y recibe respuestas basadas solo en tus notas, con las fuentes citadas.",
+    text: "Pregunta en lenguaje natural y recibe respuestas basadas solo en el contenido revisado, con enlaces a cada fuente.",
   },
   {
-    title: "Fichas automáticas",
-    text: "Pega un fragmento de lectura y la IA propone una ficha estructurada del evento, validada antes de guardarse.",
+    title: "Ayuda de la IA",
+    text: "Pega un fragmento de lectura y la IA rellena tu propuesta, para que la revises antes de enviarla.",
   },
 ];
 
 const STEPS = [
-  { title: "Registra", text: "Añade eventos, lecturas y notas desde tu panel." },
-  { title: "Indexa", text: "Tus notas se convierten en embeddings y se guardan en PostgreSQL con pgvector." },
-  { title: "Pregunta", text: "Claude responde usando únicamente el contexto recuperado de tu biblioteca." },
+  { title: "Verifica", text: "Lo que proponen los usuarios y la IA lo revisa una persona antes de publicarse." },
+  { title: "Indexa", text: "El contenido publicado se convierte en embeddings y se guarda en PostgreSQL con pgvector." },
+  { title: "Pregunta", text: "La IA responde usando únicamente los fragmentos recuperados de la enciclopedia." },
 ];
 
 const firstEvent = SAMPLE_EVENTS[0];
@@ -70,14 +70,14 @@ export default async function Home() {
           />
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24">
             <p className="mb-5 text-sm font-medium uppercase tracking-[0.2em] text-accent">
-              Gestor inteligente de conocimiento histórico
+              Enciclopedia histórica con IA
             </p>
             <h1 className="max-w-3xl font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-              Tus lecturas de historia, ordenadas en el tiempo y listas para preguntar.
+              La historia antigua, ordenada en el tiempo y lista para preguntar.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-              Organiza eventos, fuentes y notas de Grecia, Roma o Hispania, y consulta tu propia
-              biblioteca con IA que responde citando de dónde sale cada dato.
+              Explora Grecia, Roma e Hispania por civilizaciones y temas, y pregunta a una enciclopedia
+              revisada que responde citando de dónde sale cada dato.
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <a

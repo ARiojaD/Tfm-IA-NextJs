@@ -20,7 +20,7 @@ src/
 │   ├── entities/           # Entidades (HistoricalTopic, HistoricalEvent, Quiz, Comment, Recommendation)
 │   └── value-objects/      # Valores con reglas propias (HistoricalDate, HistoricalPeriod, HistoricalEra, TopicCategory, KeyFact, TopicImage, Slug, EntityId)
 ├── application/            # 🟠 APLICACIÓN: organiza el trabajo. Depende solo de domain y shared
-│   ├── use-cases/          # Casos de uso (GetTopicDetailUseCase, AddCommentUseCase, ExecuteHistoryRAGUseCase)
+│   ├── use-cases/          # Casos de uso (GetTopicDetailUseCase, AddCommentUseCase, AskEncyclopediaUseCase)
 │   ├── ports/              # Interfaces que necesitan los casos de uso (repositorios, reloj, ids, LLM, embeddings)
 │   ├── dto/                # Entradas validadas (AddCommentInput) y salidas públicas (PublicQuiz) de los casos de uso
 │   └── errors/             # Errores esperados de los casos de uso (TopicNotFoundError, InvalidCommentError…)
@@ -31,7 +31,7 @@ src/
 │   │   └── postgres/       # Cliente PostgreSQL + pgvector, esquemas ORM, migraciones y repositorios
 │   ├── system/             # Reloj del sistema y generador de UUID (implementan Clock e IdGenerator)
 │   ├── rate-limiting/      # Limitadores de frecuencia (implementan RateLimiter)
-│   └── ai/                 # Adaptadores de Anthropic Claude (Vercel AI SDK) y de embeddings
+│   └── ai/                 # Adaptadores del modelo de lenguaje (protocolo OpenAI, Vercel AI SDK) y de embeddings (Transformers.js)
 ├── composition/            # 🟢 COMPOSICIÓN: conecta casos de uso con implementaciones reales
 │                           #    (container) y valida la configuración/entorno con Zod
 ├── shared/                 # 🟤 COMPARTIDO: utilidades transversales sin lógica de negocio (p. ej. Result)
@@ -99,6 +99,15 @@ tests/                      # Tests, fuera de src/, replicando su estructura
 * **Mi biblioteca:** port `LibraryRepository` (cada método recibe el `userId`, que sale siempre de la sesión dentro del caso de uso). Seguir una civilización guarda solo la era (`era_follows`): sus temas se leen al pedir la página, así que los nuevos aparecen solos. Guardar un tema (`saved_topics`) guarda la fecha del `Clock`, para ordenarlos del más reciente al más antiguo. Los botones envían el estado deseado (`intent`: `follow`/`unfollow`, `save`/`remove`), nunca "alternar", así que un doble clic deja el mismo resultado. `GetLibraryStatusUseCase` devuelve `null` sin sesión y las páginas muestran entonces los mismos botones como enlaces a iniciar sesión (`?volver=`).
 * **Navegación:** civilización (`/roma`) → categoría como sección de esa página (`/roma#personajes`; `/roma/personajes` redirige ahí) → tema (`/roma/personajes/julio-cesar`). Las URLs se construyen siempre con `lib/routes.ts`.
 * **Modelo de un tema:** todo tema tiene un `period` (inicio y fin opcional) que lo ordena cronológicamente, una `introduction` en párrafos (el texto principal que indexará el RAG), `keyFacts` genéricos de etiqueta y valor (sirven igual para un personaje que para una batalla), una `image` opcional (solo archivos locales de `public/images`, con pie y crédito breves y su ancho y alto reales; va debajo de la introducción y los datos clave, a todo el ancho si es apaisada y centrada si es vertical; un test comprueba que el archivo existe) y `relatedTopicIds`, guardados en ambos temas (en PostgreSQL será una tabla de relación).
+* **RAG e IA (coste cero en local):**
+  - **Fragmentos:** `KnowledgeChunk` son los párrafos de la introducción, los datos clave y los eventos de los temas **publicados**. Nunca comentarios ni recomendaciones (texto sin verificar). Lo que se convierte en vector lleva delante el título y el resumen del tema.
+  - **Ports:** `EmbeddingService` (Transformers.js con `multilingual-e5-small`), `KnowledgeIndex` (pgvector, 384 dimensiones, HNSW con coseno), `AnswerGenerator`, `ContentDrafter` y `ProposalDrafter`. Ollama en local y una API gratuita al desplegar son el mismo adaptador: cambian `LLM_BASE_URL`, `LLM_MODEL` y `LLM_API_KEY`.
+  - **Índice:** `refreshingTopicIndex` envuelve en `composition/` las ediciones que cambian lo indexado. Si reindexar falla, la edición ya está guardada: se registra y `npm run rag:index` lo repara. Cambiar de modelo de embeddings exige migrar la columna y reindexar.
+  - **Preguntar:** umbral de similitud (`MIN_RELEVANT_SIMILARITY`, propio del modelo) como primer filtro, y el modelo decide con `coverage`. Solo se usan fragmentos de temas que devuelve el `TopicRepository` público.
+  - **Citas:** `parseCitations` elimina las que apuntan a fuentes inexistentes, y una respuesta sin citas válidas no se muestra. La interfaz recibe piezas de texto y construye los enlaces con datos propios.
+  - **La IA nunca escribe directamente:** cronología, quiz y propuestas solo devuelven campos para un formulario, que una persona revisa y guarda por el camino de siempre. La fuente de una propuesta nunca la pone la IA.
+  - **Controles sin modelo:** un año que no aparece en el texto de origen se descarta (cronología) o se deja vacío (propuestas). Las opciones del quiz se rotan.
+  - **Pruebas:** dobles sin modelo en el container en memoria (`HashingEmbeddingService`, `EchoAnswerGenerator`, `EmptyContentDrafter`) y `e2e/fakeLlmServer.ts` en los E2E, con la búsqueda real. Cada cambio de prompt se mide con el modelo real.
 * **Puertos asíncronos y contratos:** todos los ports de persistencia devuelven `Promise`, aunque la implementación sea en memoria. Cada port tiene un test de contrato en `tests/application/ports/` que deben pasar todas sus implementaciones (in-memory hoy, PostgreSQL después); así son intercambiables cambiando solo `composition/`.
 * **Persistencia en PostgreSQL:** Drizzle ORM con el driver `postgres` (consultas siempre parametrizadas). El esquema (`infrastructure/persistence/postgres/schema.ts`) reutiliza las constantes del dominio en sus `ENUM` y repite las reglas clave como `CHECK` (defensa en profundidad). Los cambios de esquema se hacen con `npm run db:generate` (migración SQL versionada, revisada antes de aplicarla) y `npm run db:migrate`; nunca editando una migración ya aplicada. Los mappers parsean cada fila con el esquema del dominio antes de devolverla. El seed (`npm run db:seed`) reutiliza `SEED` y es idempotente.
 * **Carpetas bajo demanda:** solo se crean las carpetas que el proyecto usa. Si en el futuro hacen falta, se añaden siguiendo la misma convención: `domain/errors/` (reglas de negocio violadas), `domain/events/` (eventos de dominio), `infrastructure/messaging/`.
@@ -122,14 +131,16 @@ Cualquier código generado o modificado debe cumplir estrictamente las directric
 ### 🛡️ C. OWASP Top 10 for LLM / GenAI Applications
 1. **LLM01: Prompt Injection:**
    - Separar tajantemente las instrucciones del sistema (*System Prompts*) del contenido introducido por el usuario.
-   - Delimitar el contexto del usuario mediante etiquetas estructuradas XML/Markdown (ej. `<user_context>...</user_context>`).
+   - Delimitar el contexto del usuario mediante etiquetas estructuradas XML/Markdown (ej. `<user_context>...</user_context>`), quitando lo que podría cerrarlas (`plainPromptText`).
+   - **Riesgo residual aceptado:** un modelo pequeño no resiste todas las inyecciones (medido en el relleno de propuestas: 1 de 8 intentos pasa). Por eso el daño posible se limita por diseño: el modelo no tiene herramientas ni datos privados, su salida tiene esquema y todo lo que escribe pasa por revisión humana.
 2. **LLM02: Insecure Output Handling:**
    - **Jamás** ejecutar o renderizar directamente código o HTML no sanitizado generado por un LLM.
    - Forzar respuestas estructuradas (*Structured Outputs / JSON Schema*) y validarlas con **Zod** antes de persistirlas o enviarlas a la interfaz.
 3. **LLM06: Sensitive Information Disclosure:**
-   - Filtrar y sanitizar las notas antes de enviarlas al modelo o a la base de datos de vectores para evitar la exfiltración de claves o datos sensibles.
+   - Al modelo y al índice solo llega contenido público y revisado, o el texto que el propio usuario pega para su propuesta. Las preguntas no se guardan.
+   - Un fallo del modelo se registra solo por su tipo: el mensaje de un error de validación puede llevar el texto del usuario o la respuesta del modelo.
 4. **LLM10: Model Denial of Service:**
-   - Establecer límites de tokens por petición (`maxTokens`) y *timeouts* en todas las llamadas a la API de Anthropic Claude.
+   - Establecer límites de tokens por petición (`maxOutputTokens`), *timeouts* y límite de longitud de la entrada en todas las llamadas al modelo, con un *rate limit* propio por usuario para cada uso (preguntas, borradores del panel, relleno de propuestas).
 
 ---
 
@@ -155,7 +166,7 @@ Toda la lógica de negocio en `domain/` y `application/` se desarrollará bajo T
 - **Lenguaje:** TypeScript (Tipado estricto, `strict: true`, prohibido el uso de `any`)
 - **Estilos:** Tailwind CSS
 - **Base de Datos:** PostgreSQL + extensión `pgvector`
-- **Modelos de IA:** Anthropic Claude API mediante Vercel AI SDK
+- **Modelos de IA:** Ollama (`qwen2.5:7b`) en local mediante Vercel AI SDK y protocolo OpenAI; embeddings con Transformers.js (`multilingual-e5-small`)
 - **Test Framework:** Vitest
 
 ---

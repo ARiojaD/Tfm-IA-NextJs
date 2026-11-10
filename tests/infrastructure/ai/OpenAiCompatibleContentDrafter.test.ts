@@ -1,6 +1,6 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEventProposalPrompt, buildEventsDraftPrompt, buildNewTopicProposalPrompt, buildQuizDraftPrompt } from "@/infrastructure/ai/draftPrompts";
 import { OpenAiCompatibleContentDrafter } from "@/infrastructure/ai/OpenAiCompatibleContentDrafter";
 
@@ -133,6 +133,20 @@ describe("OpenAiCompatibleContentDrafter", () => {
 
     expect(await drafter().draftNewTopicProposal("Fragmento.")).toEqual(topic);
     expect(requestBody?.response_format?.json_schema?.name).toBe("propuesta_tema");
+  });
+
+  it("si falla, lo registra en el servidor sin incluir el texto del usuario ni la respuesta del modelo", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    content = JSON.stringify({ found: "no", title: "respuesta-privada" });
+
+    await expect(drafter().draftEventProposal("fragmento-privado")).rejects.toThrow();
+
+    expect(log).toHaveBeenCalledTimes(1);
+    const logged = String(log.mock.calls[0]);
+    expect(logged).toContain("propuesta_evento");
+    expect(logged).not.toContain("fragmento-privado");
+    expect(logged).not.toContain("respuesta-privada");
+    log.mockRestore();
   });
 
   it("rechaza lo que no cumple el esquema", async () => {
