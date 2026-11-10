@@ -8,6 +8,7 @@ import type { HistoricalEventRepository } from "@/application/ports/HistoricalEv
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
 import type { KnowledgeIndex } from "@/application/ports/KnowledgeIndex";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
+import type { ProposalDrafter } from "@/application/ports/ProposalDrafter";
 import type { ProposalRepository } from "@/application/ports/ProposalRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
@@ -21,6 +22,7 @@ import { AskEncyclopediaUseCase } from "@/application/use-cases/AskEncyclopediaU
 import { ChangeTopicStatusUseCase } from "@/application/use-cases/ChangeTopicStatusUseCase";
 import { CreateTopicUseCase } from "@/application/use-cases/CreateTopicUseCase";
 import { DeleteTopicUseCase } from "@/application/use-cases/DeleteTopicUseCase";
+import { DraftProposalUseCase } from "@/application/use-cases/DraftProposalUseCase";
 import { DraftTopicEventsUseCase } from "@/application/use-cases/DraftTopicEventsUseCase";
 import { DraftTopicQuizUseCase } from "@/application/use-cases/DraftTopicQuizUseCase";
 import { GetAdminAccessUseCase } from "@/application/use-cases/GetAdminAccessUseCase";
@@ -114,6 +116,8 @@ export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 }
 export const QUESTION_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60 * 60_000 };
 // AI proposals in the panel, per admin: apart from the panel's budget, because each one runs the model.
 export const AI_DRAFT_RATE_LIMIT: RateLimitPolicy = { limit: 20, windowMs: 60 * 60_000 };
+// Filling a proposal with AI, per user: each one runs the model on text the user chooses.
+export const PROPOSAL_DRAFT_RATE_LIMIT: RateLimitPolicy = { limit: 20, windowMs: 60 * 60_000 };
 // How long a local model may take to load and answer before the visitor gets the fragments instead.
 const LLM_TIMEOUT_MS = 90_000;
 
@@ -178,7 +182,7 @@ function postgresRepositories(db: Database): Repositories {
 interface Ai {
   embeddings: EmbeddingService;
   answers: AnswerGenerator;
-  drafter: ContentDrafter;
+  drafter: ContentDrafter & ProposalDrafter;
   minSimilarity: number;
 }
 
@@ -201,6 +205,7 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
       proposals: new InMemoryRateLimiter(PROPOSAL_RATE_LIMIT, clock),
       questions: new InMemoryRateLimiter(QUESTION_RATE_LIMIT, clock),
       aiDrafts: new InMemoryRateLimiter(AI_DRAFT_RATE_LIMIT, clock),
+      proposalDrafts: new InMemoryRateLimiter(PROPOSAL_DRAFT_RATE_LIMIT, clock),
     },
   };
 }
@@ -266,6 +271,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
       clock,
       rateLimiter: rateLimiters.proposals,
     }),
+    draftProposal: new DraftProposalUseCase({ auth, rateLimiter: rateLimiters.proposalDrafts, drafter: ai.drafter }),
     listMyProposals: new ListMyProposalsUseCase({ auth, proposals: repositories.proposals }),
     listPendingProposals: new ListPendingProposalsUseCase({ auth, roles, proposals: repositories.proposals }),
     // An approved event joins the timeline of its topic.
@@ -390,6 +396,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     rateLimiters.admin instanceof InMemoryRateLimiter &&
     rateLimiters.proposals instanceof InMemoryRateLimiter &&
     rateLimiters.questions instanceof InMemoryRateLimiter &&
-    rateLimiters.aiDrafts instanceof InMemoryRateLimiter
+    rateLimiters.aiDrafts instanceof InMemoryRateLimiter &&
+    rateLimiters.proposalDrafts instanceof InMemoryRateLimiter
   );
 }

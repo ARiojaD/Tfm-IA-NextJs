@@ -8,7 +8,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { getContainer } from "@/composition/container";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { SlugSchema } from "@/domain/value-objects/Slug";
-import { submitProposal } from "./actions";
+import { draftProposal, submitProposal } from "./actions";
 
 export const metadata: Metadata = { title: "Mis propuestas · MemnonHistory AI" };
 
@@ -50,7 +50,7 @@ export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-b
             <h2 id="nueva-propuesta" className="mb-6 font-serif text-2xl font-semibold">
               Nueva propuesta
             </h2>
-            <ProposalForm action={submitProposal} topics={topics} initialTopicSlug={initialTopic} initialKind={proposesNewTopic ? "NEW_TOPIC" : undefined} />
+            <ProposalForm action={submitProposal} draftAction={draftProposal} topics={topics} initialTopicSlug={initialTopic} initialKind={proposesNewTopic ? "NEW_TOPIC" : undefined} />
           </section>
 
           <section aria-labelledby="enviadas" className="mt-12">

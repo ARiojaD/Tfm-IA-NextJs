@@ -63,9 +63,13 @@ export function topicSourceText({ introduction, keyFacts }: { introduction: stri
 }
 
 // A check that does not depend on the model: a year that is not in the text was invented.
+export function yearAppearsIn(year: number, text: string): boolean {
+  return new RegExp(`(?<!\\d)${year}(?!\\d)`).test(text);
+}
+
 export function eventDraftRows({ events }: GeneratedEvents, sourceText: string): EventDraftRow[] {
   return events
-    .filter((event) => new RegExp(`(?<!\\d)${event.year}(?!\\d)`).test(sourceText))
+    .filter((event) => yearAppearsIn(event.year, sourceText))
     .map(({ title, year, era, month, description }) => ({
       id: "",
       title,

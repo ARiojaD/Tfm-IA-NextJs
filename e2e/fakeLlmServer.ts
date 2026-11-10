@@ -9,6 +9,7 @@ const REPLIES: Record<string, unknown> = {
   respuesta: { coverage: "FULL", answer: "Respuesta de prueba del modelo [1].", missing: "" },
   // 44 appears in the text of Julio César: an invented year would be discarded.
   cronologia: { events: [{ title: "Evento propuesto por la IA", year: 44, era: "BC", month: 3, description: "Descripción propuesta." }] },
+  propuesta_evento: { found: true, title: "Evento rellenado por la IA", year: 216, era: "BC", month: 8, description: "Descripción rellenada." },
   quiz: {
     questions: [{ question: "Pregunta propuesta por la IA", options: ["Correcta", "Incorrecta"], correctOptionIndex: 0, explanation: "" }],
   },

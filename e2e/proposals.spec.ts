@@ -16,6 +16,36 @@ test.describe("Propuestas de los usuarios", () => {
     await expect(page).toHaveURL("/iniciar-sesion?volver=%2Fmi-biblioteca%2Fpropuestas%3Ftema%3Djulio-cesar");
   });
 
+  test("la IA rellena el formulario desde un fragmento, sin tocar la fuente y sin enviar nada", async ({ browser }) => {
+    const author = await pageAs(browser, AUTHOR_STORAGE_STATE);
+    await author.goto("/mi-biblioteca/propuestas");
+    await author.getByLabel("¿Qué quieres proponer?").selectOption("EVENT");
+    await author.getByLabel("Fuente").fill("Polibio, Historias");
+
+    await author.getByLabel("Rellenar con IA (opcional)").fill("En agosto del 216 a.C. Aníbal venció a los romanos en Cannas.");
+    await author.getByRole("button", { name: "Rellenar con IA" }).click();
+
+    await expect(author.getByText("Campos rellenados. Revísalos y añade la fuente antes de enviar.")).toBeVisible();
+    await expect(author.getByLabel("Título del evento")).toHaveValue("Evento rellenado por la IA");
+    await expect(author.getByLabel("Año")).toHaveValue("216");
+    await expect(author.getByLabel("Mes (opcional)")).toHaveValue("8");
+    await expect(author.getByLabel("Fuente")).toHaveValue("Polibio, Historias");
+    await expect(author.getByText("Evento rellenado por la IA")).toHaveCount(0); // not sent: not in the list
+    await author.context().close();
+  });
+
+  test("el relleno con IA solo aparece en eventos y temas nuevos", async ({ browser }) => {
+    const author = await pageAs(browser, AUTHOR_STORAGE_STATE);
+    await author.goto("/mi-biblioteca/propuestas");
+
+    await author.getByLabel("¿Qué quieres proponer?").selectOption("CORRECTION");
+    await expect(author.getByRole("button", { name: "Rellenar con IA" })).toHaveCount(0);
+
+    await author.getByLabel("¿Qué quieres proponer?").selectOption("NEW_TOPIC");
+    await expect(author.getByRole("button", { name: "Rellenar con IA" })).toBeVisible();
+    await author.context().close();
+  });
+
   // The whole loop with two accounts: the author proposes, the admin approves, the site changes.
   test("un evento propuesto y aprobado aparece en la cronología del tema", async ({ browser }) => {
     const title = `Batalla de Munda ${Date.now()}`;

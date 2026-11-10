@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ProposalDraft } from "@/application/use-cases/DraftProposalUseCase";
 import { PROPOSAL_KINDS, PROPOSAL_SOURCE_MAX_LENGTH, type ProposalKind } from "@/domain/entities/Proposal";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType";
@@ -14,6 +15,7 @@ import { SaveBar, SelectField, TextAreaField } from "../admin/AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "../admin/adminFormState";
 import { AuthField } from "../auth/AuthField";
 import { useFormAction } from "../admin/useFormAction";
+import { ProposalAiFill, type ProposalDraftResult } from "./ProposalAiFill";
 
 export interface TopicChoice {
   slug: string;
@@ -47,11 +49,13 @@ const EMPTY_VALUES: Record<string, string> = {
 // inputs are controlled, so a failed attempt keeps what was typed; a successful one clears it.
 export function ProposalForm({
   action,
+  draftAction,
   topics,
   initialTopicSlug,
   initialKind,
 }: {
   action: (state: AdminFormState, formData: FormData) => Promise<AdminFormState>;
+  draftAction: (kind: string, text: string) => Promise<ProposalDraftResult>;
   topics: TopicChoice[];
   initialTopicSlug?: string;
   initialKind?: ProposalKind;
@@ -72,6 +76,15 @@ export function ProposalForm({
     onChange: (event: { target: { value: string } }) => setValues({ ...values, [key]: event.target.value }),
   });
   const aboutTopic = kind !== "NEW_TOPIC";
+  // From the current values: the AI takes seconds and the source may be written meanwhile.
+  const applyDraft = (draft: ProposalDraft) => {
+    if (draft.kind === "EVENT") {
+      setValues((current) => ({ ...current, ...draft.values }));
+      return;
+    }
+    const { civilization, ...rest } = draft.values;
+    setValues((current) => ({ ...current, ...rest, topicEra: civilization }));
+  };
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
@@ -106,6 +119,8 @@ export function ProposalForm({
           })}
         </SelectField>
       )}
+
+      {(kind === "EVENT" || kind === "NEW_TOPIC") && <ProposalAiFill key={kind} kind={kind} action={draftAction} onDraft={applyDraft} />}
 
       {kind === "EVENT" && (
         <>

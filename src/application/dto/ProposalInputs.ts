@@ -77,6 +77,16 @@ export const SUBMIT_PROPOSAL_SCHEMAS = {
     })),
 };
 
+// Asking the AI to fill a proposal from a pasted fragment: only the kinds with many fields.
+export const DraftProposalInputSchema = z.strictObject({
+  kind: z.enum(["EVENT", "NEW_TOPIC"], { error: "La IA solo puede rellenar eventos y temas nuevos" }),
+  text: z
+    .string({ error: "Pega un fragmento" })
+    .trim()
+    .min(20, { error: "Pega un fragmento algo más largo" })
+    .max(4000, { error: "El fragmento no puede superar los 4000 caracteres" }),
+});
+
 // The admin's decision. Rejecting needs a reason, which the user will read.
 export const ReviewProposalInputSchema = z
   .strictObject({

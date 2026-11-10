@@ -4,7 +4,9 @@ import { refresh } from "next/cache";
 import { AuthenticationRequiredError } from "@/application/errors/AuthenticationRequiredError";
 import { InvalidProposalError } from "@/application/errors/InvalidProposalError";
 import { RateLimitExceededError } from "@/application/errors/RateLimitExceededError";
+import { TopicDraftError } from "@/application/errors/TopicDraftError";
 import type { AdminFormState } from "@/components/admin/adminFormState";
+import type { ProposalDraftResult } from "@/components/proposals/ProposalAiFill";
 import { getContainer } from "@/composition/container";
 
 // The fields each kind of proposal sends. Only those are read from the form: the author, the user and
@@ -28,6 +30,22 @@ const FIELDS_BY_KIND: Record<string, readonly string[]> = {
     "source",
   ],
 };
+
+// Only returns the fields for the form: nothing is sent until the user reviews it.
+export async function draftProposal(kind: string, text: string): Promise<ProposalDraftResult> {
+  const result = await getContainer().draftProposal.execute({ kind, text });
+
+  if (result.success) return { status: "success", draft: result.data };
+  const { error } = result;
+  if (error instanceof TopicDraftError) return { status: "error", message: error.message };
+  if (error instanceof InvalidProposalError) {
+    return { status: "error", message: error.fieldErrors.text?.[0] ?? "No se ha podido leer el fragmento." };
+  }
+  if (error instanceof AuthenticationRequiredError) {
+    return { status: "error", message: "Tu sesión ha terminado. Inicia sesión de nuevo." };
+  }
+  return { status: "error", message: `Has pedido muchos rellenados seguidos. Espera ${Math.ceil(error.retryAfterSeconds / 60)} min y vuelve a intentarlo.` };
+}
 
 export async function submitProposal(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const kind = formData.get("kind");
