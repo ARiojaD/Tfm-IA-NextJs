@@ -7,9 +7,9 @@ export interface KnowledgeIndexRebuild {
   chunks: number;
 }
 
-// Rebuilds the whole RAG index (npm run rag:index): after loading the seed, after changing the embedding
-// model, or if an automatic refresh failed. Deleted topics need nothing: their fragments go with them
-// (foreign key in PostgreSQL).
+// Reconstruye entero el índice del RAG (`npm run rag:index`): después de cargar el seed, después de
+// cambiar el modelo de embeddings o si falló una actualización automática. Los temas borrados no necesitan
+// nada: sus fragmentos se van con ellos (clave foránea en PostgreSQL).
 export class RebuildKnowledgeIndexUseCase {
   constructor(
     private readonly dependencies: {
@@ -21,7 +21,8 @@ export class RebuildKnowledgeIndexUseCase {
   async execute(): Promise<KnowledgeIndexRebuild> {
     const summary: KnowledgeIndexRebuild = { indexedTopics: 0, removedTopics: 0, chunks: 0 };
 
-    // One topic at a time: the embedding model runs on this machine, in parallel it would only compete.
+    // Un tema cada vez: el modelo de embeddings se ejecuta en esta máquina y en paralelo solo competiría
+    // consigo mismo.
     for (const topic of await this.dependencies.topicEditor.listAll()) {
       const { indexed, chunks } = await this.dependencies.refresh.execute(topic.id);
       if (indexed) summary.indexedTopics++;

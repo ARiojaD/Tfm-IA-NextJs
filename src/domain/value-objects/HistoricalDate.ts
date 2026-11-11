@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-// Negative years are BC. Year 0 does not exist in the historical calendar (1 BC is followed by AD 1).
+// Fecha histórica con año y, si se conoce, mes. Los años negativos son antes de Cristo. El año 0 no existe
+// en la cronología histórica: al 1 a.C. le sigue el 1 d.C.
 export const HistoricalDateSchema = z.strictObject({
   year: z
     .number()
@@ -11,8 +12,8 @@ export const HistoricalDateSchema = z.strictObject({
 
 export type HistoricalDate = z.infer<typeof HistoricalDateSchema>;
 
-// Chronological comparator for Array.prototype.sort. Within a year, a date with unknown
-// month goes first: it can only be placed at the start of that year.
+// Comparador cronológico para `Array.prototype.sort`. Dentro de un mismo año, una fecha sin mes va
+// primero: solo se puede situar al principio de ese año.
 export function compareHistoricalDates(a: HistoricalDate, b: HistoricalDate): number {
   return a.year - b.year || (a.month ?? 0) - (b.month ?? 0);
 }
@@ -32,8 +33,8 @@ export const MONTHS = [
   "diciembre",
 ] as const;
 
-// "490 a.C.", "marzo de 44 a.C.". In the domain because the encyclopedia is in Spanish and its text for
-// the RAG needs the dates written as people ask about them, not only the pages.
+// "490 a.C.", "marzo de 44 a.C.". Está en el dominio, y no en la interfaz, porque el texto que indexa el
+// RAG también necesita las fechas escritas como las pregunta la gente, no solo las páginas.
 export function formatHistoricalDate({ year, month }: HistoricalDate): string {
   const yearLabel = year < 0 ? `${-year} a.C.` : `${year} d.C.`;
 

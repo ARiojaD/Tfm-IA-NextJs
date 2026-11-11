@@ -3,7 +3,8 @@ import type { KnowledgeChunk } from "@/domain/entities/KnowledgeChunk";
 import { HISTORICAL_ERAS, type HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import { TOPIC_CATEGORIES, type TopicCategory } from "@/domain/value-objects/TopicCategory";
 
-// Spanish URLs: /roma → civilization, /roma/personajes/julio-cesar → topic.
+// URL en castellano: /roma → civilización, /roma/personajes/julio-cesar → tema. Los valores del dominio
+// siguen en inglés; la traducción de ida y vuelta está aquí.
 
 export const ERA_ROUTE_SLUGS: Record<HistoricalEra, string> = {
   ROMAN: "roma",
@@ -30,7 +31,7 @@ export function eraPath(era: HistoricalEra): string {
   return `/${ERA_ROUTE_SLUGS[era]}`;
 }
 
-// Categories have no page of their own: they are sections of the civilization page.
+// Las categorías no tienen página propia: son secciones de la página de la civilización.
 export function categoryPath(era: HistoricalEra, category: TopicCategory): string {
   return `${eraPath(era)}#${CATEGORY_ROUTE_SLUGS[category]}`;
 }
@@ -39,7 +40,7 @@ export function topicPath(topic: Pick<HistoricalTopic, "era" | "category" | "slu
   return `${eraPath(topic.era)}/${CATEGORY_ROUTE_SLUGS[topic.category]}/${topic.slug}`;
 }
 
-// Where a citation of the RAG leads: the exact paragraph, fact or event of the topic page.
+// Adónde lleva una cita del RAG: el párrafo, el dato o el evento exacto de la página del tema.
 export function knowledgeChunkPath(
   topic: Pick<HistoricalTopic, "era" | "category" | "slug">,
   chunk: Pick<KnowledgeChunk, "source" | "position" | "eventId">,

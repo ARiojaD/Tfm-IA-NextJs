@@ -37,9 +37,10 @@ export interface Seed {
   recommendations: Recommendation[];
 }
 
-// Initial data for the in-memory repositories; later reusable as the database seed.
-// A new topic is added by creating its file next to juliusCaesar.ts and listing it here. Only the first two
-// carry example comments: the others start, as a real topic would, with no conversation yet.
+// Los datos iniciales de la enciclopedia: los usan los repositorios en memoria y `npm run db:seed` para
+// cargar PostgreSQL. Un tema nuevo se añade creando su archivo junto a juliusCaesar.ts y listándolo aquí.
+// Solo los dos primeros traen comentarios de ejemplo: los demás empiezan, como un tema real, sin
+// conversación.
 export const SEED: Seed = {
   topics: [juliusCaesarTopic, siegeOfAlesiaTopic, romulusTopic, romanKingdomTopic, romanRepublicBirthTopic, gallicSackOfRomeTopic, periclesTopic, alexanderTheGreatTopic, thermopylaeTopic, classicalAthensTopic, viriathusTopic, siegeOfNumantiaTopic, emeritaAugustaTopic],
   events: [...juliusCaesarEvents, ...siegeOfAlesiaEvents, ...romulusEvents, ...romanKingdomEvents, ...romanRepublicBirthEvents, ...gallicSackOfRomeEvents, ...periclesEvents, ...alexanderTheGreatEvents, ...thermopylaeEvents, ...classicalAthensEvents, ...viriathusEvents, ...siegeOfNumantiaEvents, ...emeritaAugustaEvents],

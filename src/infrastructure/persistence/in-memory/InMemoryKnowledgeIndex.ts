@@ -1,7 +1,8 @@
 import type { ChunkMatch, IndexedChunk, KnowledgeIndex } from "@/application/ports/KnowledgeIndex";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
-// The same cosine similarity pgvector computes, over a plain array: enough for the unit tests.
+// La misma similitud del coseno que calcula pgvector, sobre un array normal: suficiente para los tests
+// unitarios.
 export class InMemoryKnowledgeIndex implements KnowledgeIndex {
   private entries: IndexedChunk[] = [];
 

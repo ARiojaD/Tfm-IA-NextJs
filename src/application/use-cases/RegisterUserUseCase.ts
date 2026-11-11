@@ -18,13 +18,14 @@ const BREACHED_PASSWORD_MESSAGE = "Esta contraseña aparece en filtraciones de d
 
 export type RegisterUserError = RateLimitExceededError | InvalidRegistrationError | RegistrationRejectedError;
 
-// Creates an account and signs the new user in.
+// Crea una cuenta e inicia la sesión del usuario nuevo.
 export class RegisterUserUseCase {
   constructor(private readonly dependencies: RegisterUserDependencies) {}
 
-  // The input comes from a form: `unknown` until validated. requesterId is the visitor's IP.
+  // La entrada viene de un formulario: es `unknown` hasta validarla. `requesterId` es la IP del visitante.
   async execute(input: unknown, requesterId: string): Promise<Result<AuthenticatedUser, RegisterUserError>> {
-    // Before validating, so invalid attempts count too (no mass account creation by script).
+    // Antes de validar, para que también cuenten los intentos no válidos (nada de crear cuentas en masa con
+    // un script).
     const decision = await this.dependencies.rateLimiter.consume(requesterId);
     if (!decision.allowed) {
       return failure(new RateLimitExceededError(decision.retryAfterSeconds));
@@ -47,8 +48,9 @@ export class RegisterUserUseCase {
     return success(registration.user);
   }
 
-  // Fails open: if the breach service is down, the sign-up goes on with the other rules (minimum length,
-  // rate limit). An outage of an external service must not lock everyone out of creating an account.
+  // Si falla, deja pasar: si el servicio de filtraciones está caído, el registro sigue con las demás reglas
+  // (longitud mínima, límite de peticiones). La caída de un servicio externo no puede impedir a todo el
+  // mundo crear una cuenta.
   private async isBreached(password: string): Promise<boolean> {
     try {
       return await this.dependencies.breachedPasswords.isBreached(password);

@@ -1,4 +1,4 @@
-// Caps how many times a requester may perform an action within a time window (OWASP API4).
+// Cuántas veces puede un solicitante hacer una acción dentro de una ventana de tiempo (OWASP API4).
 export interface RateLimitPolicy {
   limit: number;
   windowMs: number;
@@ -6,7 +6,8 @@ export interface RateLimitPolicy {
 
 export type RateLimitDecision = { allowed: true } | { allowed: false; retryAfterSeconds: number };
 
+// Lleva la cuenta de los intentos de cada solicitante (un usuario, una IP, un correo).
 export interface RateLimiter {
-  // Records an attempt for `key` and says whether it is allowed. Rejected attempts do not use up quota.
+  // Registra un intento para `key` y dice si se permite. Los intentos rechazados no gastan cupo.
   consume(key: string): Promise<RateLimitDecision>;
 }

@@ -14,7 +14,7 @@ import type { TopicRepository } from "../ports/TopicRepository";
 
 export interface SubmitProposalDependencies {
   auth: AuthService;
-  // The public side: proposals are only about published topics.
+  // La cara pública: solo se puede proponer sobre temas publicados.
   topics: TopicRepository;
   proposals: ProposalRepository;
   ids: IdGenerator;
@@ -24,8 +24,8 @@ export interface SubmitProposalDependencies {
 
 export type SubmitProposalError = AuthenticationRequiredError | RateLimitExceededError | InvalidProposalError | TopicNotFoundError;
 
-// A signed-in user proposes an event, a recommendation, a correction or a new topic. It waits as PENDING
-// until an admin reviews it: nothing on the site changes yet.
+// Un usuario con sesión propone un evento, una recomendación, una corrección o un tema nuevo. Queda
+// pendiente (PENDING) hasta que la revise un administrador: todavía no cambia nada en la web.
 export class SubmitProposalUseCase {
   constructor(private readonly dependencies: SubmitProposalDependencies) {}
 
@@ -35,13 +35,13 @@ export class SubmitProposalUseCase {
       return failure(new AuthenticationRequiredError("proponer cambios"));
     }
 
-    // Per user and checked before validating, so every attempt counts.
+    // Por usuario y antes de validar, para que cuenten todos los intentos.
     const decision = await this.dependencies.rateLimiter.consume(`user:${user.id}`);
     if (!decision.allowed) {
       return failure(new RateLimitExceededError(decision.retryAfterSeconds));
     }
 
-    // First the kind, then the schema of that kind.
+    // Primero el tipo y después el esquema de ese tipo.
     const kind = ProposalKindInputSchema.safeParse(input);
     if (!kind.success) {
       return failure(InvalidProposalError.fromIssues(kind.error.issues));
@@ -51,7 +51,7 @@ export class SubmitProposalUseCase {
       return failure(InvalidProposalError.fromIssues(parsed.error.issues));
     }
 
-    // Who and when come from the server; the topic from its slug (published topics only).
+    // Quién y cuándo salen del servidor; el tema, de su slug (solo temas publicados).
     const common = {
       id: this.dependencies.ids.generate(),
       userId: user.id,

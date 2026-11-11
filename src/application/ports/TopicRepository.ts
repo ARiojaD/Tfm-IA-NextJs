@@ -3,12 +3,12 @@ import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import type { Slug } from "@/domain/value-objects/Slug";
 
-// The public side of the topics: every method sees only PUBLISHED topics, so a draft is invisible
-// everywhere (civilization pages, topic pages, related topics, libraries, comments) without each page
-// having to remember it. The admin panel uses TopicEditorRepository instead.
+// La cara pública de los temas: todos los métodos ven solo temas publicados, así que un borrador es
+// invisible en todas partes (páginas de civilización y de tema, relacionados, bibliotecas, comentarios)
+// sin que cada página tenga que acordarse. El panel de administración usa `TopicEditorRepository`.
 export interface TopicRepository {
   findBySlug(slug: Slug): Promise<HistoricalTopic | null>;
   listByEra(era: HistoricalEra): Promise<HistoricalTopic[]>;
-  // Unknown ids are skipped; the order of the result is not guaranteed.
+  // Los ids desconocidos se omiten; el orden del resultado no está garantizado.
   findByIds(ids: EntityId[]): Promise<HistoricalTopic[]>;
 }

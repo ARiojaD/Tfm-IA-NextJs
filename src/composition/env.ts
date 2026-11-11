@@ -1,22 +1,25 @@
 import { z } from "zod";
 
-// Server configuration, validated on first use (OWASP A05): a missing or malformed variable stops the
-// app with a clear message instead of failing later in an obscure way. Each group is validated where it
-// is needed, so the database scripts (migrations, seed, tests) do not require the auth secret. Only the
-// declared variables are kept; the rest of process.env is ignored.
+// La configuración del servidor, validada la primera vez que se usa (OWASP A05): una variable que falta o
+// está mal formada detiene la aplicación con un mensaje claro, en lugar de fallar más tarde de forma
+// confusa. Cada grupo se valida donde se necesita, así los scripts de base de datos (migraciones, seed,
+// tests) no exigen el secreto de autenticación. Solo se conservan las variables declaradas; el resto de
+// `process.env` se ignora.
 
 export const DatabaseEnvSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 });
 
 export const AuthEnvSchema = z.object({
-  // Signs session cookies and tokens: high entropy, at least 32 characters (generate with npm run auth:secret).
+  // Firma las cookies de sesión y los tokens: mucha entropía, al menos 32 caracteres (se genera con
+  // `npm run auth:secret`).
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.url({ protocol: /^https?$/ }),
 });
 
-// The language model of the RAG: any server that speaks the OpenAI protocol. The defaults are a local
-// Ollama; once deployed these point to a free API, which is the only case that needs a key.
+// El modelo de lenguaje del RAG: cualquier servidor que hable el protocolo de OpenAI. Los valores por
+// defecto son un Ollama local; una vez desplegado apuntan a una API gratuita, que es el único caso que
+// necesita clave.
 export const LlmEnvSchema = z.object({
   LLM_BASE_URL: z.url({ protocol: /^https?$/ }).default("http://127.0.0.1:11434/v1"),
   LLM_MODEL: z.string().trim().min(1).default("qwen2.5:7b"),
@@ -27,7 +30,7 @@ export type DatabaseEnv = z.infer<typeof DatabaseEnvSchema>;
 export type AuthEnv = z.infer<typeof AuthEnvSchema>;
 export type LlmEnv = z.infer<typeof LlmEnvSchema>;
 
-// Names the variables that failed and why, never their values: they carry passwords and secrets.
+// Nombra las variables que fallaron y por qué, nunca sus valores: llevan contraseñas y secretos.
 export class InvalidEnvironmentError extends Error {
   constructor(public readonly variables: string[]) {
     super(

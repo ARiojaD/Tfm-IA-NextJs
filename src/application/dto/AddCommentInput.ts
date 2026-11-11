@@ -2,9 +2,10 @@ import { z } from "zod";
 import { COMMENT_MESSAGE_MAX_LENGTH } from "@/domain/entities/Comment";
 import { SlugSchema } from "@/domain/value-objects/Slug";
 
-// What a signed-in user sends to post a comment: only the topic and the text. The author, the user, the
-// id and the date are decided by the server (from the session, IdGenerator and Clock). Strict, so a form
-// that tries to send author or userId is rejected: nobody can comment in someone else's name.
+// Lo que envía un usuario con sesión para publicar un comentario: solo el tema y el texto. El autor, el
+// usuario, el id y la fecha los decide el servidor (con la sesión, `IdGenerator` y `Clock`). Es estricto,
+// así que un formulario que intente enviar `author` o `userId` se rechaza: nadie puede comentar en nombre
+// de otro.
 export const AddCommentInputSchema = z.strictObject(
   {
     topicSlug: SlugSchema,

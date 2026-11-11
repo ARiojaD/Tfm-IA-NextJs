@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-// A label/value pair shown in a topic's fact sheet ("Nacimiento", "Lugar", "Resultado"…). Generic on
-// purpose: a person and a battle need different facts, and fixed fields per category would not scale.
+// Un par etiqueta/valor de la ficha de un tema ("Nacimiento", "Lugar", "Resultado"…). Es genérico a
+// propósito: un personaje y una batalla necesitan datos distintos, y unos campos fijos por categoría no
+// escalarían.
 export const KeyFactSchema = z.strictObject({
   label: z.string().trim().min(1).max(40),
   value: z.string().trim().min(1).max(200),

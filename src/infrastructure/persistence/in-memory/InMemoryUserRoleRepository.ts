@@ -2,7 +2,7 @@ import type { UserRoleRepository } from "@/application/ports/UserRoleRepository"
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { UserRole } from "@/domain/value-objects/UserRole";
 
-// Roles of the in-memory accounts (unit tests). Accounts never named here are USERs.
+// Los roles de las cuentas en memoria (tests unitarios). Las cuentas que no aparecen aquí son USER.
 export class InMemoryUserRoleRepository implements UserRoleRepository {
   private readonly roles = new Map<EntityId, UserRole>();
 

@@ -1,7 +1,8 @@
 import type { AnswerGenerator, AnswerSource } from "@/application/ports/AnswerGenerator";
 import type { GeneratedAnswer } from "@/domain/entities/EncyclopediaAnswer";
 
-// Test double for the in-memory container: answers with its first fragment, citing it. No model needed.
+// Doble de prueba para el container en memoria: responde con su primer fragmento, citándolo. No necesita
+// modelo.
 export class EchoAnswerGenerator implements AnswerGenerator {
   answer(_question: string, sources: AnswerSource[]): Promise<GeneratedAnswer> {
     const [first] = sources;

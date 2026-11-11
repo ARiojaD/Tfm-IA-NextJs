@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-roman-kingdom";
 
-// The reigns follow the traditional chronology, which historians take as approximate.
+// Los reinados siguen la cronología tradicional, que los historiadores consideran aproximada.
 
 export const romanKingdomTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

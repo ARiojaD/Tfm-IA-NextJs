@@ -9,8 +9,8 @@ export interface AdminEraTopics {
   topics: HistoricalTopic[];
 }
 
-// The panel's list of topics, drafts included: every civilization (also the empty ones, where new topics
-// will go), each with its topics in time order.
+// La lista de temas del panel, también los borradores: todas las civilizaciones (también las vacías, donde
+// irán los temas nuevos), cada una con sus temas en orden cronológico.
 export class ListTopicsForAdminUseCase {
   constructor(private readonly dependencies: AdminAuthorizationDependencies & { topicEditor: TopicEditorRepository }) {}
 

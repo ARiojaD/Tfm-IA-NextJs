@@ -6,7 +6,7 @@ import type { KnowledgeIndex } from "../ports/KnowledgeIndex";
 import type { TopicEditorRepository } from "../ports/TopicEditorRepository";
 
 export interface RefreshTopicIndexDependencies {
-  // The editor's view, which sees drafts: a topic that went back to draft must leave the index.
+  // La vista del editor, que ve los borradores: un tema que vuelve a borrador debe salir del índice.
   topicEditor: TopicEditorRepository;
   events: HistoricalEventRepository;
   embeddings: EmbeddingService;
@@ -18,8 +18,9 @@ export interface TopicIndexRefresh {
   chunks: number;
 }
 
-// Brings one topic's fragments in the RAG index up to date with what the web shows. Internal: it runs
-// after an admin's edit (already authorized) or from the rebuild script, never from a visitor's request.
+// Pone al día los fragmentos de un tema en el índice del RAG con lo que muestra la web. Es interno: se
+// ejecuta después de una edición de un administrador (ya autorizada) o desde el script de reconstrucción,
+// nunca desde la petición de un visitante.
 export class RefreshTopicIndexUseCase {
   constructor(private readonly dependencies: RefreshTopicIndexDependencies) {}
 

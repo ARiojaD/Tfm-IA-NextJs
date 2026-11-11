@@ -1,10 +1,11 @@
 import { HistoricalEventSchema } from "@/domain/entities/HistoricalEvent";
 
-// Mixed-era showcase for the landing timeline; it does not belong to a real topic.
+// No pertenece a ningún tema real: mezcla civilizaciones a propósito.
 const LANDING_SHOWCASE_TOPIC_ID = "landing-showcase";
 
-// Demo data for the landing page until the database exists. Parsing with the domain
-// schema means invalid sample data fails loudly instead of rendering silently.
+// La cronología de muestra de la portada: un hito de cada civilización para enseñar cómo se lee una
+// cronología. Se valida con el esquema del dominio, así unos datos de ejemplo erróneos fallan en lugar de
+// pintarse sin avisar.
 export const SAMPLE_EVENTS = HistoricalEventSchema.array().parse([
   {
     id: "sample-rome-foundation",

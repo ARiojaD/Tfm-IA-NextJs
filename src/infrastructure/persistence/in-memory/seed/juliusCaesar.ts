@@ -6,7 +6,7 @@ import { RecommendationSchema } from "@/domain/entities/Recommendation";
 
 const TOPIC_ID = "topic-julius-caesar";
 
-// Every collection is parsed with its domain schema, so invalid seed data fails at startup.
+// Cada colección se valida con su esquema del dominio, así que un dato erróneo del seed falla al arrancar.
 
 export const juliusCaesarTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

@@ -6,8 +6,8 @@ import { TopicNotFoundError } from "../errors/TopicNotFoundError";
 import { authorizeAdminWrite } from "./authorizeAdmin";
 import type { TopicEditingDependencies, TopicEditingError } from "./topicEditing";
 
-// Deletes a draft for good (with its events, quiz and recommendations). A published topic must be
-// unpublished first: two deliberate steps.
+// Borra un borrador para siempre (con sus eventos, su quiz y sus recomendaciones). Un tema publicado hay
+// que despublicarlo antes: dos pasos deliberados.
 export class DeleteTopicUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies) {}
 

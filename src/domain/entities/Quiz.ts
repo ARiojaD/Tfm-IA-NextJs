@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { EntityIdSchema } from "../value-objects/EntityId";
 
+// Una pregunta con sus opciones. Las reglas impiden guardar una pregunta imposible de acertar: opciones
+// repetidas o una respuesta correcta que no está entre ellas.
 export const QuizQuestionSchema = z
   .strictObject({
     id: EntityIdSchema,
@@ -18,6 +20,8 @@ export const QuizQuestionSchema = z
     path: ["correctOptionIndex"],
   });
 
+// El quiz de un tema. La respuesta correcta nunca llega al navegador: los casos de uso entregan una versión
+// sin ella (`PublicQuiz`) y corrigen en el servidor.
 export const QuizSchema = z.strictObject({
   id: EntityIdSchema,
   topicId: EntityIdSchema,

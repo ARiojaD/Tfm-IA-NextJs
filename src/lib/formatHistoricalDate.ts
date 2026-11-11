@@ -1,2 +1,3 @@
-// The format lives in the domain (the RAG fragments need it too); the components keep importing it here.
+// El formato vive en el dominio (los fragmentos del RAG también lo necesitan); los componentes lo siguen
+// importando desde aquí.
 export { formatHistoricalDate, MONTHS } from "@/domain/value-objects/HistoricalDate";

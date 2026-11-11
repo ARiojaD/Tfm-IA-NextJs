@@ -4,10 +4,10 @@ import { EmailSchema } from "@/domain/value-objects/Email";
 import { createDatabase } from "@/infrastructure/persistence/postgres/client";
 import { PostgresUserRoleRepository } from "@/infrastructure/persistence/postgres/PostgresUserRoleRepository";
 
-// npm run admin:grant -- tu@email.com   → the account becomes an administrator
-// npm run admin:revoke -- tu@email.com  → back to a normal user
-// The only way to change a role: it needs access to the server and its database, never the web.
-// The account must exist first (sign up in the web). It applies on the next request.
+// npm run admin:grant -- tu@email.com   → la cuenta pasa a ser administradora
+// npm run admin:revoke -- tu@email.com  → vuelve a ser un usuario normal
+// La única forma de cambiar un rol: exige acceso al servidor y a su base de datos, nunca a la web.
+// La cuenta tiene que existir antes (registrándose en la web). Se aplica en la siguiente petición.
 async function main() {
   const [action, rawEmail] = process.argv.slice(2);
   const email = EmailSchema.safeParse(rawEmail);
@@ -43,7 +43,7 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  // Only the message: a driver error could otherwise print connection details.
+  // Solo el mensaje: un error del driver podría mostrar los datos de conexión.
   console.error(`No se pudo cambiar el rol: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 });

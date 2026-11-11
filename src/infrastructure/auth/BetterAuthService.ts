@@ -8,8 +8,8 @@ import type { SessionCookies } from "./SessionCookies";
 const EMAIL_TAKEN_CODES = new Set(["USER_ALREADY_EXISTS", "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"]);
 const INVALID_CREDENTIALS_CODES = new Set(["INVALID_EMAIL_OR_PASSWORD"]);
 
-// AuthService on top of Better Auth. Only the expected failures (email taken, wrong credentials) are
-// translated; anything else is a real error and propagates.
+// `AuthService` sobre Better Auth. Solo se traducen los fallos esperados (correo ya registrado,
+// credenciales incorrectas); cualquier otro es un error de verdad y se propaga.
 export class BetterAuthService implements AuthService {
   constructor(
     private readonly auth: BetterAuth,
@@ -64,7 +64,8 @@ export class BetterAuthService implements AuthService {
   }
 }
 
-// Allowlist: the rest of the app never sees the email or anything else Better Auth knows.
+// Lista de lo permitido: el resto de la aplicación nunca ve el correo ni nada más de lo que sabe Better
+// Auth.
 function toAuthenticatedUser(user: { id: string; name: string }): AuthenticatedUser {
   return { id: user.id, name: user.name };
 }

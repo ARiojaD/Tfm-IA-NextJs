@@ -1,9 +1,9 @@
 import type { Clock } from "@/application/ports/Clock";
 import type { RateLimitDecision, RateLimiter, RateLimitPolicy } from "@/application/ports/RateLimiter";
 
-// Sliding-window log: keeps the timestamp of each allowed request per key and drops the ones
-// older than the window. Only valid for a single server process: with several instances
-// (serverless, multiple containers) the counters must live in a shared store such as Redis.
+// Ventana deslizante con registro: guarda la hora de cada petición permitida por clave y descarta las que
+// son más antiguas que la ventana. Solo vale para un único proceso del servidor: con varias instancias
+// (serverless, varios contenedores) los contadores tienen que vivir en un almacén compartido, como Redis.
 export class InMemoryRateLimiter implements RateLimiter {
   private readonly requestsByKey = new Map<string, number[]>();
 

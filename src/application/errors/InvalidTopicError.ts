@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-// How each list of the editor names its rows in an error message.
+// Cómo nombra cada lista del editor a sus filas en un mensaje de error.
 const ROW_LABELS: Record<string, string> = {
   keyFacts: "Dato",
   events: "Evento",
@@ -9,8 +9,9 @@ const ROW_LABELS: Record<string, string> = {
   relatedTopicIds: "Tema",
 };
 
-// Validation failure in the topic editor. fieldErrors maps each form field to its messages, ready to show
-// next to the input; formErrors holds the ones not tied to a field (e.g. what is missing to publish).
+// Fallo de validación en el editor de temas. `fieldErrors` asigna a cada campo del formulario sus
+// mensajes, listos para mostrarse junto al campo; `formErrors` guarda los que no son de ningún campo (por
+// ejemplo, lo que falta para publicar).
 export class InvalidTopicError extends Error {
   constructor(
     readonly fieldErrors: Record<string, string[]>,
@@ -20,9 +21,10 @@ export class InvalidTopicError extends Error {
     this.name = "InvalidTopicError";
   }
 
-  // From Zod issues: the first path segment is the field. Issues inside a list say which row they belong
-  // to ("Evento 2: …"), since a list has one message area for all its rows. `prefix` puts the issues of
-  // a schema that validates only the list (e.g. the events) under its field.
+  // Desde los errores de Zod: el primer tramo de la ruta es el campo. Los errores dentro de una lista dicen
+  // a qué fila pertenecen ("Evento 2: …"), porque una lista tiene una sola zona de mensajes para todas sus
+  // filas. `prefix` coloca bajo su campo los errores de un esquema que valida solo la lista (por ejemplo,
+  // los eventos).
   static fromIssues(issues: z.core.$ZodIssue[], prefix: PropertyKey[] = []): InvalidTopicError {
     const fieldErrors: Record<string, string[]> = {};
     const formErrors: string[] = [];

@@ -2,7 +2,7 @@ import type { ProposalRepository } from "@/application/ports/ProposalRepository"
 import type { Proposal } from "@/domain/entities/Proposal";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
-// Proposals of this process only (unit tests): lost when it stops.
+// Las propuestas solo de este proceso (tests unitarios): se pierden cuando termina.
 export class InMemoryProposalRepository implements ProposalRepository {
   private readonly proposals = new Map<EntityId, Proposal>();
 

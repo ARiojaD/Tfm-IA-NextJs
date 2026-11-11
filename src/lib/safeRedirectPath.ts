@@ -1,6 +1,7 @@
-// Where to send the user after signing in (?volver=/roma/...). Only paths inside this site are accepted:
-// an absolute URL, a protocol-relative one (//host) or a backslash trick (/\host, which browsers treat
-// as //host) would turn the sign-in page into an open redirect for phishing links.
+// Adónde se envía al usuario después de iniciar sesión (?volver=/roma/...). Solo se aceptan rutas de este
+// sitio: una URL absoluta, una relativa al protocolo (//host) o el truco de la barra invertida (/\host, que
+// los navegadores tratan como //host) convertirían la página de inicio de sesión en una redirección
+// abierta para enlaces de phishing.
 const INTERNAL_PATH = /^\/(?![/\\])[^\s\\]*$/;
 const MAX_LENGTH = 512;
 

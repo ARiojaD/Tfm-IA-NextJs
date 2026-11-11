@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+// La pregunta de un usuario a la enciclopedia. El máximo es corto a propósito: es una pregunta, no un texto
+// que meter en el prompt.
 export const AskQuestionInputSchema = z.strictObject({
   question: z
     .string({ error: "Escribe tu pregunta" })

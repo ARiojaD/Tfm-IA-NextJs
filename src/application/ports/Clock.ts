@@ -1,4 +1,4 @@
-// Source of the current time. Injected so tests can freeze it.
+// La fuente de la hora actual. Se inyecta para que los tests puedan congelarla.
 export interface Clock {
   now(): Date;
 }

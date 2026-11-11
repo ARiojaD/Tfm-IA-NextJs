@@ -1,6 +1,6 @@
 import type { Quiz } from "@/domain/entities/Quiz";
 
-// The quiz as a player may see it: no correct answer, no explanation.
+// El quiz tal como puede verlo un jugador: sin la respuesta correcta ni la explicación.
 export interface PublicQuizQuestion {
   id: string;
   question: string;
@@ -13,8 +13,8 @@ export interface PublicQuiz {
   questions: PublicQuizQuestion[];
 }
 
-// Allowlist, not denylist: fields are copied explicitly, so a field added to Quiz later
-// stays private unless it is deliberately added here.
+// Lista de lo permitido, no de lo prohibido: los campos se copian uno a uno, así que un campo que se añada
+// a `Quiz` en el futuro sigue siendo privado salvo que se añada aquí a propósito.
 export function toPublicQuiz(quiz: Quiz): PublicQuiz {
   return {
     id: quiz.id,

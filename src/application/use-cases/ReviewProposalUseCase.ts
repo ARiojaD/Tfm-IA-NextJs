@@ -33,9 +33,10 @@ export type ReviewProposalError =
   | TopicNotFoundError
   | InvalidTopicError;
 
-// An admin approves or rejects a pending proposal. Approving applies it: the event or the recommendation
-// is added to the topic, a new topic becomes a draft to complete, and a correction is marked as resolved
-// (the admin edits the topic by hand). Rejecting needs a reason, which the user sees.
+// Un administrador aprueba o rechaza una propuesta pendiente. Aprobarla la aplica: el evento o la
+// recomendación se añaden al tema, un tema nuevo pasa a ser un borrador que completar y una corrección se
+// marca como resuelta (el administrador edita el tema a mano). Rechazarla exige un motivo, que ve el
+// usuario.
 export class ReviewProposalUseCase {
   constructor(private readonly dependencies: ReviewProposalDependencies) {}
 
@@ -53,7 +54,7 @@ export class ReviewProposalUseCase {
     if (!proposal) {
       return failure(new ProposalNotFoundError(proposalId));
     }
-    // Reviewed once: approving twice would add its event or recommendation twice.
+    // Se revisa una sola vez: aprobarla dos veces añadiría dos veces su evento o su recomendación.
     if (proposal.status !== "PENDING") {
       return failure(new ProposalAlreadyReviewedError());
     }
@@ -76,7 +77,7 @@ export class ReviewProposalUseCase {
     return success({ proposal: reviewed, ...(createdTopicId !== undefined && { createdTopicId }) });
   }
 
-  // What approving changes on the site. Returns the id of the draft created for a new topic.
+  // Lo que cambia en la web al aprobar. Devuelve el id del borrador creado para un tema nuevo.
   private async apply(proposal: Proposal): Promise<Result<EntityId | undefined, TopicNotFoundError | InvalidTopicError>> {
     const { topicEditor, events, recommendations, ids } = this.dependencies;
 
@@ -86,7 +87,8 @@ export class ReviewProposalUseCase {
         id: ids.generate(),
         slug: await uniqueSlug(topicEditor, basics.title),
         ...basics,
-        // The proposal's description is the draft's first introduction, for the admin to rework.
+        // La descripción de la propuesta es la primera introducción del borrador, para que la rehaga el
+        // administrador.
         introduction: description
           .split(/\n\s*\n/)
           .map((paragraph) => paragraph.trim())
@@ -105,6 +107,8 @@ export class ReviewProposalUseCase {
     if (!topic) {
       return failure(new TopicNotFoundError(proposal.topicId));
     }
+    // El evento o la recomendación se añaden al final de la lista del tema (la página ordena los eventos
+    // por fecha).
     if (proposal.kind === "EVENT") {
       const event = HistoricalEventSchema.parse({ ...proposal.event, id: ids.generate(), topicId: topic.id, era: topic.era });
       await events.replaceForTopic(topic.id, [...(await events.listByTopic(topic.id)), event]);

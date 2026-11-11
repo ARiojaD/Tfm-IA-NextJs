@@ -4,8 +4,8 @@ import { AuthenticationRequiredError } from "../errors/AuthenticationRequiredErr
 import type { AuthService } from "../ports/AuthService";
 import type { ProposalRepository } from "../ports/ProposalRepository";
 
-// "Mis propuestas": the signed-in user's proposals and how they were reviewed. Only their own (BOLA): the
-// user comes from the session and the repository lists by user.
+// "Mis propuestas": las propuestas del usuario con sesión y cómo se revisaron. Solo las suyas (OWASP
+// BOLA): el usuario sale de la sesión y el repositorio lista por usuario.
 export class ListMyProposalsUseCase {
   constructor(private readonly dependencies: { auth: AuthService; proposals: ProposalRepository }) {}
 

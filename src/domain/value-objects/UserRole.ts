@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// What an account may do. Every account is a USER; ADMIN can also manage the content from the panel.
-// Only an operator grants ADMIN (npm run admin:grant): nobody can become one from the web.
+// Lo que puede hacer una cuenta. Todas son USER; ADMIN además gestiona el contenido desde el panel.
+// Solo un operador concede ADMIN (`npm run admin:grant`): nadie puede convertirse en administrador desde la web.
 export const USER_ROLES = ["USER", "ADMIN"] as const;
 
 export const UserRoleSchema = z.enum(USER_ROLES);

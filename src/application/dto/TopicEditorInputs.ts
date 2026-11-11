@@ -7,10 +7,11 @@ import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType"
 import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
 import { TopicStatusSchema } from "@/domain/value-objects/TopicStatus";
 
-// What the admin editor's forms send. Every value of a form is a string, so years and months arrive as
-// text and are turned into numbers here; dates BC become negative years, as the domain expects. All the
-// schemas are strict: id, slug and status are never taken from a form that edits the content. The field
-// schemas are exported for the other forms that ask for the same data (the users' proposals).
+// Lo que envían los formularios del editor del panel. Todos los valores de un formulario son texto, así
+// que los años y los meses llegan como texto y aquí se convierten en números; las fechas antes de Cristo
+// pasan a ser años negativos, como espera el dominio. Todos los esquemas son estrictos: el id, el slug y
+// el estado nunca se toman de un formulario que edita el contenido. Los esquemas de los campos se exportan
+// para otros formularios que piden los mismos datos (las propuestas de los usuarios).
 
 export const TOPIC_TITLE_MAX_LENGTH = 120;
 export const TOPIC_SUMMARY_MAX_LENGTH = 300;
@@ -66,6 +67,7 @@ export const basicsShape = {
 
 export type BasicsFields = z.output<z.ZodObject<typeof basicsShape>>;
 
+// Los años antes de Cristo pasan a ser negativos, como espera el dominio.
 export function toDate(yearNumber: number, era: "BC" | "AD", month: number | undefined): HistoricalDate {
   return { year: era === "BC" ? -yearNumber : yearNumber, ...(month !== undefined && { month }) };
 }
@@ -98,7 +100,8 @@ export const UpdateTopicBasicsInputSchema = z
   .superRefine(checkPeriodOrder)
   .transform(({ topicId: id, ...fields }) => ({ topicId: id, basics: toBasics(fields) }));
 
-// Paragraphs are separated by blank lines. Browsers send textarea line breaks as \r\n.
+// Los párrafos se separan con líneas en blanco. Los navegadores envían los saltos de línea de un textarea
+// como \r\n.
 export const UpdateTopicIntroductionInputSchema = z.strictObject({
   topicId,
   introduction: z
@@ -131,7 +134,7 @@ const isBlankRow = (row: unknown) =>
   row !== null &&
   Object.values(row).every((value) => typeof value === "string" && value.trim() === "");
 
-// Rows left completely empty in the form are dropped; the rest keep their order.
+// Las filas que se dejan totalmente vacías en el formulario se descartan; las demás conservan su orden.
 export const UpdateTopicKeyFactsInputSchema = z.strictObject({
   topicId,
   keyFacts: z.preprocess(
@@ -144,13 +147,13 @@ export const ChangeTopicStatusInputSchema = z.strictObject({ topicId, status: To
 
 export const DeleteTopicInputSchema = z.strictObject({ topicId });
 
-// Asking the AI for a proposal: only the topic, whose saved text is what the model reads.
+// Pedir una propuesta a la IA: solo el tema, porque lo que lee el modelo es su texto ya guardado.
 export const DraftTopicInputSchema = z.strictObject({ topicId });
 
-// --- The topic's lists: timeline, quiz, recommendations and related topics ---
-// The editor sends each list whole (as JSON in a hidden field). `id` is the row's id when it already
-// existed: the use case keeps it only if it belongs to this topic, so nobody can overwrite another
-// topic's rows by sending their ids.
+// --- Las listas del tema: cronología, quiz, recomendaciones y temas relacionados ---
+// El editor envía cada lista entera (como JSON en un campo oculto). `id` es el de la fila cuando ya
+// existía: el caso de uso solo lo conserva si pertenece a este tema, para que nadie pueda sobrescribir las
+// filas de otro tema enviando sus ids.
 
 export const EVENTS_MAX = 50;
 export const QUIZ_QUESTIONS_MAX = 10;
@@ -159,6 +162,7 @@ export const QUIZ_OPTIONS_MAX = 4;
 export const RECOMMENDATIONS_MAX = 20;
 export const RELATED_TOPICS_MAX = 10;
 
+// Un id vacío es una fila nueva.
 const rowId = z
   .string()
   .trim()
@@ -205,7 +209,7 @@ const questionRow = z.strictObject({
     .transform((value) => value || undefined),
 });
 
-// No questions at all removes the topic's quiz.
+// Sin ninguna pregunta, el tema se queda sin quiz.
 export const UpdateTopicQuizInputSchema = z.strictObject({
   topicId,
   questions: z.array(questionRow, { error: "La lista de preguntas no es válida" }).max(QUIZ_QUESTIONS_MAX, { error: `Como máximo ${QUIZ_QUESTIONS_MAX} preguntas` }),
@@ -216,7 +220,7 @@ const recommendationRow = z.strictObject({
   type: z.enum(RECOMMENDATION_TYPES, { error: "elige el tipo" }),
   title: text("escribe el título", 150, "el título no puede superar los 150 caracteres"),
   creator: text("escribe el autor o director", 120, "el autor no puede superar los 120 caracteres"),
-  // The year of the work (a book, a film): modern years, written as is.
+  // El año de la obra (un libro, una película): años modernos, escritos tal cual.
   year: z
     .string({ error: "escribe el año" })
     .trim()
@@ -240,9 +244,9 @@ export const UpdateRelatedTopicsInputSchema = z.strictObject({
     .refine((ids) => new Set(ids).size === ids.length, { error: "Un tema no puede estar repetido" }),
 });
 
-// --- The topic's image ---
-// Only a catalog id: the file, its size and its credit come from the catalog, never from the form. An
-// empty id leaves the topic without image (nothing is shown on its page).
+// --- La imagen del tema ---
+// Solo el id de una imagen del catálogo: el archivo, su tamaño y su crédito salen del catálogo, nunca del
+// formulario. Un id vacío deja el tema sin imagen (su página no muestra ninguna).
 export const UpdateTopicImageInputSchema = z
   .strictObject({
     topicId,

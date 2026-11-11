@@ -2,7 +2,8 @@ import { type EventDraftRow, eventDraftRows } from "@/domain/entities/TopicDraft
 import type { Result } from "@/shared/Result";
 import { draftFromTopic, type TopicDraftingDependencies, type TopicDraftingError } from "./topicDrafting";
 
-// The AI proposes a timeline from the topic's text. It only fills the form: saving is the administrator's.
+// La IA propone una cronología a partir del texto del tema. Solo rellena el formulario: guardar es cosa
+// del administrador.
 export class DraftTopicEventsUseCase {
   constructor(private readonly dependencies: TopicDraftingDependencies) {}
 

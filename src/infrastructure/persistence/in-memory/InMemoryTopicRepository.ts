@@ -5,8 +5,9 @@ import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 import type { Slug } from "@/domain/value-objects/Slug";
 
-// One store behind both ports: the public side (published topics only) and the admin editor (everything).
-// structuredClone on the way in and out mimics a database: callers never share references with the store.
+// Un solo almacén detrás de los dos ports: la cara pública (solo temas publicados) y el editor del panel
+// (todo). `structuredClone` a la entrada y a la salida imita a una base de datos: quien llama nunca
+// comparte referencias con el almacén.
 export class InMemoryTopicRepository implements TopicRepository, TopicEditorRepository {
   private readonly topics: HistoricalTopic[];
 
@@ -45,7 +46,7 @@ export class InMemoryTopicRepository implements TopicRepository, TopicEditorRepo
     if (index === -1) {
       this.topics.push(structuredClone(topic));
     } else {
-      // Related topics are not the topic's own fields: they stay as they were.
+      // Los temas relacionados no son campos propios del tema: se quedan como estaban.
       this.topics[index] = { ...structuredClone(topic), relatedTopicIds: this.topics[index].relatedTopicIds };
     }
     return Promise.resolve();

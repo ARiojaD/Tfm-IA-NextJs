@@ -2,7 +2,8 @@ import type { DisplayName } from "@/domain/value-objects/DisplayName";
 import type { Email } from "@/domain/value-objects/Email";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
-// Who is signed in, as the rest of the app sees it: only what it needs. Never the email or the password.
+// Quién ha iniciado sesión, tal como lo ve el resto de la aplicación: solo lo que necesita. Nunca el correo
+// ni la contraseña.
 export interface AuthenticatedUser {
   id: EntityId;
   name: DisplayName;
@@ -12,13 +13,14 @@ export type RegistrationResult =
   | { ok: true; user: AuthenticatedUser }
   | { ok: false; reason: "EMAIL_ALREADY_REGISTERED" };
 
-// A wrong password and an unknown email give the same answer, so nobody can learn which emails exist.
+// Una contraseña incorrecta y un correo desconocido dan la misma respuesta, para que nadie pueda averiguar
+// qué correos están registrados.
 export type SignInResult = { ok: true; user: AuthenticatedUser } | { ok: false; reason: "INVALID_CREDENTIALS" };
 
-// Accounts and sessions. The use cases validate the input before calling it; the implementation stores
-// the password hashed and keeps the session for the current request (a cookie, in the real one).
+// Cuentas y sesiones. Los casos de uso validan la entrada antes de llamarlo; la implementación guarda la
+// contraseña con hash y mantiene la sesión de la petición en curso (en la real, con una cookie).
 export interface AuthService {
-  // Creates the account and signs the user in.
+  // Crea la cuenta e inicia la sesión del usuario.
   register(input: { name: DisplayName; email: Email; password: string }): Promise<RegistrationResult>;
   signIn(input: { email: Email; password: string }): Promise<SignInResult>;
   signOut(): Promise<void>;

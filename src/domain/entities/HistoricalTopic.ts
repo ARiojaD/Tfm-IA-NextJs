@@ -8,9 +8,10 @@ import { TopicCategorySchema } from "../value-objects/TopicCategory";
 import { TopicImageSchema } from "../value-objects/TopicImage";
 import { TopicStatusSchema } from "../value-objects/TopicStatus";
 
-// A historical case (e.g. "Julio César") within an era (civilization) and a category (people,
-// battles…). Events, quiz, comments and recommendations all hang from a topic, so every topic
-// page shares the same structure. The introduction is also the main text the RAG pipeline will index.
+// La pieza central de la enciclopedia: un caso histórico (por ejemplo, "Julio César") dentro de una
+// civilización y una categoría (personajes, batallas…). Cronología, quiz, comentarios y recomendaciones
+// cuelgan de un tema, así que todas las páginas de tema comparten la misma estructura. La introducción es
+// también el texto principal que indexa el RAG.
 export const HistoricalTopicSchema = z
   .strictObject({
     id: EntityIdSchema,
@@ -20,15 +21,15 @@ export const HistoricalTopicSchema = z
     category: TopicCategorySchema,
     summary: z.string().trim().min(1),
     period: HistoricalPeriodSchema,
-    // May be empty while the topic is a draft; required to publish (see below).
+    // Puede estar vacía mientras el tema es un borrador; es obligatoria para publicar (ver más abajo).
     introduction: z.array(z.string().trim().min(1)),
     keyFacts: z.array(KeyFactSchema),
     image: TopicImageSchema.optional(),
-    // Links in both directions are stored on each topic (a join table in PostgreSQL).
+    // Cada tema guarda sus enlaces en las dos direcciones (en PostgreSQL, una tabla intermedia).
     relatedTopicIds: z.array(EntityIdSchema),
     status: TopicStatusSchema,
   })
-  // What a published topic needs so its page is complete. A draft can be saved half-written.
+  // Lo que necesita un tema publicado para que su página esté completa. Un borrador se puede guardar a medias.
   .refine(({ status, introduction }) => status === "DRAFT" || introduction.length > 0, {
     message: "Escribe la introducción antes de publicar",
     path: ["introduction"],
@@ -48,8 +49,9 @@ export const HistoricalTopicSchema = z
 
 export type HistoricalTopic = z.infer<typeof HistoricalTopicSchema>;
 
-// History reads in time order (Monarquía → República → Imperio, which alphabetical order would break).
-// Ties use Spanish collation, so accented titles ("Ávila") sort where a reader expects them.
+// La historia se lee en orden cronológico (Monarquía → República → Imperio, que el orden alfabético
+// rompería). Los empates se ordenan con la intercalación española, para que los títulos con tilde ("Ávila")
+// queden donde los espera un lector.
 export function compareTopicsChronologically(
   a: Pick<HistoricalTopic, "title" | "period">,
   b: Pick<HistoricalTopic, "title" | "period">,

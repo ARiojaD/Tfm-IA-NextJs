@@ -1,13 +1,14 @@
-// Identifies who is calling a Server Action, for rate limiting.
+// Identifica quién llama a una Server Action anónima, para los límites de peticiones. Las acciones con
+// sesión limitan por usuario (`user:<id>`), no por IP.
 //
-// SECURITY: x-forwarded-for / x-real-ip can be forged by the client unless a trusted proxy
-// (Vercel, Nginx…) overwrites them. Deploy behind one; otherwise an attacker can rotate fake IPs
-// to dodge the limit. Once authentication exists, prefer the user id over the IP.
+// SEGURIDAD: x-forwarded-for y x-real-ip los puede falsear el cliente salvo que un proxy de confianza
+// (Vercel, Nginx…) los sobrescriba. Hay que desplegar detrás de uno; si no, un atacante puede ir cambiando
+// de IP falsa para esquivar el límite.
 
 export const ANONYMOUS_REQUESTER = "anonymous";
 
-// IPv4 / IPv6 characters only, at most 45 chars (longest textual IPv6): rejects junk and stops a
-// client from flooding the rate limiter with huge or endless distinct keys.
+// Solo caracteres de IPv4 / IPv6 y como mucho 45 (la IPv6 más larga en texto): rechaza la basura e impide
+// que un cliente llene el limitador con claves enormes o infinitas.
 const IP_PATTERN = /^[0-9a-fA-F.:]{3,45}$/;
 
 export function requesterIdFromHeaders(headers: Headers): string {

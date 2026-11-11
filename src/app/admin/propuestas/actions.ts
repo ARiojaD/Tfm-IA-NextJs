@@ -10,8 +10,8 @@ import { RateLimitExceededError } from "@/application/errors/RateLimitExceededEr
 import type { AdminFormState } from "@/components/admin/adminFormState";
 import { getContainer } from "@/composition/container";
 
-// Thin Server Action for the inbox: the use case checks the ADMIN role, rate-limits, validates and applies
-// the proposal. An approved new topic opens its draft in the editor, to complete it.
+// Server Action fina para la bandeja de propuestas: el caso de uso comprueba el rol ADMIN, limita, valida
+// y aplica la propuesta. Un tema nuevo aprobado abre su borrador en el editor, para completarlo.
 export async function reviewProposal(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const result = await getContainer().reviewProposal.execute({
     proposalId: formData.get("proposalId"),
@@ -23,7 +23,7 @@ export async function reviewProposal(_previous: AdminFormState, formData: FormDa
     if (result.data.createdTopicId) {
       redirect(`/admin/temas/${result.data.createdTopicId}`);
     }
-    refresh(); // The reviewed proposal leaves the inbox.
+    refresh(); // La propuesta revisada sale de la bandeja.
     return { status: "success" };
   }
 

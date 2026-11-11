@@ -13,8 +13,9 @@ export interface AdminAuthorizationDependencies {
 
 export type AdminAuthorizationError = AuthenticationRequiredError | AdminRequiredError;
 
-// The first step of every admin use case: a session, and the ADMIN role read from the database right now
-// (never from the session cookie or the form), so revoking it applies on the next request.
+// El primer paso de todo caso de uso de administración: una sesión y el rol ADMIN leído de la base de
+// datos en ese momento (nunca de la cookie de sesión ni del formulario), así que retirarlo se aplica en la
+// siguiente petición.
 export async function authorizeAdmin({
   auth,
   roles,
@@ -35,8 +36,8 @@ export interface AdminWriteDependencies extends AdminAuthorizationDependencies {
 
 export type AdminWriteError = AdminAuthorizationError | RateLimitExceededError;
 
-// For the admin use cases that change data: authorized first, then rate-limited per admin (OWASP API4),
-// before validating, so every attempt counts.
+// Para los casos de uso de administración que cambian datos: primero se autoriza y después se limita por
+// administrador (OWASP API4), antes de validar, para que cuenten todos los intentos.
 export async function authorizeAdminWrite(
   dependencies: AdminWriteDependencies,
 ): Promise<Result<AuthenticatedUser, AdminWriteError>> {

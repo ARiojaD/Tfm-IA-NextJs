@@ -2,7 +2,8 @@ import { z } from "zod";
 import { EntityIdSchema } from "@/domain/value-objects/EntityId";
 import { SlugSchema } from "@/domain/value-objects/Slug";
 
-// What the browser sends when a player picks an option. Never trusted: it arrives through a public Server Action.
+// Lo que envía el navegador cuando un jugador elige una opción. Nunca es de fiar: llega por una Server
+// Action pública.
 export const AnswerQuizQuestionInputSchema = z.strictObject({
   topicSlug: SlugSchema,
   questionId: EntityIdSchema,

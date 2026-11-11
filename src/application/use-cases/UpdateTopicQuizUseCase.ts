@@ -6,8 +6,9 @@ import type { IdGenerator } from "../ports/IdGenerator";
 import type { QuizRepository } from "../ports/QuizRepository";
 import { keepOwnId, loadTopicToEdit, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// The topic's quiz, saved whole: its questions in order, each with its options and the correct one. No
-// questions removes the quiz. The domain checks the rest (options not repeated, the answer is an option).
+// El quiz del tema, guardado entero: sus preguntas en orden, cada una con sus opciones y la correcta. Sin
+// preguntas, el quiz se elimina. El dominio comprueba el resto (opciones sin repetir y la respuesta entre
+// las opciones).
 export class UpdateTopicQuizUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies & { quizzes: QuizRepository; ids: IdGenerator }) {}
 

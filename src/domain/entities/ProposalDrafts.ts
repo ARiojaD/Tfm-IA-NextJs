@@ -3,9 +3,10 @@ import { HISTORICAL_ERAS } from "../value-objects/HistoricalEra";
 import { TOPIC_CATEGORIES } from "../value-objects/TopicCategory";
 import { yearAppearsIn } from "./TopicDrafts";
 
-// What the language model may fill in a user's proposal from a pasted fragment. There is no `source` on
-// purpose: a model would invent references, and the source is what lets an admin check the proposal.
-// `found` is false when the fragment has nothing to propose. Years are 0 when the fragment does not say them.
+// Lo que el modelo de lenguaje puede rellenar en la propuesta de un usuario a partir de un fragmento
+// pegado. No hay `source` a propósito: un modelo inventaría referencias, y la fuente es justo lo que
+// permite a un administrador comprobar la propuesta. `found` es false cuando el fragmento no tiene nada
+// que proponer. Los años valen 0 cuando el fragmento no los dice.
 const calendarEra = z.enum(["BC", "AD"]);
 const year = z.number().int().min(0).max(3000);
 const month = z.number().int().min(0).max(12);
@@ -37,13 +38,14 @@ export const GeneratedNewTopicProposalSchema = z.strictObject({
 export type GeneratedEventProposal = z.infer<typeof GeneratedEventProposalSchema>;
 export type GeneratedNewTopicProposal = z.infer<typeof GeneratedNewTopicProposalSchema>;
 
-// A year the fragment does not contain was invented: it stays empty, for the user to complete. So does
-// its month, which means nothing without the year.
+// Un año que no aparece en el fragmento es inventado: se deja vacío para que lo complete el usuario. Lo
+// mismo su mes, que sin el año no significa nada.
 function dateFields(yearValue: number, monthValue: number, fragment: string): { year: string; month: string } {
   if (yearValue === 0 || !yearAppearsIn(yearValue, fragment)) return { year: "", month: "" };
   return { year: String(yearValue), month: monthValue === 0 ? "" : String(monthValue) };
 }
 
+// Convierte lo que propuso el modelo en los valores del formulario de propuesta, que el usuario revisa.
 export function eventProposalValues({ title, year: yearValue, era, month: monthValue, description }: GeneratedEventProposal, fragment: string) {
   return { title, ...dateFields(yearValue, monthValue, fragment), era, description };
 }

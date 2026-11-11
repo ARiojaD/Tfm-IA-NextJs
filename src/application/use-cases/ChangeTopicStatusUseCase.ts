@@ -4,8 +4,8 @@ import { ChangeTopicStatusInputSchema } from "../dto/TopicEditorInputs";
 import { InvalidTopicError } from "../errors/InvalidTopicError";
 import { editTopic, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// Publish (the topic appears on the web) or unpublish (back to draft: hidden, but nothing is lost).
-// Publishing an incomplete topic fails with the list of what is missing, from the domain rules.
+// Publicar (el tema aparece en la web) o despublicar (vuelve a borrador: oculto, pero no se pierde nada).
+// Publicar un tema incompleto falla con la lista de lo que falta, sacada de las reglas del dominio.
 export class ChangeTopicStatusUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies) {}
 
@@ -15,7 +15,7 @@ export class ChangeTopicStatusUseCase {
       status,
     }));
 
-    // Shown next to the "Publicar" button, not next to the fields of other sections.
+    // Se muestra junto al botón "Publicar", no junto a los campos de otras secciones.
     if (!result.success && result.error instanceof InvalidTopicError) {
       const { fieldErrors, formErrors } = result.error;
       return failure(new InvalidTopicError({}, [...formErrors, ...Object.values(fieldErrors).flat()]));

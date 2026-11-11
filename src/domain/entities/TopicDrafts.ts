@@ -1,21 +1,23 @@
 import { z } from "zod";
 import type { KeyFact } from "../value-objects/KeyFact";
 
-// What the language model may propose for a topic's timeline and quiz, always from the topic's own text.
-// A proposal is only a draft: it fills the editor's form, and an administrator reviews and saves it.
+// Lo que el modelo de lenguaje puede proponer para la cronología y el quiz de un tema, siempre a partir
+// del propio texto del tema. Una propuesta es solo un borrador: rellena el formulario del editor, y un
+// administrador la revisa y la guarda.
 export const MAX_DRAFT_EVENTS = 8;
 export const MAX_DRAFT_QUESTIONS = 5;
 
-// OWASP LLM02: the limits match the editor's, so a draft can always be saved once reviewed.
+// OWASP LLM02: los límites coinciden con los del editor, así que un borrador revisado siempre se puede
+// guardar.
 export const GeneratedEventsSchema = z.strictObject({
   events: z
     .array(
       z.strictObject({
         title: z.string().trim().min(1).max(120),
-        // Year and era apart: a model gets negative years wrong far more often.
+        // Año y era por separado: un modelo se equivoca mucho más con los años negativos.
         year: z.number().int().min(1).max(3000),
         era: z.enum(["BC", "AD"]),
-        // 0 when the text does not say the month.
+        // 0 cuando el texto no dice el mes.
         month: z.number().int().min(0).max(12),
         description: z.string().trim().min(1).max(1000),
       }),
@@ -39,7 +41,8 @@ export const GeneratedQuizSchema = z.strictObject({
 export type GeneratedEvents = z.infer<typeof GeneratedEventsSchema>;
 export type GeneratedQuiz = z.infer<typeof GeneratedQuizSchema>;
 
-// The rows of the editor's forms, where every date field is text. An empty id means a new row.
+// Las filas de los formularios del editor, donde todos los campos de fecha son texto. Un id vacío es una
+// fila nueva.
 export interface EventDraftRow {
   id: "";
   title: string;
@@ -57,16 +60,17 @@ export interface QuestionDraftRow {
   explanation: string;
 }
 
-// All the model can read about a topic: what the administrator wrote in it.
+// Todo lo que el modelo puede leer de un tema: lo que escribió en él el administrador.
 export function topicSourceText({ introduction, keyFacts }: { introduction: string[]; keyFacts: KeyFact[] }): string {
   return [...introduction, ...keyFacts.map((fact) => `${fact.label}: ${fact.value}`)].join("\n");
 }
 
-// A check that does not depend on the model: a year that is not in the text was invented.
+// Una comprobación que no depende del modelo: un año que no está en el texto es inventado.
 export function yearAppearsIn(year: number, text: string): boolean {
   return new RegExp(`(?<!\\d)${year}(?!\\d)`).test(text);
 }
 
+// Los eventos con un año que no aparece en el texto se descartan (ver `yearAppearsIn`).
 export function eventDraftRows({ events }: GeneratedEvents, sourceText: string): EventDraftRow[] {
   return events
     .filter((event) => yearAppearsIn(event.year, sourceText))
@@ -80,8 +84,8 @@ export function eventDraftRows({ events }: GeneratedEvents, sourceText: string):
     }));
 }
 
-// Drops what the quiz could not hold. Models tend to write the correct answer first, so each question is
-// rotated by its position: the answer moves and stays marked.
+// Descarta lo que el quiz no podría guardar. Los modelos tienden a escribir la respuesta correcta la
+// primera, así que cada pregunta se rota según su posición: la respuesta cambia de sitio y sigue marcada.
 export function quizDraftRows({ questions }: GeneratedQuiz): QuestionDraftRow[] {
   return questions
     .filter(({ options, correctOptionIndex }) => new Set(options).size === options.length && correctOptionIndex < options.length)

@@ -6,7 +6,8 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-gallic-sack-of-rome";
 
-// Dated with the traditional Roman chronology (390 a.C.); the Greek historian Polybius places it in 387–386.
+// Fechado con la cronología romana tradicional (390 a.C.); el historiador griego Polibio lo sitúa en el
+// 387–386.
 
 export const gallicSackOfRomeTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

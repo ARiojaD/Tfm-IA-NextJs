@@ -7,9 +7,9 @@ export interface PasswordStrength {
 
 const LABELS = ["", "Débil: demasiado repetitiva", "Aceptable", "Fuerte", "Muy fuerte"] as const;
 
-// A visual hint while typing, not a rule: the server only enforces the minimum length and rejects
-// leaked passwords. Length weighs most (a long passphrase is strong even in lower case), variety adds a
-// little, and a few repeated characters ("aaaa…") are flagged as weak.
+// Una pista visual mientras se escribe, no una regla: el servidor solo exige la longitud mínima y rechaza
+// las contraseñas filtradas. Lo que más pesa es la longitud (una frase larga es fuerte aunque vaya en
+// minúsculas), la variedad suma un poco y unos pocos caracteres repetidos ("aaaa…") se marcan como débil.
 export function estimatePasswordStrength(password: string): PasswordStrength {
   if (password.length === 0) return { score: 0, label: "" };
   if (password.length < PASSWORD_MIN_LENGTH) return { score: 0, label: `Demasiado corta (mínimo ${PASSWORD_MIN_LENGTH})` };

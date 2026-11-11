@@ -1,6 +1,6 @@
-// Tells whether a password appears in known data breaches (OWASP ASVS: reject passwords that are known
-// to be compromised). Implementations may fail (e.g. the external service is down): they throw, and the
-// use case decides what to do.
+// Dice si una contraseña aparece en filtraciones de datos conocidas (OWASP ASVS: rechazar contraseñas que
+// se sabe que están comprometidas). Las implementaciones pueden fallar (por ejemplo, si el servicio externo
+// está caído): lanzan un error y el caso de uso decide qué hacer.
 export interface BreachedPasswordChecker {
   isBreached(password: string): Promise<boolean>;
 }

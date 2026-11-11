@@ -2,7 +2,8 @@ import { type QuestionDraftRow, quizDraftRows } from "@/domain/entities/TopicDra
 import type { Result } from "@/shared/Result";
 import { draftFromTopic, type TopicDraftingDependencies, type TopicDraftingError } from "./topicDrafting";
 
-// The AI proposes quiz questions from the topic's text. It only fills the form: saving is the administrator's.
+// La IA propone preguntas de quiz a partir del texto del tema. Solo rellena el formulario: guardar es cosa
+// del administrador.
 export class DraftTopicQuizUseCase {
   constructor(private readonly dependencies: TopicDraftingDependencies) {}
 

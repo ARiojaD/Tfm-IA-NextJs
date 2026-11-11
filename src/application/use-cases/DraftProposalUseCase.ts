@@ -26,8 +26,9 @@ export interface DraftProposalDependencies {
   drafter: ProposalDrafter;
 }
 
-// Fills a proposal's form from a fragment the user pasted. It only returns the fields: the user reviews
-// them, adds the source and sends the proposal, which an administrator still has to approve.
+// Rellena el formulario de una propuesta a partir de un fragmento que pegó el usuario. Solo devuelve los
+// campos: el usuario los revisa, añade la fuente y envía la propuesta, que aún tiene que aprobar un
+// administrador.
 export class DraftProposalUseCase {
   constructor(private readonly dependencies: DraftProposalDependencies) {}
 
@@ -39,6 +40,7 @@ export class DraftProposalUseCase {
       return failure(new AuthenticationRequiredError("rellenar propuestas con IA"));
     }
 
+    // Por usuario y antes de validar: cada petición puede acabar en una llamada al modelo (OWASP LLM10).
     const decision = await rateLimiter.consume(`user:${user.id}`);
     if (!decision.allowed) {
       return failure(new RateLimitExceededError(decision.retryAfterSeconds));

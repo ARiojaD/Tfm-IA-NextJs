@@ -3,7 +3,7 @@ import type { Result } from "@/shared/Result";
 import { UpdateTopicIntroductionInputSchema } from "../dto/TopicEditorInputs";
 import { editTopic, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// The topic's main text (the one the RAG will index), written as paragraphs separated by blank lines.
+// El texto principal del tema (el que indexa el RAG), escrito en párrafos separados por líneas en blanco.
 export class UpdateTopicIntroductionUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies) {}
 

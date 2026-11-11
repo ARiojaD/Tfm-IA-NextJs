@@ -2,6 +2,7 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText, type LanguageModel, Output } from "ai";
 import type { z } from "zod";
 
+// La configuración del modelo de lenguaje, que sale de las variables `LLM_*` (ver `composition/container.ts`).
 export interface LlmConfig {
   baseURL: string;
   model: string;
@@ -9,20 +10,22 @@ export interface LlmConfig {
   timeoutMs: number;
 }
 
-// Any server that speaks the OpenAI protocol: Ollama in development and, by changing LLM_BASE_URL,
-// LLM_MODEL and LLM_API_KEY, a free API such as Groq or Gemini once deployed.
+// Cualquier servidor que hable el protocolo de OpenAI: Ollama en desarrollo y, cambiando `LLM_BASE_URL`,
+// `LLM_MODEL` y `LLM_API_KEY`, una API gratuita como Groq o Gemini una vez desplegado.
 export function createLanguageModel({ baseURL, apiKey, model }: LlmConfig): LanguageModel {
   return createOpenAICompatible({ name: "llm", baseURL, apiKey, supportsStructuredOutputs: true }).chatModel(model);
 }
 
-// Removes what could close a prompt's tag or attribute, so a text stays inside its delimiters (OWASP LLM01).
+// Quita lo que podría cerrar una etiqueta o un atributo del prompt, para que un texto se quede dentro de
+// sus delimitadores (OWASP LLM01).
 export function plainPromptText(text: string): string {
   return text.replace(/[<>]/g, " ").replace(/"/g, "'");
 }
 
-// One structured call to the model. Output.object asks for the JSON schema and validates the reply with it;
-// anything else rejects (OWASP LLM02). A failure is logged by its type only: the message of a validation
-// error can carry the model's reply or the user's text (OWASP LLM06).
+// Una llamada estructurada al modelo. `Output.object` le pide el esquema JSON y valida la respuesta con
+// él; cualquier otra cosa se rechaza (OWASP LLM02). Un fallo se registra solo por su tipo: el mensaje de
+// un error de validación puede llevar la respuesta del modelo o el texto del usuario (OWASP LLM06).
+// Temperatura baja para que el modelo se ciña a los datos, y sin reintentos para no multiplicar el coste.
 export async function generateStructured<Schema extends z.ZodType<object>>(
   model: LanguageModel,
   config: LlmConfig,

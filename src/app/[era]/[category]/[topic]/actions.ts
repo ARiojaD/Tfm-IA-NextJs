@@ -9,10 +9,10 @@ import type { QuizAnswerState } from "@/components/topic/QuizGame";
 import { getContainer } from "@/composition/container";
 import { currentRequesterId } from "@/lib/currentRequesterId";
 
-// Server Actions are public POST endpoints: anyone can call them with any payload, not only
-// through our UI. They stay thin on purpose: the use cases validate every input (unknown → DTO)
-// and enforce the rate limits; these functions only identify the caller and translate the
-// Result into what the components display.
+// Las Server Actions son endpoints POST públicos: cualquiera puede llamarlas con cualquier contenido, no
+// solo desde nuestra interfaz. Son finas a propósito: los casos de uso validan toda entrada (de `unknown`
+// a DTO) y aplican los límites de peticiones; estas funciones solo identifican a quien llama y traducen el
+// `Result` a lo que muestran los componentes.
 
 function rateLimitMessage(error: RateLimitExceededError, action: string): string {
   return `Has ${action} demasiadas veces seguidas. Espera ${error.retryAfterSeconds} s y vuelve a intentarlo.`;
@@ -30,7 +30,7 @@ export async function answerQuizQuestion(input: unknown): Promise<QuizAnswerStat
   return { status: "error", message: "No se ha podido comprobar la respuesta. Inténtalo de nuevo." };
 }
 
-// The author is never read from the form: the use case takes it from the session.
+// El autor nunca se lee del formulario: el caso de uso lo toma de la sesión.
 export async function addComment(_previous: CommentFormState, formData: FormData): Promise<CommentFormState> {
   const result = await getContainer().addComment.execute({
     topicSlug: formData.get("topicSlug"),
@@ -38,7 +38,7 @@ export async function addComment(_previous: CommentFormState, formData: FormData
   });
 
   if (result.success) {
-    refresh(); // Re-render the page so the new comment appears at the top of the list.
+    refresh(); // Vuelve a pintar la página para que el comentario nuevo salga el primero de la lista.
     return { status: "success" };
   }
   if (result.error instanceof AuthenticationRequiredError) {

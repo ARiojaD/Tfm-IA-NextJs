@@ -1,3 +1,7 @@
+// La raíz de composición: el único sitio que sabe qué implementación hay detrás de cada port. La
+// aplicación usa PostgreSQL y los modelos reales; los tests unitarios, repositorios en memoria y dobles de
+// IA. Los casos de uso y las páginas nunca saben cuál reciben. Aquí viven también las políticas de los
+// límites de peticiones.
 import type { AnswerGenerator } from "@/application/ports/AnswerGenerator";
 import type { AuthService } from "@/application/ports/AuthService";
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
@@ -97,28 +101,32 @@ import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { Result } from "@/shared/Result";
 import { parseAuthEnv, parseDatabaseEnv, parseLlmEnv } from "./env";
 
-// Rate limits per requester (OWASP API4). Generous for a person, tight for a script.
+// Límites de peticiones por solicitante (OWASP API4). Generosos para una persona y estrictos para un script.
 export const COMMENT_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 60_000 };
 export const QUIZ_ANSWER_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000 };
-// Brute force: 5 attempts a minute per visitor and per account (Better Auth's own limiter does not apply
-// to server-side calls, so this one is the protection).
+// Fuerza bruta: 5 intentos por minuto por visitante y por cuenta (el limitador propio de Better Auth no se
+// aplica a las llamadas desde el servidor, así que la protección es este).
 export const SIGN_IN_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 60_000 };
-// Mass account creation: 5 sign-ups every 15 minutes per visitor.
+// Creación masiva de cuentas: 5 registros cada 15 minutos por visitante.
 export const SIGN_UP_RATE_LIMIT: RateLimitPolicy = { limit: 5, windowMs: 15 * 60_000 };
-// Following and saving share one budget per user: plenty for clicking around, not for a script.
+// Seguir y guardar comparten un mismo cupo por usuario: de sobra para ir haciendo clic, no para un script.
 export const LIBRARY_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60_000 };
 
-// Every change in the admin panel, per admin: generous for editing by hand, a brake on a stolen session.
-// Proposals per user: enough to contribute, not to flood the admins' inbox.
+// Propuestas por usuario: suficientes para contribuir, no para inundar la bandeja de los administradores.
 export const PROPOSAL_RATE_LIMIT: RateLimitPolicy = { limit: 10, windowMs: 60 * 60_000 };
+// Cada cambio en el panel de administración, por administrador: generoso para editar a mano y un freno
+// para una sesión robada.
 export const ADMIN_RATE_LIMIT: RateLimitPolicy = { limit: 60, windowMs: 60_000 };
-// Questions to the RAG, per user: each one runs a language model, so this also protects a free API's quota (OWASP LLM10).
+// Preguntas al RAG, por usuario: cada una ejecuta un modelo de lenguaje, así que esto también protege la
+// cuota de una API gratuita (OWASP LLM10).
 export const QUESTION_RATE_LIMIT: RateLimitPolicy = { limit: 30, windowMs: 60 * 60_000 };
-// AI proposals in the panel, per admin: apart from the panel's budget, because each one runs the model.
+// Propuestas de la IA en el panel, por administrador: aparte del cupo del panel, porque cada una ejecuta el
+// modelo.
 export const AI_DRAFT_RATE_LIMIT: RateLimitPolicy = { limit: 20, windowMs: 60 * 60_000 };
-// Filling a proposal with AI, per user: each one runs the model on text the user chooses.
+// Rellenar una propuesta con IA, por usuario: cada una ejecuta el modelo sobre un texto que elige el usuario.
 export const PROPOSAL_DRAFT_RATE_LIMIT: RateLimitPolicy = { limit: 20, windowMs: 60 * 60_000 };
-// How long a local model may take to load and answer before the visitor gets the fragments instead.
+// Cuánto puede tardar un modelo local en cargarse y responder antes de que el visitante reciba los
+// fragmentos en su lugar. El primer arranque de Ollama ronda el minuto.
 const LLM_TIMEOUT_MS = 90_000;
 
 interface Repositories {
@@ -130,16 +138,16 @@ interface Repositories {
   recommendations: RecommendationRepository;
   library: LibraryRepository;
   roles: UserRoleRepository;
-  // Not a database table: the images are files of the project (see infrastructure/images/imageCatalog.ts).
+  // No es una tabla de la base de datos: las imágenes son archivos del proyecto (ver
+  // `infrastructure/images/imageCatalog.ts`).
   images: ImageCatalog;
   proposals: ProposalRepository;
-  // The RAG: the fragments of the published topics with their vectors.
+  // El RAG: los fragmentos de los temas publicados con sus vectores.
   knowledge: KnowledgeIndex;
 }
 
-// The only place that knows which implementation backs each port. The app uses PostgreSQL; the unit
-// tests use the in-memory repositories. Use cases and pages never know which one they get.
-// One topic store behind both topic ports, so what the editor saves is what the public side reads.
+// Los tests unitarios: repositorios en memoria con el seed. Un solo almacén de temas detrás de los dos
+// ports de temas, así lo que guarda el editor es lo que lee la cara pública.
 function inMemoryRepositories(seed: Seed): Repositories {
   const topics = new InMemoryTopicRepository(seed.topics);
 
@@ -158,6 +166,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
   };
 }
 
+// La aplicación: PostgreSQL para todo salvo el catálogo de imágenes, que vive en el código.
 function postgresRepositories(db: Database): Repositories {
   const topics = new PostgresTopicRepository(db);
 
@@ -176,9 +185,7 @@ function postgresRepositories(db: Database): Repositories {
   };
 }
 
-// The rate-limit counters stay in memory: valid for a single server process. With several instances
-// they must move to a shared store (PostgreSQL or Redis).
-// The models of the RAG. `minSimilarity` goes with the embedding model: it only makes sense for that one.
+// Los modelos del RAG. `minSimilarity` va con el modelo de embeddings: solo tiene sentido para ese modelo.
 interface Ai {
   embeddings: EmbeddingService;
   answers: AnswerGenerator;
@@ -186,7 +193,10 @@ interface Ai {
   minSimilarity: number;
 }
 
-// The embedding model is part of the state: it is loaded once per process, not once per request.
+// El estado que vive todo el proceso. El modelo de embeddings forma parte de él: se carga una vez por
+// proceso, no una vez por petición. Los contadores de los límites se quedan en memoria: solo valen para un
+// proceso del servidor, y con varias instancias tendrán que pasar a un almacén compartido (PostgreSQL o
+// Redis).
 function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker, ai: Ai) {
   const clock = new SystemClock();
 
@@ -212,15 +222,15 @@ function createState(repositories: Repositories, breachedPasswords: BreachedPass
 
 type State = ReturnType<typeof createState>;
 
-// `auth` is passed apart from the state: in the app it is built per request (it reads that request's
-// cookies), in the unit tests it is a single in-memory double.
+// `auth` se pasa aparte del estado: en la aplicación se construye en cada petición (lee las cookies de esa
+// petición) y en los tests unitarios es un único doble en memoria.
 function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, ai }: State, auth: AuthService) {
   const { topics, topicEditor, quizzes, comments, library, roles } = repositories;
   const ids = new RandomUuidGenerator();
   const editor = { topicEditor, auth, roles, rateLimiter: rateLimiters.admin };
   const drafting = { ...editor, rateLimiter: rateLimiters.aiDrafts, drafter: ai.drafter };
   const refreshIndex = new RefreshTopicIndexUseCase({ topicEditor, events: repositories.events, embeddings: ai.embeddings, index: repositories.knowledge });
-  // The admin edits that change what the RAG indexes reindex their topic when they succeed.
+  // Las ediciones del panel que cambian lo que indexa el RAG reindexan su tema cuando salen bien.
   const indexed = <Output, Failure extends Error>(
     useCase: { execute(input: unknown): Promise<Result<Output, Failure>> },
     topicIdOf?: (input: unknown, output: Output) => EntityId | undefined,
@@ -274,7 +284,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
     draftProposal: new DraftProposalUseCase({ auth, rateLimiter: rateLimiters.proposalDrafts, drafter: ai.drafter }),
     listMyProposals: new ListMyProposalsUseCase({ auth, proposals: repositories.proposals }),
     listPendingProposals: new ListPendingProposalsUseCase({ auth, roles, proposals: repositories.proposals }),
-    // An approved event joins the timeline of its topic.
+    // Un evento aprobado se une a la cronología de su tema, así que hay que reindexarlo.
     reviewProposal: indexed(new ReviewProposalUseCase({ ...editor, ...repositories, ids, clock }), (_input, { proposal }) =>
       proposal.status === "APPROVED" && proposal.kind === "EVENT" ? proposal.topicId : undefined,
     ),
@@ -291,7 +301,8 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
   };
 }
 
-// Only the topic id and the message: the edit itself was saved, and `npm run rag:index` repairs the index.
+// Solo el id del tema y el mensaje del error: la edición sí se guardó, y `npm run rag:index` repara el
+// índice.
 function reportIndexFailure(topicId: EntityId, error: unknown) {
   console.error(
     `No se pudo actualizar el índice del RAG del tema ${topicId}: ${error instanceof Error ? error.message : String(error)}`,
@@ -300,24 +311,26 @@ function reportIndexFailure(topicId: EntityId, error: unknown) {
 
 export type Container = ReturnType<typeof createUseCases>;
 
-// A fresh, isolated container over in-memory data and accounts (used by the unit tests; no database needed).
+// Un container nuevo y aislado sobre datos y cuentas en memoria (lo usan los tests unitarios; no necesita
+// base de datos).
 export function createContainer(seed: Seed = SEED): Container {
   return createUseCases(
     createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), {
       embeddings: new HashingEmbeddingService(EMBEDDING_DIMENSIONS),
       answers: new EchoAnswerGenerator(),
       drafter: new EmptyContentDrafter(),
-      // Word counts give low similarities: here every fragment is a candidate.
+      // El recuento de palabras da similitudes bajas: aquí cualquier fragmento es candidato.
       minSimilarity: 0,
     }),
     new InMemoryAuthService(),
   );
 }
 
-// The app's container, backed by PostgreSQL. Next.js re-evaluates modules on hot reload and may load this
-// file from several bundles, so the connection pool and the state (repositories and rate-limit counters)
-// are shared on globalThis: one pool for the whole process, never one per reload. Use cases are rebuilt on
-// every call (they are cheap), so edited use-case code applies immediately.
+// El container de la aplicación, sobre PostgreSQL. Next.js vuelve a evaluar los módulos en cada recarga en
+// caliente y puede cargar este archivo desde varios bundles, así que el pool de conexiones y el estado
+// (repositorios y contadores de los límites) se comparten en `globalThis`: un pool para todo el proceso,
+// nunca uno por recarga. Los casos de uso se reconstruyen en cada llamada (son baratos), así el código
+// editado de un caso de uso se aplica al momento.
 const globalForApp = globalThis as typeof globalThis & {
   __memnonState?: State;
   __memnonDatabase?: ReturnType<typeof createDatabase>;
@@ -340,8 +353,9 @@ export function getContainer(): Container {
   return createUseCases(globalForApp.__memnonState, new BetterAuthService(getBetterAuth(), new NextSessionCookies()));
 }
 
-// DATABASE_URL and the auth variables are validated on first use (OWASP A05): a missing or malformed
-// value stops with a clear error that names the variable but never shows its value.
+// `DATABASE_URL` y las variables de autenticación se validan la primera vez que se usan (OWASP A05): un
+// valor que falta o está mal formado se detiene con un error claro que nombra la variable pero nunca
+// muestra su valor.
 function getDatabase(): Database {
   globalForApp.__memnonDatabase ??= createDatabase(parseDatabaseEnv(process.env).DATABASE_URL);
   return globalForApp.__memnonDatabase.db;
@@ -357,7 +371,7 @@ function getBetterAuth(): BetterAuth {
   return globalForApp.__memnonAuth;
 }
 
-// Closes the connection pool and forgets the state (used by the integration tests between cases).
+// Cierra el pool de conexiones y olvida el estado (lo usan los tests de integración entre casos).
 export async function closeContainer(): Promise<void> {
   const database = globalForApp.__memnonDatabase;
   globalForApp.__memnonDatabase = undefined;
@@ -366,9 +380,9 @@ export async function closeContainer(): Promise<void> {
   await database?.close();
 }
 
-// A hot reload of an infrastructure module redefines its class. Instances created before keep the old
-// methods (e.g. a repository method added later would be missing), so the state is rebuilt; the
-// connection pool is reused. Only happens in development.
+// Una recarga en caliente de un módulo de infraestructura redefine su clase. Las instancias creadas antes
+// conservan los métodos viejos (por ejemplo, faltaría un método de repositorio añadido después), así que
+// el estado se reconstruye; el pool de conexiones se reutiliza. Solo pasa en desarrollo.
 function isBuiltWithCurrentClasses(state: State | undefined): state is State {
   if (!state) return false;
   const { clock, repositories, rateLimiters, ai } = state;

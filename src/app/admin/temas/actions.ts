@@ -15,9 +15,9 @@ import { getContainer } from "@/composition/container";
 import type { EventDraftRow, QuestionDraftRow } from "@/domain/entities/TopicDrafts";
 import type { Result } from "@/shared/Result";
 
-// Thin Server Actions for the topic editor. Like every Server Action they are public POST endpoints:
-// the use cases check the ADMIN role, rate-limit and validate; these only read the form and translate
-// the Result into what the form shows, without internal details.
+// Server Actions finas para el editor de temas. Como toda Server Action, son endpoints POST públicos: los
+// casos de uso comprueban el rol ADMIN, limitan y validan; estas solo leen el formulario y traducen el
+// `Result` a lo que muestra el formulario, sin detalles internos.
 
 const BASICS_FIELDS = [
   "title",
@@ -57,11 +57,11 @@ function errorState(error: Error): AdminFormState {
 
 function toState(result: Result<unknown, Error>): AdminFormState {
   if (!result.success) return errorState(result.error);
-  refresh(); // Re-render the editor (and its status) with the saved data.
+  refresh(); // Vuelve a pintar el editor (y su estado) con los datos guardados.
   return { status: "success" };
 }
 
-// A new topic goes straight to its editor, to write the introduction and the rest.
+// Un tema nuevo va directo a su editor, para escribir la introducción y el resto.
 export async function createTopic(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const result = await getContainer().createTopic.execute(basicsFrom(formData));
   if (!result.success) return errorState(result.error);
@@ -83,7 +83,7 @@ export async function updateTopicIntroduction(_previous: AdminFormState, formDat
   );
 }
 
-// Labels and values arrive as two lists in the same order: the n-th label goes with the n-th value.
+// Las etiquetas y los valores llegan como dos listas en el mismo orden: la etiqueta n va con el valor n.
 export async function updateTopicKeyFacts(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const labels = formData.getAll("keyFactLabel");
   const values = formData.getAll("keyFactValue");
@@ -95,8 +95,9 @@ export async function updateTopicKeyFacts(_previous: AdminFormState, formData: F
   );
 }
 
-// The lists (timeline, quiz, recommendations, related topics) arrive as JSON in a hidden field. Parsing
-// only turns text into plain data; the use case validates it like any other input (it may be anything).
+// Las listas (cronología, quiz, recomendaciones y temas relacionados) llegan como JSON en un campo oculto.
+// Analizarlo solo convierte el texto en datos simples; el caso de uso los valida como cualquier otra
+// entrada (pueden ser cualquier cosa). El tamaño máximo evita analizar un JSON enorme.
 const JSON_FIELD_MAX_LENGTH = 200_000;
 
 function jsonField(formData: FormData, name: string): unknown {
@@ -119,7 +120,8 @@ function draftResult<Row>(result: Result<Row[], Error>): AiDraftResult<Row> {
   return { status: "error", message: errorState(error).formErrors?.[0] ?? "No se ha podido pedir la propuesta." };
 }
 
-// The AI's proposals only return rows for the form: nothing is saved until the administrator saves it.
+// Las propuestas de la IA solo devuelven filas para el formulario: no se guarda nada hasta que lo guarde el
+// administrador.
 export async function draftTopicEvents(topicId: string): Promise<AiDraftResult<EventDraftRow>> {
   return draftResult(await getContainer().draftTopicEvents.execute({ topicId }));
 }
@@ -169,8 +171,8 @@ export async function updateTopicImage(_previous: AdminFormState, formData: Form
   );
 }
 
-// Publishing without an image is allowed (the page simply shows none); the admin is only told, so it is
-// a choice and not an oversight.
+// Se puede publicar sin imagen (la página simplemente no muestra ninguna); solo se avisa al
+// administrador, para que sea una decisión y no un descuido.
 export async function changeTopicStatus(_previous: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const result = await getContainer().changeTopicStatus.execute({
     topicId: formData.get("topicId"),

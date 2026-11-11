@@ -1,10 +1,11 @@
 import { CatalogImageSchema } from "@/domain/entities/CatalogImage";
 
-// The images topics can use. To add one:
-//   1. Choose an image with a free licence (Wikimedia Commons: public domain or CC BY / CC BY-SA).
-//   2. Save it as .jpg in public/images/topics (specific) or public/images/catalog (general).
-//   3. Add it here with its real width and height and its credit (the test checks the file and its size).
-// Validated with the domain schema when the module loads: a wrong entry fails at once, not in a page.
+// Las imágenes que pueden usar los temas. Para añadir una:
+//   1. Elegir una imagen con licencia libre (Wikimedia Commons: dominio público o CC BY / CC BY-SA).
+//   2. Guardarla como .jpg en public/images/topics (específicas) o public/images/catalog (generales).
+//   3. Añadirla aquí con su ancho y su alto reales y su crédito (el test comprueba el archivo y su tamaño).
+// Se valida con el esquema del dominio al cargar el módulo: una entrada errónea falla enseguida, no en una
+// página.
 export const IMAGE_CATALOG = CatalogImageSchema.array().parse([
   {
     id: "julio-cesar-busto",
@@ -105,7 +106,7 @@ export const IMAGE_CATALOG = CatalogImageSchema.array().parse([
     alt: "Estatua de bronce de Viriato con el brazo alzado, sobre una gran roca, ante un edificio de piedra",
     caption: "Monumento a Viriato de Eduardo Barrón (1884) en Zamora.",
   },
-  // General images: any topic of their civilization can use them while it has no image of its own.
+  // Imágenes generales: cualquier tema de su civilización puede usarlas mientras no tenga una propia.
   {
     id: "roma-foro",
     src: "/images/catalog/roma-foro.jpg",

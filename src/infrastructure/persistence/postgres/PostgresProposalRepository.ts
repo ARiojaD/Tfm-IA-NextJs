@@ -6,6 +6,7 @@ import type { Database } from "./client";
 import { toProposal, toProposalRow } from "./mappers";
 import { proposals } from "./schema";
 
+// Las propuestas en PostgreSQL. Cada tipo guarda sus campos propios en una columna JSON (ver `mappers.ts`).
 export class PostgresProposalRepository implements ProposalRepository {
   constructor(private readonly db: Database) {}
 
@@ -36,7 +37,7 @@ export class PostgresProposalRepository implements ProposalRepository {
     return rows.map(toProposal);
   }
 
-  // Only the review changes: who proposed what never does.
+  // Solo cambia la revisión: quién propuso qué no cambia nunca.
   async save(proposal: Proposal): Promise<void> {
     const { status, reviewNote, reviewedAt, reviewedBy } = toProposalRow(proposal);
     await this.db.update(proposals).set({ status, reviewNote, reviewedAt, reviewedBy }).where(eq(proposals.id, proposal.id));

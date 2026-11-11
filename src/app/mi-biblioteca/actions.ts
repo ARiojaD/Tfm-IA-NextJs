@@ -8,12 +8,12 @@ import type { Result } from "@/shared/Result";
 import type { LibraryActionState } from "@/components/library/LibraryToggle";
 import { getContainer } from "@/composition/container";
 
-// Thin Server Actions for "Mi biblioteca": the use cases take the user from the session, rate-limit and
-// validate; these only read the form and translate the Result. The user is never read from the form.
+// Server Actions finas para "Mi biblioteca": los casos de uso toman el usuario de la sesión, limitan y
+// validan; estas solo leen el formulario y traducen el `Result`. El usuario nunca se lee del formulario.
 
 function toState(result: Result<unknown, Error>): LibraryActionState {
   if (result.success) {
-    refresh(); // Re-render the page so the button (and the library) show the new state.
+    refresh(); // Vuelve a pintar la página para que el botón (y la biblioteca) muestren el estado nuevo.
     return { status: "idle" };
   }
   if (result.error instanceof AuthenticationRequiredError) {

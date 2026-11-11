@@ -3,7 +3,7 @@ import type { Result } from "@/shared/Result";
 import { UpdateTopicBasicsInputSchema } from "../dto/TopicEditorInputs";
 import { editTopic, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// Title, civilization, category, summary and period. The slug stays: the URL of a topic never changes.
+// Título, civilización, categoría, resumen y periodo. El slug no cambia: la URL de un tema nunca cambia.
 export class UpdateTopicBasicsUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies) {}
 

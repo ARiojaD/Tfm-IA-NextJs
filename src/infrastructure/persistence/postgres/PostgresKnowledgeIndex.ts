@@ -5,10 +5,11 @@ import type { Database } from "./client";
 import { toKnowledgeChunk, toKnowledgeChunkRow } from "./mappers";
 import { knowledgeChunks } from "./schema";
 
+// El índice del RAG sobre pgvector: cada fragmento es una fila con su vector en la tabla `knowledge_chunks`.
 export class PostgresKnowledgeIndex implements KnowledgeIndex {
   constructor(private readonly db: Database) {}
 
-  // In one transaction: a search never sees a topic half reindexed.
+  // En una transacción: una búsqueda nunca ve un tema reindexado a medias.
   async replaceTopic(topicId: EntityId, entries: IndexedChunk[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(knowledgeChunks).where(eq(knowledgeChunks.topicId, topicId));
@@ -22,7 +23,7 @@ export class PostgresKnowledgeIndex implements KnowledgeIndex {
     await this.db.delete(knowledgeChunks).where(eq(knowledgeChunks.topicId, topicId));
   }
 
-  // pgvector's cosine distance (<=>), which the HNSW index serves; similarity is 1 - distance.
+  // La distancia del coseno de pgvector (<=>), la que sirve el índice HNSW; la similitud es 1 - distancia.
   async search(embedding: number[], limit: number): Promise<ChunkMatch[]> {
     const distance = cosineDistance(knowledgeChunks.embedding, embedding).mapWith(Number);
     const rows = await this.db

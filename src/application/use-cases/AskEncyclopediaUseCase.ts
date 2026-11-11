@@ -15,9 +15,10 @@ import type { ChunkMatch, KnowledgeIndex } from "../ports/KnowledgeIndex";
 import type { RateLimiter } from "../ports/RateLimiter";
 import type { TopicRepository } from "../ports/TopicRepository";
 
-// How many fragments the model reads. Enough to cover a question that spans several sections of a topic,
-// and a bound on what each question costs (OWASP LLM10).
+// Cuántos fragmentos lee el modelo. Suficientes para una pregunta que abarca varias secciones de un tema,
+// y un tope a lo que cuesta cada pregunta (OWASP LLM10).
 export const MAX_ANSWER_SOURCES = 8;
+// Cuando no hay respuesta se muestran menos fuentes: sin texto que las cite, más serían ruido.
 const MAX_SOURCES_WITHOUT_ANSWER = 5;
 
 export interface AnswerSourceView {
@@ -28,7 +29,8 @@ export interface AnswerSourceView {
 
 export type EncyclopediaAnswer =
   | { status: "ANSWERED"; coverage: "FULL" | "PARTIAL"; parts: AnswerPart[]; missing: string | null; sources: AnswerSourceView[] }
-  // The fragments were found but no valid answer could be written: the model is off, or it cited nothing.
+  // Se encontraron fragmentos, pero no se pudo redactar una respuesta válida: el modelo está apagado o no
+  // citó nada.
   | { status: "SOURCES_ONLY"; sources: AnswerSourceView[] }
   | { status: "NO_INFORMATION" };
 
@@ -43,16 +45,16 @@ export interface AskEncyclopediaDependencies {
   rateLimiter: RateLimiter;
   embeddings: EmbeddingService;
   index: KnowledgeIndex;
-  // The public repository: a fragment of a topic that is not published can never be used.
+  // El repositorio público: nunca se puede usar un fragmento de un tema que no está publicado.
   topics: TopicRepository;
   answers: AnswerGenerator;
-  // A first filter, for what is clearly unrelated; it depends on the embedding model. The real decision on
-  // whether the fragments answer the question is the language model's (coverage NONE).
+  // Un primer filtro para lo que claramente no tiene relación; depende del modelo de embeddings. La
+  // decisión real de si los fragmentos responden a la pregunta es del modelo de lenguaje (coverage NONE).
   minSimilarity: number;
 }
 
-// The RAG: finds the fragments of the encyclopedia closest to the question and has the model answer only
-// from them, citing them.
+// El RAG: busca los fragmentos de la enciclopedia más cercanos a la pregunta y hace que el modelo responda
+// solo a partir de ellos, citándolos.
 export class AskEncyclopediaUseCase {
   constructor(private readonly dependencies: AskEncyclopediaDependencies) {}
 
@@ -84,7 +86,8 @@ export class AskEncyclopediaUseCase {
     return success(await this.writeAnswer(question, sources));
   }
 
-  // null when the search itself failed, as opposed to finding nothing.
+  // Devuelve null cuando falló la propia búsqueda, para distinguirlo de no encontrar nada. Los temas se
+  // vuelven a leer de la cara pública: un fragmento de un tema que ya no está publicado se descarta.
   private async findSources(question: string): Promise<AnswerSourceView[] | null> {
     const { embeddings, index, topics, minSimilarity } = this.dependencies;
     let matches: ChunkMatch[];
@@ -127,7 +130,7 @@ export class AskEncyclopediaUseCase {
     }
 
     const { parts, citedSources } = parseCitations(generated.answer, sources.length);
-    // Every statement must be traceable: an answer that cites nothing is not shown.
+    // Toda afirmación debe poder rastrearse: una respuesta que no cita nada no se muestra.
     if (citedSources.length === 0) {
       return onlySources;
     }

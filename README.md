@@ -143,7 +143,7 @@ El proyecto sigue una **Clean Architecture pragmática**, orientada al dominio. 
 
 **Regla de dependencias:** las dependencias solo apuntan hacia dentro (`infrastructure` → `application` → `domain`). `domain` y `application` nunca importan de `infrastructure` ni de Next.js, lo que permite probar toda la lógica de negocio con repositorios en memoria o mocks.
 
-Las normas completas de arquitectura, seguridad y metodología están en [`AGENTS.md`](AGENTS.md).
+Las normas completas de arquitectura, seguridad y metodología están en [`AGENTS.md`](AGENTS.md). Para leer el código con orden (por dónde empezar, el recorrido de una petición, cómo funciona el RAG y las decisiones principales), consulta la [guía de arquitectura](docs/ARQUITECTURA.md).
 
 ---
 
@@ -191,6 +191,7 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ├── e2e/                          # Tests end-to-end con Playwright (la web entera en un navegador)
 ├── scripts/                      # Scripts de mantenimiento (db-seed.ts)
 ├── public/                       # Recursos estáticos (images/topics: imágenes de los temas)
+├── docs/                         # Guía de arquitectura para leer el código
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA
 ├── .env.example                  # Plantilla de variables de entorno (sin valores reales)

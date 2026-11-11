@@ -6,6 +6,7 @@ import type { Database } from "./client";
 import { toEvent, toEventRow } from "./mappers";
 import { historicalEvents } from "./schema";
 
+// Los eventos de la cronología en PostgreSQL. El orden por fecha lo pone el caso de uso.
 export class PostgresHistoricalEventRepository implements HistoricalEventRepository {
   constructor(private readonly db: Database) {}
 
@@ -14,7 +15,7 @@ export class PostgresHistoricalEventRepository implements HistoricalEventReposit
     return rows.map(toEvent);
   }
 
-  // In one transaction: the timeline is never left half replaced.
+  // En una transacción: la cronología nunca se queda sustituida a medias.
   async replaceForTopic(topicId: EntityId, events: HistoricalEvent[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(historicalEvents).where(eq(historicalEvents.topicId, topicId));

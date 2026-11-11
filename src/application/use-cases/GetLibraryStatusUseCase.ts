@@ -8,8 +8,9 @@ export interface LibraryStatus {
   savedTopicIds: EntityId[];
 }
 
-// What the civilization and topic pages need to draw their buttons as "Siguiendo" / "Guardado".
-// null without a session: the pages then show the same buttons, leading to the sign-in page.
+// Lo que necesitan las páginas de civilización y de tema para pintar sus botones como "Siguiendo" o
+// "Guardado". Sin sesión devuelve null: las páginas muestran los mismos botones, que llevan al inicio de
+// sesión.
 export class GetLibraryStatusUseCase {
   constructor(private readonly dependencies: { library: LibraryRepository; auth: AuthService }) {}
 

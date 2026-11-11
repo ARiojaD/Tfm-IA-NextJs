@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { HistoricalEraSchema } from "@/domain/value-objects/HistoricalEra";
 
-// What the "Seguir" button sends: the civilization and the state wanted (not a toggle, so a double click
-// or a retried request leaves the same result). The user comes from the session: strict, so a request
-// that tries to send userId is rejected.
+// Lo que envía el botón "Seguir": la civilización y el estado que se quiere (no un interruptor, para que
+// un doble clic o una petición repetida dejen el mismo resultado). El usuario sale de la sesión: es
+// estricto, así que una petición que intente enviar `userId` se rechaza.
 export const UpdateEraFollowInputSchema = z.strictObject({
   era: HistoricalEraSchema,
   intent: z.enum(["follow", "unfollow"]),

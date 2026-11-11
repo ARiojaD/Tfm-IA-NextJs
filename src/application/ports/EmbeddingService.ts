@@ -1,8 +1,9 @@
-// Turns text into vectors that are close when their meaning is close: the base of the RAG search. Two
-// methods because some models (the E5 family) expect fragments and questions marked differently.
+// Convierte texto en vectores que quedan cerca cuando su significado se parece: la base de la búsqueda del
+// RAG. Tiene dos métodos porque algunos modelos (la familia E5) esperan los fragmentos y las preguntas
+// marcados de forma distinta.
 export interface EmbeddingService {
-  // The encyclopedia's fragments, in a single batch. One vector per text, in the same order.
+  // Los fragmentos de la enciclopedia, en un solo lote. Un vector por texto, en el mismo orden.
   embedDocuments(texts: string[]): Promise<number[][]>;
-  // A visitor's question.
+  // La pregunta de un visitante.
   embedQuery(text: string): Promise<number[]>;
 }

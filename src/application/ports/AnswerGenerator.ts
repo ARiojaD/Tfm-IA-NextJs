@@ -1,6 +1,6 @@
 import type { GeneratedAnswer } from "@/domain/entities/EncyclopediaAnswer";
 
-// A fragment found for the question, numbered so the model can cite it as [1], [2]…
+// Un fragmento encontrado para la pregunta, numerado para que el modelo pueda citarlo como [1], [2]…
 export interface AnswerSource {
   number: number;
   topicTitle: string;
@@ -8,8 +8,8 @@ export interface AnswerSource {
   content: string;
 }
 
-// Writes the answer from the given fragments only. Behind it: Ollama in development, a free API once
-// deployed. Rejects if the model is unavailable or does not return a valid answer.
+// Redacta la respuesta usando solo los fragmentos recibidos. Detrás está Ollama en desarrollo y una API
+// gratuita una vez desplegado. Falla si el modelo no está disponible o no devuelve una respuesta válida.
 export interface AnswerGenerator {
   answer(question: string, sources: AnswerSource[]): Promise<GeneratedAnswer>;
 }

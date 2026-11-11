@@ -7,7 +7,7 @@ interface StoredLibrary {
   savedTopics: Map<EntityId, Date>;
 }
 
-// Each user's library lives only in this process: it is lost when the server restarts.
+// La biblioteca de cada usuario vive solo en este proceso: se pierde al reiniciar el servidor.
 export class InMemoryLibraryRepository implements LibraryRepository {
   private readonly libraries = new Map<EntityId, StoredLibrary>();
 

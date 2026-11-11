@@ -1,5 +1,6 @@
-// The signed-in user is not an administrator (OWASP A01: privilege escalation). Checked on the server, in
-// every admin use case: hiding the panel link is only a convenience, never the protection.
+// El usuario con sesión no es administrador (OWASP A01: escalada de privilegios). Se comprueba en el
+// servidor, en cada caso de uso de administración: ocultar el enlace al panel es solo una comodidad, nunca
+// la protección.
 export class AdminRequiredError extends Error {
   constructor() {
     super("Esta acción es solo para administradores");

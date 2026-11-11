@@ -1,8 +1,10 @@
 import type { AnswerSource } from "@/application/ports/AnswerGenerator";
 import { plainPromptText as plain } from "./languageModel";
 
-// OWASP LLM01: the instructions go in the system message and never mention the data; the question and the
-// fragments go in the user message, inside tags they cannot close (see plainPromptText).
+// OWASP LLM01: las instrucciones van en el mensaje de sistema y nunca mencionan los datos; la pregunta y
+// los fragmentos van en el mensaje del usuario, dentro de etiquetas que no pueden cerrar (ver
+// `plainPromptText`). El ejemplo de la regla 2 está ahí porque, sin él, el modelo olvidaba citar en
+// bastantes respuestas.
 const SYSTEM_PROMPT = `Eres el asistente de MemnonHistory, una enciclopedia de historia antigua. Respondes en español, con frases breves y claras.
 
 Reglas:
@@ -16,6 +18,8 @@ Devuelve estos campos:
 - answer: la respuesta con sus citas, en uno o dos párrafos, sin mencionar los fragmentos ni lo que no aparece en ellos. Vacío si coverage es "NONE".
 - missing: si coverage es "PARTIAL", una frase corta con lo que no aparece en los fragmentos. Vacío en los demás casos.`;
 
+// El prompt de una pregunta: los fragmentos numerados (con su tema y su sección) y la pregunta, cada uno
+// dentro de su etiqueta.
 export function buildAnswerPrompt(question: string, sources: AnswerSource[]): { system: string; prompt: string } {
   const fragments = sources
     .map(

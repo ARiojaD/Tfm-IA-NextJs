@@ -6,6 +6,7 @@ import type { Database } from "./client";
 import { toRecommendation, toRecommendationRow } from "./mappers";
 import { recommendations } from "./schema";
 
+// Las recomendaciones en PostgreSQL. El orden por tipo y año lo pone el caso de uso.
 export class PostgresRecommendationRepository implements RecommendationRepository {
   constructor(private readonly db: Database) {}
 
@@ -14,7 +15,7 @@ export class PostgresRecommendationRepository implements RecommendationRepositor
     return rows.map(toRecommendation);
   }
 
-  // In one transaction: the list is never left half replaced.
+  // En una transacción: la lista nunca se queda sustituida a medias.
   async replaceForTopic(topicId: EntityId, items: Recommendation[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(recommendations).where(eq(recommendations.topicId, topicId));

@@ -6,8 +6,8 @@ import { InvalidTopicError } from "../errors/InvalidTopicError";
 import type { ImageCatalog } from "../ports/ImageCatalog";
 import { loadTopicToEdit, saveValidTopic, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// The topic's image, chosen from the catalog (or none). Nothing is uploaded: an id that is not in the
-// catalog is rejected, so only images with a checked licence ever reach a page.
+// La imagen del tema, elegida del catálogo (o ninguna). No se sube nada: un id que no está en el catálogo
+// se rechaza, así que a una página solo llegan imágenes con la licencia comprobada.
 export class UpdateTopicImageUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies & { images: ImageCatalog }) {}
 

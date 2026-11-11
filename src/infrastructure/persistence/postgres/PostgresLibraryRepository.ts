@@ -6,11 +6,12 @@ import type { Database } from "./client";
 import { toFollowedEra, toSavedTopicId } from "./mappers";
 import { eraFollows, savedTopics } from "./schema";
 
-// Every query filters by user_id: one user's library is never read or changed through another's.
+// Todas las consultas filtran por `user_id`: la biblioteca de un usuario nunca se lee ni se cambia a
+// través de la de otro.
 export class PostgresLibraryRepository implements LibraryRepository {
   constructor(private readonly db: Database) {}
 
-  // ON CONFLICT DO NOTHING: following again is not an error and keeps the original row.
+  // ON CONFLICT DO NOTHING: volver a seguir no es un error y conserva la fila original.
   async followEra(userId: EntityId, era: HistoricalEra): Promise<void> {
     await this.db.insert(eraFollows).values({ userId, era }).onConflictDoNothing();
   }

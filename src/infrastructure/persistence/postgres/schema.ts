@@ -15,7 +15,7 @@ import {
   unique,
   vector,
 } from "drizzle-orm/pg-core";
-// Relative imports: drizzle-kit loads this file on its own and does not know the "@/" alias.
+// Imports relativos: drizzle-kit carga este archivo por su cuenta y no conoce el alias "@/".
 import { KNOWLEDGE_SOURCES } from "../../../domain/entities/KnowledgeChunk";
 import { PROPOSAL_KINDS, PROPOSAL_STATUSES } from "../../../domain/entities/Proposal";
 import type { KeyFact } from "../../../domain/value-objects/KeyFact";
@@ -27,9 +27,10 @@ import { TOPIC_STATUSES } from "../../../domain/value-objects/TopicStatus";
 import { USER_ROLES } from "../../../domain/value-objects/UserRole";
 import { EMBEDDING_DIMENSIONS } from "../../ai/embeddingModel";
 
-// PostgreSQL tables for the domain entities. The domain (Zod schemas) stays the source of truth: the
-// enums reuse its constants, and the CHECK constraints repeat its key rules as a second line of defence,
-// so a bad row is rejected even if it is inserted by hand or by a future script.
+// Las tablas de PostgreSQL para las entidades del dominio. El dominio (los esquemas de Zod) sigue siendo
+// la fuente de verdad: los enums reutilizan sus constantes, y las restricciones CHECK repiten sus reglas
+// clave como segunda línea de defensa, para que una fila errónea se rechace aunque se inserte a mano o
+// desde un script futuro.
 
 export const historicalEra = pgEnum("historical_era", HISTORICAL_ERAS);
 export const topicCategory = pgEnum("topic_category", TOPIC_CATEGORIES);
@@ -40,7 +41,7 @@ export const proposalKind = pgEnum("proposal_kind", PROPOSAL_KINDS);
 export const proposalStatus = pgEnum("proposal_status", PROPOSAL_STATUSES);
 export const knowledgeSource = pgEnum("knowledge_source", KNOWLEDGE_SOURCES);
 
-// Historical dates: negative years are BC, year 0 does not exist, the month is optional.
+// Fechas históricas: los años negativos son antes de Cristo, el año 0 no existe y el mes es opcional.
 const validYear = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} <> 0`;
 const validMonth = (column: AnyPgColumn) => sql`${column} IS NULL OR ${column} BETWEEN 1 AND 12`;
 
@@ -53,16 +54,18 @@ export const topics = pgTable(
     era: historicalEra("era").notNull(),
     category: topicCategory("category").notNull(),
     summary: text("summary").notNull(),
-    // The period in plain columns (not JSON) so the database can sort topics chronologically.
+    // El periodo en columnas normales (no en JSON) para que la base de datos pueda ordenar los temas
+    // cronológicamente.
     periodStartYear: integer("period_start_year").notNull(),
     periodStartMonth: smallint("period_start_month"),
     periodEndYear: integer("period_end_year"),
     periodEndMonth: smallint("period_end_month"),
-    // Ordered lists that are always read whole with their topic: an array and JSONB are enough.
+    // Listas ordenadas que siempre se leen enteras con su tema: un array y JSONB bastan.
     introduction: text("introduction").array().notNull(),
     keyFacts: jsonb("key_facts").$type<KeyFact[]>().notNull(),
     image: jsonb("image").$type<TopicImage>(),
-    // New topics are drafts unless said otherwise: the safe default is "not public".
+    // Los temas nuevos son borradores salvo que se diga otra cosa: el valor seguro por defecto es "no
+    // público".
     status: topicStatus("status").notNull().default("DRAFT"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -76,7 +79,7 @@ export const topics = pgTable(
       "topics_period_end_after_start",
       sql`${table.periodEndYear} IS NULL OR ${table.periodEndYear} >= ${table.periodStartYear}`,
     ),
-    // Same rule as the domain: a draft can be half-written, a published topic cannot.
+    // La misma regla que el dominio: un borrador puede estar a medias; un tema publicado, no.
     check(
       "topics_published_has_introduction",
       sql`${table.status} = 'DRAFT' OR cardinality(${table.introduction}) > 0`,
@@ -88,7 +91,7 @@ export const topics = pgTable(
   ],
 );
 
-// Related topics: one row per direction (César → Alesia and Alesia → César), as in the domain.
+// Temas relacionados: una fila por sentido (César → Alesia y Alesia → César), como en el dominio.
 export const topicRelations = pgTable(
   "topic_relations",
   {
@@ -125,7 +128,7 @@ export const historicalEvents = pgTable(
   ],
 );
 
-// One quiz per topic; its questions keep their order with `position`.
+// Un quiz por tema; sus preguntas conservan el orden con `position`.
 export const quizzes = pgTable("quizzes", {
   id: text("id").primaryKey(),
   topicId: text("topic_id")
@@ -157,8 +160,9 @@ export const quizQuestions = pgTable(
   ],
 );
 
-// user_id is empty for the seed comments (written before accounts existed). New comments belong to the
-// signed-in user; deleting a user deletes their comments too (right to erasure).
+// `user_id` está vacío en los comentarios del seed (escritos antes de que existieran las cuentas). Los
+// comentarios nuevos son del usuario con sesión; borrar un usuario borra también sus comentarios (derecho
+// de supresión).
 export const comments = pgTable(
   "comments",
   {
@@ -174,10 +178,11 @@ export const comments = pgTable(
   (table) => [index("comments_topic_created_idx").on(table.topicId, table.createdAt.desc())],
 );
 
-// --- Authentication (Better Auth) ---
-// The tables Better Auth 1.7 needs (core/dist/db/get-tables), with plural names (usePlural) and
-// snake_case columns. The drizzle adapter maps them through the property names (emailVerified…).
-// Passwords never live in `users`: Better Auth stores their scrypt hash in accounts.password.
+// --- Autenticación (Better Auth) ---
+// Las tablas que necesita Better Auth 1.7 (core/dist/db/get-tables), con nombres en plural (`usePlural`)
+// y columnas en snake_case. El adaptador de Drizzle las relaciona por el nombre de las propiedades
+// (`emailVerified`…). Las contraseñas nunca están en `users`: Better Auth guarda su hash scrypt en
+// `accounts.password`.
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -189,13 +194,13 @@ const timestamps = {
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
-  // Display name, shown publicly (e.g. as the author of a comment). The email is never shown to others.
+  // El nombre público (por ejemplo, como autor de un comentario). El correo nunca se muestra a los demás.
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
-  // Not a Better Auth field: it never sets it, so every new account starts as USER. Only the
-  // admin:grant script changes it.
+  // No es un campo de Better Auth: nunca lo escribe, así que toda cuenta nueva empieza como USER. Solo lo
+  // cambia el script admin:grant.
   role: userRole("role").notNull().default("USER"),
   ...timestamps,
 });
@@ -205,7 +210,7 @@ export const sessions = pgTable(
   {
     id: text("id").primaryKey(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    // The value of the session cookie.
+    // El valor de la cookie de sesión.
     token: text("token").notNull().unique(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -217,8 +222,8 @@ export const sessions = pgTable(
   (table) => [index("sessions_user_idx").on(table.userId)],
 );
 
-// One row per way of signing in: "credential" (email and password) today; Google or GitHub could be
-// added later as more rows for the same user, without changing this table.
+// Una fila por cada forma de iniciar sesión: hoy "credential" (correo y contraseña); más adelante se
+// podrían añadir Google o GitHub como filas nuevas del mismo usuario, sin cambiar esta tabla.
 export const accounts = pgTable(
   "accounts",
   {
@@ -240,7 +245,8 @@ export const accounts = pgTable(
   (table) => [index("accounts_user_idx").on(table.userId)],
 );
 
-// Single-use tokens (email verification, password reset). Unused until those features arrive.
+// Tokens de un solo uso (verificación de correo, cambio de contraseña). Sin usar hasta que lleguen esas
+// funciones.
 export const verifications = pgTable(
   "verifications",
   {
@@ -253,9 +259,10 @@ export const verifications = pgTable(
   (table) => [index("verifications_identifier_idx").on(table.identifier)],
 );
 
-// --- Proposals (users' contributions, reviewed by an admin) ---
-// The common fields are columns (to list and filter); what each kind proposes (an event, a
-// recommendation, a correction, a new topic) goes in `payload`, parsed with the domain schema on read.
+// --- Propuestas (contribuciones de los usuarios, revisadas por un administrador) ---
+// Los campos comunes son columnas (para listar y filtrar); lo que propone cada tipo (un evento, una
+// recomendación, una corrección, un tema nuevo) va en `payload`, que se valida con el esquema del dominio
+// al leerlo.
 export const proposals = pgTable(
   "proposals",
   {
@@ -265,7 +272,7 @@ export const proposals = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     authorName: text("author_name").notNull(),
     kind: proposalKind("kind").notNull(),
-    // Empty for a new topic. Deleting the topic deletes the proposals about it.
+    // Vacío para un tema nuevo. Borrar el tema borra las propuestas sobre él.
     topicId: text("topic_id").references(() => topics.id, { onDelete: "cascade" }),
     topicTitle: text("topic_title"),
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
@@ -279,17 +286,18 @@ export const proposals = pgTable(
   (table) => [
     index("proposals_user_created_idx").on(table.userId, table.createdAt.desc()),
     index("proposals_status_created_idx").on(table.status, table.createdAt),
-    // Same rules as the domain: a proposal about a topic names it; a rejection says why.
+    // Las mismas reglas que el dominio: una propuesta sobre un tema lo nombra; un rechazo dice por qué.
     check("proposals_topic_matches_kind", sql`(${table.kind} = 'NEW_TOPIC') = (${table.topicId} IS NULL)`),
     check("proposals_rejection_has_note", sql`${table.status} <> 'REJECTED' OR ${table.reviewNote} IS NOT NULL`),
   ],
 );
 
 // --- Mi biblioteca ---
-// The primary keys make following or saving twice impossible. Deleting a user deletes their library;
-// deleting a topic removes it from every library.
+// Las claves primarias impiden seguir o guardar dos veces. Borrar un usuario borra su biblioteca; borrar
+// un tema lo quita de todas las bibliotecas.
 
-// Following a civilization stores only the era: its topics are read at request time, so new ones appear on their own.
+// Seguir una civilización guarda solo la era: sus temas se leen en cada petición, así que los nuevos
+// aparecen solos.
 export const eraFollows = pgTable(
   "era_follows",
   {
@@ -311,7 +319,7 @@ export const savedTopics = pgTable(
     topicId: text("topic_id")
       .notNull()
       .references(() => topics.id, { onDelete: "cascade" }),
-    // Set by the server's Clock (not defaultNow) so the order is exact, also in the tests.
+    // Lo pone el `Clock` del servidor (no `defaultNow`) para que el orden sea exacto, también en los tests.
     savedAt: timestamp("saved_at", { withTimezone: true }).notNull(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.topicId] })],
@@ -334,8 +342,8 @@ export const recommendations = pgTable(
 );
 
 // --- RAG ---
-// The fragments of the published topics with their vector (pgvector). A topic is always replaced whole,
-// and deleting it deletes its fragments. The HNSW index finds the nearest vectors without reading them all.
+// Los fragmentos de los temas publicados con su vector (pgvector). Un tema siempre se sustituye entero, y
+// borrarlo borra sus fragmentos. El índice HNSW encuentra los vectores más cercanos sin leerlos todos.
 export const knowledgeChunks = pgTable(
   "knowledge_chunks",
   {
@@ -344,7 +352,7 @@ export const knowledgeChunks = pgTable(
       .references(() => topics.id, { onDelete: "cascade" }),
     source: knowledgeSource("source").notNull(),
     position: integer("position").notNull(),
-    // No foreign key: the timeline is replaced on every edit, and the topic is reindexed right after.
+    // Sin clave foránea: la cronología se sustituye en cada edición y el tema se reindexa justo después.
     eventId: text("event_id"),
     content: text("content").notNull(),
     embedding: vector("embedding", { dimensions: EMBEDDING_DIMENSIONS }).notNull(),

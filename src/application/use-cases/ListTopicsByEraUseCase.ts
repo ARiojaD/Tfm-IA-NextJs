@@ -14,8 +14,9 @@ export interface EraOverview {
   categories: TopicCategoryGroup[];
 }
 
-// What a civilization page shows: its topics grouped by category (people, battles and wars,
-// periods, cities), in the fixed category order and leaving out empty categories, each one in time order.
+// Lo que muestra la página de una civilización: sus temas agrupados por categoría (personajes, guerras y
+// batallas, periodos, ciudades), en el orden fijo de las categorías y sin las vacías, cada una en orden
+// cronológico.
 export class ListTopicsByEraUseCase {
   constructor(private readonly dependencies: { topics: TopicRepository }) {}
 

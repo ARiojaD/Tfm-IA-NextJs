@@ -6,6 +6,7 @@ import type { Database } from "./client";
 import { toComment, toCommentRow } from "./mappers";
 import { comments } from "./schema";
 
+// Los comentarios en PostgreSQL. El orden lo decide el caso de uso (los más recientes primero).
 export class PostgresCommentRepository implements CommentRepository {
   constructor(private readonly db: Database) {}
 

@@ -6,8 +6,9 @@ import type { IdGenerator } from "../ports/IdGenerator";
 import { authorizeAdminWrite, type AdminWriteError } from "./authorizeAdmin";
 import { saveValidTopic, type TopicEditingDependencies, uniqueSlug } from "./topicEditing";
 
-// Creates a topic from its basic data, as a DRAFT: invisible until an admin completes and publishes it.
-// The slug comes from the title once and never changes, so links and libraries keep working.
+// Crea un tema a partir de sus datos básicos, como borrador: invisible hasta que un administrador lo
+// complete y lo publique. El slug sale del título una sola vez y nunca cambia, así los enlaces y las
+// bibliotecas siguen funcionando.
 export class CreateTopicUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies & { ids: IdGenerator }) {}
 

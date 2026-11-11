@@ -6,10 +6,11 @@ const TIMEOUT_MS = 3_000;
 
 type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 
-// Checks passwords against Have I Been Pwned's public "Pwned Passwords" list using k-anonymity: only the
-// first 5 characters of the password's SHA-1 hash leave the server. The service answers with every hash
-// suffix that starts with them, and the match is done here. SHA-1 is only a lookup key for the service,
-// never how we store passwords (that is Better Auth's scrypt).
+// Comprueba las contraseñas contra la lista pública "Pwned Passwords" de Have I Been Pwned con
+// k-anonimato: del servidor solo salen los 5 primeros caracteres del hash SHA-1 de la contraseña. El
+// servicio responde con todos los sufijos que empiezan así y la coincidencia se busca aquí. SHA-1 es solo
+// la clave de búsqueda del servicio, nunca cómo se guardan las contraseñas (eso es el scrypt de Better
+// Auth).
 export class HaveIBeenPwnedChecker implements BreachedPasswordChecker {
   constructor(private readonly fetchFn: FetchFn = fetch) {}
 
@@ -19,7 +20,8 @@ export class HaveIBeenPwnedChecker implements BreachedPasswordChecker {
     const suffix = hash.slice(5);
 
     const response = await this.fetchFn(`${RANGE_API}/${prefix}`, {
-      // Padding makes every response a similar size, so its length does not reveal the prefix.
+      // El relleno hace que todas las respuestas tengan un tamaño parecido, para que su longitud no
+      // revele el prefijo.
       headers: { "Add-Padding": "true", "User-Agent": "MemnonHistory-TFM" },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -27,7 +29,7 @@ export class HaveIBeenPwnedChecker implements BreachedPasswordChecker {
       throw new Error(`Have I Been Pwned respondió ${response.status}`);
     }
 
-    // Each line is "SUFFIX:COUNT"; padding lines have a count of 0.
+    // Cada línea es "SUFIJO:VECES"; las líneas de relleno tienen 0.
     return (await response.text()).split(/\r?\n/).some((line) => {
       const [candidate, count] = line.trim().split(":");
       return candidate === suffix && Number(count) > 0;

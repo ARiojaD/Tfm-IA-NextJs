@@ -8,9 +8,9 @@ import { getContainer } from "@/composition/container";
 import { currentRequesterId } from "@/lib/currentRequesterId";
 import { safeRedirectPath } from "@/lib/safeRedirectPath";
 
-// Thin Server Actions for the account pages: the use cases validate, rate-limit and talk to Better Auth;
-// these only read the form, translate the Result and redirect. The destination after signing in comes
-// from the form (?volver=…) and goes through safeRedirectPath: only paths inside this site.
+// Server Actions finas para las páginas de cuenta: los casos de uso validan, limitan las peticiones y
+// hablan con Better Auth; estas solo leen el formulario, traducen el `Result` y redirigen. El destino tras
+// iniciar sesión viene del formulario (?volver=…) y pasa por `safeRedirectPath`: solo rutas de este sitio.
 
 function rateLimitMessage(error: RateLimitExceededError): string {
   return `Demasiados intentos seguidos. Espera ${error.retryAfterSeconds} s y vuelve a intentarlo.`;

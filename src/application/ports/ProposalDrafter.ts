@@ -1,7 +1,7 @@
 import type { GeneratedEventProposal, GeneratedNewTopicProposal } from "@/domain/entities/ProposalDrafts";
 
-// Reads a fragment pasted by a user and proposes the fields of their proposal. Rejects if the model is
-// unavailable or does not return a valid result.
+// Lee un fragmento pegado por un usuario y propone los campos de su propuesta. Falla si el modelo no está
+// disponible o no devuelve un resultado válido.
 export interface ProposalDrafter {
   draftEventProposal(fragment: string): Promise<GeneratedEventProposal>;
   draftNewTopicProposal(fragment: string): Promise<GeneratedNewTopicProposal>;

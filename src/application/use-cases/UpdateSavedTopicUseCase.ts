@@ -25,18 +25,18 @@ export type UpdateSavedTopicError =
   | InvalidLibraryRequestError
   | TopicNotFoundError;
 
-// Saves a topic to (or removes it from) the signed-in user's library.
+// Guarda un tema en la biblioteca del usuario con sesión (o lo quita).
 export class UpdateSavedTopicUseCase {
   constructor(private readonly dependencies: UpdateSavedTopicDependencies) {}
 
   async execute(input: unknown): Promise<Result<{ topicId: EntityId; saved: boolean }, UpdateSavedTopicError>> {
-    // Whose library comes from the session, never from the input.
+    // De quién es la biblioteca sale de la sesión, nunca de la entrada.
     const user = await this.dependencies.auth.getCurrentUser();
     if (!user) {
       return failure(new AuthenticationRequiredError("guardar temas"));
     }
 
-    // Per user and checked before validating, so every attempt counts, valid or not.
+    // Por usuario y antes de validar, para que cuenten todos los intentos, válidos o no.
     const decision = await this.dependencies.rateLimiter.consume(`user:${user.id}`);
     if (!decision.allowed) {
       return failure(new RateLimitExceededError(decision.retryAfterSeconds));

@@ -1,10 +1,10 @@
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { UserRole } from "@/domain/value-objects/UserRole";
 
-// The role of each account, read on every request: granting or revoking ADMIN applies at once, without
-// waiting for the session to expire. Kept apart from AuthService, which only knows who is signed in.
+// El rol de cada cuenta, que se lee en cada petición: conceder o retirar ADMIN se aplica al momento, sin
+// esperar a que caduque la sesión. Está separado de `AuthService`, que solo sabe quién ha iniciado sesión.
 export interface UserRoleRepository {
-  // An unknown account is a USER: when in doubt, never ADMIN.
+  // Una cuenta desconocida es USER: ante la duda, nunca ADMIN.
   getRole(userId: EntityId): Promise<UserRole>;
   setRole(userId: EntityId, role: UserRole): Promise<void>;
 }

@@ -2,6 +2,7 @@ import type { QuizRepository } from "@/application/ports/QuizRepository";
 import type { Quiz } from "@/domain/entities/Quiz";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
+// Los quizzes en memoria, para los tests unitarios y el container en memoria.
 export class InMemoryQuizRepository implements QuizRepository {
   private quizzes: Quiz[];
 

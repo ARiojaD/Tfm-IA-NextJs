@@ -6,6 +6,8 @@ import { type UserRole, UserRoleSchema } from "@/domain/value-objects/UserRole";
 import type { Database } from "./client";
 import { users } from "./schema";
 
+// El rol se guarda en la tabla `users` de Better Auth, en una columna propia que no se puede cambiar desde
+// la web.
 export class PostgresUserRoleRepository implements UserRoleRepository {
   constructor(private readonly db: Database) {}
 
@@ -18,7 +20,7 @@ export class PostgresUserRoleRepository implements UserRoleRepository {
     await this.db.update(users).set({ role }).where(eq(users.id, userId));
   }
 
-  // Only for the admin:grant / admin:revoke script, which names the account by its email.
+  // Solo para el script admin:grant / admin:revoke, que identifica la cuenta por su correo.
   async findUserIdByEmail(email: Email): Promise<EntityId | null> {
     const [row] = await this.db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
     return row?.id ?? null;

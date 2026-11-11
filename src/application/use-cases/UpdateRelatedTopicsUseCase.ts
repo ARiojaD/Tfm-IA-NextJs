@@ -4,8 +4,8 @@ import { UpdateRelatedTopicsInputSchema } from "../dto/TopicEditorInputs";
 import { InvalidTopicError } from "../errors/InvalidTopicError";
 import { loadTopicToEdit, type TopicEditingDependencies, type TopicEditingError } from "./topicEditing";
 
-// "Sigue explorando": the topics related to this one, in both directions. Drafts can be chosen; the
-// public page only shows the published ones.
+// "Sigue explorando": los temas relacionados con este, en los dos sentidos. Se pueden elegir borradores;
+// la página pública solo muestra los publicados.
 export class UpdateRelatedTopicsUseCase {
   constructor(private readonly dependencies: TopicEditingDependencies) {}
 

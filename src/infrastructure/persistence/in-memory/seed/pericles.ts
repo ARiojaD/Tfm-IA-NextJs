@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-pericles";
 
-// His year of birth is approximate (hacia el 495 a.C.).
+// Su año de nacimiento es aproximado (hacia el 495 a.C.).
 
 export const periclesTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

@@ -9,8 +9,8 @@ import type { AdminFormState } from "@/components/admin/adminFormState";
 import type { ProposalDraftResult } from "@/components/proposals/ProposalAiFill";
 import { getContainer } from "@/composition/container";
 
-// The fields each kind of proposal sends. Only those are read from the form: the author, the user and
-// the status come from the server (the use case would reject them anyway).
+// Los campos que envía cada tipo de propuesta. Solo se leen esos del formulario: el autor, el usuario y el
+// estado salen del servidor (el caso de uso los rechazaría de todos modos).
 const FIELDS_BY_KIND: Record<string, readonly string[]> = {
   EVENT: ["topicSlug", "title", "year", "era", "month", "description", "source"],
   RECOMMENDATION: ["topicSlug", "type", "title", "creator", "year", "description", "source"],
@@ -31,7 +31,7 @@ const FIELDS_BY_KIND: Record<string, readonly string[]> = {
   ],
 };
 
-// Only returns the fields for the form: nothing is sent until the user reviews it.
+// Solo devuelve los campos para el formulario: no se envía nada hasta que el usuario lo revisa.
 export async function draftProposal(kind: string, text: string): Promise<ProposalDraftResult> {
   const result = await getContainer().draftProposal.execute({ kind, text });
 
@@ -56,7 +56,7 @@ export async function submitProposal(_previous: AdminFormState, formData: FormDa
   });
 
   if (result.success) {
-    refresh(); // The new proposal appears in the list below the form.
+    refresh(); // La propuesta nueva aparece en la lista bajo el formulario.
     return { status: "success" };
   }
   if (result.error instanceof InvalidProposalError) {

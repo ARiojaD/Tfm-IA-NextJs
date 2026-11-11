@@ -1,9 +1,9 @@
 import type { CatalogImage } from "@/domain/entities/CatalogImage";
 
-// The images topics may use, chosen by the site owner (files of the project with their licence checked).
-// The admin panel picks from here; nothing is uploaded from the web.
+// Las imágenes que pueden usar los temas, elegidas por el responsable del sitio (archivos del proyecto con
+// la licencia comprobada). El panel de administración elige de aquí; desde la web no se sube nada.
 export interface ImageCatalog {
   list(): Promise<CatalogImage[]>;
-  // Unknown ids → null: an image that is not in the catalog cannot be used.
+  // Un id desconocido devuelve null: una imagen que no está en el catálogo no se puede usar.
   findById(id: string): Promise<CatalogImage | null>;
 }

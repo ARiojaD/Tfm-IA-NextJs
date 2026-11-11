@@ -1,5 +1,5 @@
-// The action needs a signed-in user and there is none (OWASP A01: access control is enforced on the
-// server, in the use case, never only by hiding a button in the interface).
+// La acción necesita un usuario con sesión y no lo hay (OWASP A01: el control de acceso se hace en el
+// servidor, en el caso de uso, nunca solo ocultando un botón en la interfaz).
 export class AuthenticationRequiredError extends Error {
   constructor(action = "hacer esto") {
     super(`Inicia sesión para ${action}`);

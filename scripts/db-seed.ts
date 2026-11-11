@@ -4,9 +4,9 @@ import { SEED } from "@/infrastructure/persistence/in-memory/seed";
 import { createDatabase } from "@/infrastructure/persistence/postgres/client";
 import { insertSeed } from "@/infrastructure/persistence/postgres/insertSeed";
 
-// npm run db:seed — loads the example topics (Julio César, Asedio de Alesia…) into the database in
-// DATABASE_URL. The same SEED the in-memory repositories use, so both stay identical. Existing rows are
-// skipped, so it is safe to run again; it never deletes anything.
+// npm run db:seed — carga los temas de ejemplo (Julio César, Asedio de Alesia…) en la base de datos de
+// `DATABASE_URL`. Es el mismo `SEED` que usan los repositorios en memoria, así que los dos son idénticos.
+// Las filas que ya existen se saltan: se puede volver a ejecutar sin peligro y nunca borra nada.
 async function main() {
   if (existsSync(".env.local")) {
     process.loadEnvFile(".env.local");
@@ -25,7 +25,7 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  // Only the message: a driver error could otherwise print connection details.
+  // Solo el mensaje: un error del driver podría mostrar los datos de conexión.
   console.error(`No se pudo cargar el seed: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 });

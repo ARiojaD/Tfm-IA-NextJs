@@ -1,4 +1,4 @@
-// Fixed time zone so the server renders the same date regardless of where it runs.
+// Zona horaria fija para que el servidor pinte la misma fecha esté donde esté.
 const COMMENT_DATE_FORMAT = new Intl.DateTimeFormat("es-ES", {
   dateStyle: "medium",
   timeStyle: "short",

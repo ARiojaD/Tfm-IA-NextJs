@@ -11,7 +11,8 @@ import {
   validateTopicList,
 } from "./topicEditing";
 
-// The topic's books, films and series, saved as a whole list (the page groups them by type).
+// Los libros, películas y series del tema, guardados como una lista completa (la página los agrupa por
+// tipo).
 export class UpdateTopicRecommendationsUseCase {
   constructor(
     private readonly dependencies: TopicEditingDependencies & { recommendations: RecommendationRepository; ids: IdGenerator },

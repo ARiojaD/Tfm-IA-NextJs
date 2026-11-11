@@ -8,9 +8,9 @@ interface StoredAccount {
   password: string;
 }
 
-// Test double for the unit tests and createContainer(): accounts and the "current session" live in this
-// object. Passwords are kept as given because nothing here is ever persisted; the real implementation
-// (BetterAuthService) stores only a scrypt hash.
+// Doble de prueba para los tests unitarios y `createContainer()`: las cuentas y la "sesión actual" viven
+// en este objeto. Las contraseñas se guardan tal cual porque aquí nunca se persiste nada; la
+// implementación real (`BetterAuthService`) solo guarda un hash scrypt.
 export class InMemoryAuthService implements AuthService {
   private readonly accountsByEmail = new Map<Email, StoredAccount>();
   private currentUser: AuthenticatedUser | null = null;

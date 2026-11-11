@@ -2,8 +2,9 @@ import { z } from "zod";
 import { DISPLAY_NAME_MAX_LENGTH, DISPLAY_NAME_MIN_LENGTH } from "@/domain/value-objects/DisplayName";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/domain/value-objects/Password";
 
-// What a visitor sends to create an account: the domain rules (DisplayName, Email, Password) with
-// user-facing Spanish messages for the form. Strict: anything else (emailVerified, role…) is rejected.
+// Lo que envía un visitante para crear una cuenta: las reglas del dominio (`DisplayName`, `Email`,
+// `Password`) con mensajes en castellano para el formulario. Es estricto: cualquier otro campo
+// (`emailVerified`, `role`…) se rechaza.
 export const RegisterUserInputSchema = z.strictObject(
   {
     name: z

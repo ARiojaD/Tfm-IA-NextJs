@@ -12,8 +12,8 @@ export interface SignInDependencies {
 
 export type SignInError = RateLimitExceededError | InvalidCredentialsError;
 
-// Signs a user in with email and password, protected against brute force with two limits:
-// per visitor (one IP trying many passwords) and per account (many IPs trying one account).
+// Inicia la sesión de un usuario con correo y contraseña, protegida contra la fuerza bruta con dos
+// límites: por visitante (una IP probando muchas contraseñas) y por cuenta (muchas IP probando una cuenta).
 export class SignInUseCase {
   constructor(private readonly dependencies: SignInDependencies) {}
 

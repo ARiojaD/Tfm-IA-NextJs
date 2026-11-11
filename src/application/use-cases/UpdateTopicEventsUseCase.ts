@@ -11,8 +11,8 @@ import {
   validateTopicList,
 } from "./topicEditing";
 
-// The topic's timeline, saved as a whole list. Each event takes the topic and its civilization from the
-// server; the page sorts them by date, so the order of the list does not matter.
+// La cronología del tema, guardada como una lista completa. Cada evento toma del servidor el tema y su
+// civilización; la página los ordena por fecha, así que el orden de la lista no importa.
 export class UpdateTopicEventsUseCase {
   constructor(
     private readonly dependencies: TopicEditingDependencies & { events: HistoricalEventRepository; ids: IdGenerator },

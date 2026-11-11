@@ -6,8 +6,8 @@ import { RecommendationSchema } from "@/domain/entities/Recommendation";
 
 const TOPIC_ID = "topic-siege-of-alesia";
 
-// Every collection is parsed with its domain schema, so invalid seed data fails at startup.
-// Most events are dated only by year (52 a.C.): their order here is the order they happened.
+// Cada colección se valida con su esquema del dominio, así que un dato erróneo del seed falla al arrancar.
+// La mayoría de los eventos solo tienen año (52 a.C.): su orden aquí es el orden en que ocurrieron.
 
 export const siegeOfAlesiaTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

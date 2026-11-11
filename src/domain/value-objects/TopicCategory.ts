@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// The kind of historical topic. The array order is the display order inside each civilization.
+// El tipo de tema histórico. El orden del array es el orden en que se muestran dentro de cada civilización.
 export const TOPIC_CATEGORIES = ["PEOPLE", "WARS_AND_BATTLES", "PERIODS", "CITIES"] as const;
 
 export const TopicCategorySchema = z.enum(TOPIC_CATEGORIES);

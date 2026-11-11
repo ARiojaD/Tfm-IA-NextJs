@@ -2,6 +2,7 @@ import type { HistoricalEventRepository } from "@/application/ports/HistoricalEv
 import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
+// Los eventos en memoria, para los tests unitarios y el container en memoria.
 export class InMemoryHistoricalEventRepository implements HistoricalEventRepository {
   private events: HistoricalEvent[];
 

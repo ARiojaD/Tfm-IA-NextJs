@@ -1,17 +1,17 @@
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 
-// "Mi biblioteca": the civilizations a user follows (every topic of that era, including future ones) and
-// the topics they save one by one. Every method is scoped to one user: nobody reads or changes another
-// user's library (OWASP A01/BOLA). Following or saving twice changes nothing (idempotent).
+// "Mi biblioteca": las civilizaciones que sigue un usuario (todos los temas de esa era, también los
+// futuros) y los temas que guarda uno a uno. Cada método trabaja sobre un solo usuario: nadie lee ni
+// cambia la biblioteca de otro (OWASP A01/BOLA). Seguir o guardar dos veces no cambia nada (idempotente).
 export interface LibraryRepository {
   followEra(userId: EntityId, era: HistoricalEra): Promise<void>;
   unfollowEra(userId: EntityId, era: HistoricalEra): Promise<void>;
-  // The order of the result is not guaranteed.
+  // El orden del resultado no está garantizado.
   listFollowedEras(userId: EntityId): Promise<HistoricalEra[]>;
-  // Saving an already saved topic keeps its original date.
+  // Guardar un tema que ya estaba guardado conserva su fecha original.
   saveTopic(userId: EntityId, topicId: EntityId, savedAt: Date): Promise<void>;
   removeSavedTopic(userId: EntityId, topicId: EntityId): Promise<void>;
-  // Most recently saved first.
+  // Los guardados más recientemente, primero.
   listSavedTopicIds(userId: EntityId): Promise<EntityId[]>;
 }

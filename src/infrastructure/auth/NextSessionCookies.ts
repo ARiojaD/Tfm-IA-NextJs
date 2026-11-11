@@ -2,8 +2,9 @@ import { parseSetCookieHeader, toCookieOptions } from "better-auth/cookies";
 import { cookies, headers } from "next/headers";
 import type { SessionCookies } from "./SessionCookies";
 
-// SessionCookies backed by the current Next.js request. Reading works anywhere on the server; writing
-// (apply) only inside Server Actions and Route Handlers, which is where sign-in and sign-out happen.
+// `SessionCookies` sobre la petición en curso de Next.js. Leer funciona en cualquier punto del servidor;
+// escribir (`apply`), solo dentro de Server Actions y Route Handlers, que es donde se inicia y se cierra
+// la sesión.
 export class NextSessionCookies implements SessionCookies {
   async toHeaders(): Promise<Headers> {
     return new Headers(await headers());

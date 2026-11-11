@@ -8,7 +8,7 @@ import { TopicNotFoundError } from "../errors/TopicNotFoundError";
 import type { TopicEditorRepository } from "../ports/TopicEditorRepository";
 import { type AdminWriteDependencies, type AdminWriteError, authorizeAdminWrite } from "./authorizeAdmin";
 
-// The steps every topic editor use case shares.
+// Los pasos que comparten todos los casos de uso del editor de temas.
 
 export interface TopicEditingDependencies extends AdminWriteDependencies {
   topicEditor: TopicEditorRepository;
@@ -16,8 +16,8 @@ export interface TopicEditingDependencies extends AdminWriteDependencies {
 
 export type TopicEditingError = AdminWriteError | InvalidTopicError | TopicNotFoundError;
 
-// The whole topic goes through the domain schema before saving, so no edit can leave it in a state the
-// web cannot show (e.g. a published topic without introduction).
+// El tema entero pasa por el esquema del dominio antes de guardarse, así ninguna edición puede dejarlo en
+// un estado que la web no sepa mostrar (por ejemplo, un tema publicado sin introducción).
 export async function saveValidTopic(
   topicEditor: TopicEditorRepository,
   topic: HistoricalTopic,
@@ -30,7 +30,8 @@ export async function saveValidTopic(
   return success(parsed.data);
 }
 
-// The first steps of every change: admin, rate limit, input, and the topic it is about. In that order.
+// Los primeros pasos de todo cambio: administrador, límite de peticiones, entrada y el tema al que se
+// refiere. En ese orden.
 export async function loadTopicToEdit<Schema extends z.ZodType<{ topicId: EntityId }>>(
   dependencies: TopicEditingDependencies,
   schema: Schema,
@@ -51,7 +52,8 @@ export async function loadTopicToEdit<Schema extends z.ZodType<{ topicId: Entity
   return success({ topic, data: parsed.data });
 }
 
-// A change to the topic's own fields: loaded, changed, checked against the domain rules and saved.
+// Un cambio en los campos propios del tema: se carga, se cambia, se comprueba con las reglas del dominio y
+// se guarda.
 export async function editTopic<Schema extends z.ZodType<{ topicId: EntityId }>>(
   dependencies: TopicEditingDependencies,
   schema: Schema,
@@ -63,8 +65,8 @@ export async function editTopic<Schema extends z.ZodType<{ topicId: EntityId }>>
   return saveValidTopic(dependencies.topicEditor, applyChange(loaded.data.topic, loaded.data.data));
 }
 
-// A list of the topic (events, recommendations…) checked with its domain schema before saving. The
-// errors go under the list's field, naming the row ("Evento 2: …").
+// Una lista del tema (eventos, recomendaciones…) comprobada con su esquema del dominio antes de guardarla.
+// Los errores van bajo el campo de la lista, nombrando la fila ("Evento 2: …").
 export function validateTopicList<Item>(
   schema: z.ZodType<Item>,
   rows: unknown[],
@@ -74,13 +76,15 @@ export function validateTopicList<Item>(
   return parsed.success ? success(parsed.data) : failure(InvalidTopicError.fromIssues(parsed.error.issues, [field]));
 }
 
-// Keeps a row's id only if it already belonged to this topic; anything else gets a new id. So a request
-// that sends the id of another topic's row creates a new row instead of overwriting that one.
+// Conserva el id de una fila solo si ya pertenecía a este tema; cualquier otro recibe un id nuevo. Así,
+// una petición que envía el id de una fila de otro tema crea una fila nueva en lugar de sobrescribir
+// aquella (OWASP BOLA).
 export function keepOwnId(ownIds: Set<EntityId>, ids: { generate(): EntityId }) {
   return (id: string | undefined): EntityId => (id !== undefined && ownIds.has(id) ? id : ids.generate());
 }
 
-// "viriato", and if taken "viriato-2", "viriato-3"… Slugs are unique across drafts and published topics.
+// "viriato" y, si ya existe, "viriato-2", "viriato-3"… Los slugs son únicos entre borradores y temas
+// publicados.
 export async function uniqueSlug(topicEditor: TopicEditorRepository, title: string): Promise<Slug> {
   const base = slugify(title);
   let candidate = base;

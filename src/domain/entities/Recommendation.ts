@@ -2,7 +2,7 @@ import { z } from "zod";
 import { EntityIdSchema } from "../value-objects/EntityId";
 import { RecommendationTypeSchema } from "../value-objects/RecommendationType";
 
-// A book, film or series recommended for a topic. `creator` is the author, director or studio.
+// Un libro, película o serie recomendado en un tema. `creator` es el autor, el director o la productora.
 export const RecommendationSchema = z.strictObject({
   id: EntityIdSchema,
   topicId: EntityIdSchema,

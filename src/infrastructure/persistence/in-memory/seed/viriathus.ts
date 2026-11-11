@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-viriathus";
 
-// His birth is unknown: the period covers the years he led the Lusitanians (147–139 a.C.).
+// Su nacimiento es desconocido: el periodo abarca los años en que dirigió a los lusitanos (147–139 a.C.).
 
 export const viriathusTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

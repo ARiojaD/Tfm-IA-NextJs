@@ -7,9 +7,9 @@ import { HistoricalPeriodSchema } from "../value-objects/HistoricalPeriod";
 import { RecommendationTypeSchema } from "../value-objects/RecommendationType";
 import { TopicCategorySchema } from "../value-objects/TopicCategory";
 
-// A user's contribution to the encyclopedia, reviewed by an admin before anything changes: an event or a
-// recommendation for a topic, a correction of a topic, or a new topic. Text only (never files), and
-// always with its source, so the admin can check it.
+// Una contribución de un usuario a la enciclopedia, que un administrador revisa antes de que cambie nada:
+// un evento o una recomendación para un tema, una corrección de un tema o un tema nuevo. Solo texto (nunca
+// archivos) y siempre con su fuente, para que el administrador pueda comprobarla.
 export const PROPOSAL_KINDS = ["EVENT", "RECOMMENDATION", "CORRECTION", "NEW_TOPIC"] as const;
 export const PROPOSAL_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 
@@ -21,19 +21,19 @@ const text = (max: number) => z.string().trim().min(1).max(max);
 const common = {
   id: EntityIdSchema,
   userId: EntityIdSchema,
-  // The author's display name when they proposed it (like a comment's signature).
+  // El nombre público del autor cuando la hizo (como la firma de un comentario).
   authorName: DisplayNameSchema,
   source: text(PROPOSAL_SOURCE_MAX_LENGTH),
   status: z.enum(PROPOSAL_STATUSES),
-  // The admin's answer: required to reject, optional to approve.
+  // La respuesta del administrador: obligatoria para rechazar, opcional para aprobar.
   reviewNote: text(PROPOSAL_REVIEW_NOTE_MAX_LENGTH).optional(),
   createdAt: z.date(),
   reviewedAt: z.date().optional(),
-  // Optional: the reviewer's account may be deleted later.
+  // Opcional: la cuenta del revisor puede borrarse más adelante.
   reviewedBy: EntityIdSchema.optional(),
 };
 
-// The topic it is about, with its title when it was proposed (the list shows it even if it changes).
+// El tema al que se refiere, con el título que tenía al proponerse (la lista lo muestra aunque cambie).
 const aboutTopic = { topicId: EntityIdSchema, topicTitle: text(120) };
 
 export const ProposalSchema = z

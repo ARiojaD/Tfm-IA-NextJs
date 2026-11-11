@@ -5,7 +5,8 @@ import type { TopicEditorRepository } from "../ports/TopicEditorRepository";
 import { type AdminAuthorizationDependencies, type AdminAuthorizationError, authorizeAdmin } from "./authorizeAdmin";
 import { type GetTopicDetailDependencies, loadTopicDetail, type TopicDetail } from "./GetTopicDetailUseCase";
 
-// The preview of a topic, drafts included: exactly what its public page will show, built the same way.
+// La vista previa de un tema, también de un borrador: exactamente lo que mostrará su página pública,
+// construido de la misma forma.
 export class GetTopicPreviewUseCase {
   constructor(
     private readonly dependencies: AdminAuthorizationDependencies &

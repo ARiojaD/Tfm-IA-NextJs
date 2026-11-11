@@ -6,7 +6,7 @@ import { RateLimitExceededError } from "@/application/errors/RateLimitExceededEr
 import type { AskFormState } from "@/components/ask/AskForm";
 import { getContainer } from "@/composition/container";
 
-// The question is not stored anywhere: it is only sent back so the form keeps showing it.
+// La pregunta no se guarda en ningún sitio: solo se devuelve para que el formulario la siga mostrando.
 export async function askEncyclopedia(_previous: AskFormState, formData: FormData): Promise<AskFormState> {
   const rawQuestion = formData.get("question");
   const question = typeof rawQuestion === "string" ? rawQuestion : "";

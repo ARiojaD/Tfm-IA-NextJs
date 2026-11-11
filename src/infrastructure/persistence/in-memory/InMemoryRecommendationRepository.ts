@@ -2,6 +2,7 @@ import type { RecommendationRepository } from "@/application/ports/Recommendatio
 import type { Recommendation } from "@/domain/entities/Recommendation";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
+// Las recomendaciones en memoria, para los tests unitarios y el container en memoria.
 export class InMemoryRecommendationRepository implements RecommendationRepository {
   private recommendations: Recommendation[];
 

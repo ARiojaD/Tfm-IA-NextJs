@@ -2,7 +2,8 @@ import type { CommentRepository } from "@/application/ports/CommentRepository";
 import type { Comment } from "@/domain/entities/Comment";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 
-// Comments added at runtime live only in this process: they are lost when the server restarts.
+// Los comentarios que se añaden en ejecución viven solo en este proceso: se pierden al reiniciar el
+// servidor.
 export class InMemoryCommentRepository implements CommentRepository {
   private readonly comments: Comment[];
 

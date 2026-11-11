@@ -5,9 +5,9 @@ import { TopicNotFoundError } from "@/application/errors/TopicNotFoundError";
 import type { AdminAuthorizationError } from "@/application/use-cases/authorizeAdmin";
 import { getContainer } from "@/composition/container";
 
-// What an admin page answers when its use case refuses access: an anonymous visitor goes to sign in (and
-// back); a signed-in non-admin gets a plain 404, so the panel does not even admit it exists. A topic id
-// that does not exist is a 404 too.
+// Lo que responde una página de administración cuando su caso de uso niega el acceso: un visitante anónimo
+// va a iniciar sesión (y vuelve); un usuario con sesión que no es administrador recibe un 404 normal, para
+// que el panel ni siquiera admita que existe. Un id de tema que no existe también es un 404.
 export function denyAdminPage(error: AdminAuthorizationError | TopicNotFoundError, path: string): never {
   if (error instanceof AuthenticationRequiredError) {
     redirect(`/iniciar-sesion?volver=${encodeURIComponent(path)}`);
@@ -15,8 +15,9 @@ export function denyAdminPage(error: AdminAuthorizationError | TopicNotFoundErro
   notFound();
 }
 
-// The title also depends on access: a fixed one would show the panel's titles in the tab of the 404 that
-// non-admins get, revealing that the panel exists. Admin pages are never indexed.
+// El título también depende del acceso: uno fijo mostraría los títulos del panel en la pestaña del 404 que
+// reciben quienes no son administradores, revelando que el panel existe. Las páginas de administración
+// nunca se indexan.
 export async function adminPageMetadata(title: string): Promise<Metadata> {
   const access = await getContainer().getAdminAccess.execute();
 

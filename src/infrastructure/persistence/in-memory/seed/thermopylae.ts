@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-thermopylae";
 
-// The exact month of the battle is debated (August or September of 480 a.C.): the events give only the year.
+// El mes exacto de la batalla se discute (agosto o septiembre del 480 a.C.): los eventos solo dan el año.
 
 export const thermopylaeTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

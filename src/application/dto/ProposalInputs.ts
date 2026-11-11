@@ -5,8 +5,8 @@ import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType"
 import { SlugSchema } from "@/domain/value-objects/Slug";
 import { basicsShape, calendarEra, checkPeriodOrder, optionalMonth, toBasics, toDate, year } from "./TopicEditorInputs";
 
-// What a user sends to propose a change. Every schema is strict: the author, the user, the status and
-// the dates are decided by the server (session, Clock), never by the form.
+// Lo que envía un usuario para proponer un cambio. Todos los esquemas son estrictos: el autor, el usuario,
+// el estado y las fechas los decide el servidor (sesión, `Clock`), nunca el formulario.
 
 const text = (missing: string, max: number, tooLong: string) =>
   z.string({ error: missing }).trim().min(1, { error: missing }).max(max, { error: tooLong });
@@ -20,7 +20,7 @@ const topicSlug = SlugSchema;
 
 export const ProposalKindInputSchema = z.object({ kind: z.enum(PROPOSAL_KINDS, { error: "Elige qué quieres proponer" }) });
 
-// One schema per kind; the use case picks it after reading `kind`.
+// Un esquema por tipo; el caso de uso elige el suyo después de leer `kind`.
 export const SUBMIT_PROPOSAL_SCHEMAS = {
   EVENT: z
     .strictObject({
@@ -77,7 +77,7 @@ export const SUBMIT_PROPOSAL_SCHEMAS = {
     })),
 };
 
-// Asking the AI to fill a proposal from a pasted fragment: only the kinds with many fields.
+// Pedir a la IA que rellene una propuesta desde un fragmento pegado: solo los tipos con muchos campos.
 export const DraftProposalInputSchema = z.strictObject({
   kind: z.enum(["EVENT", "NEW_TOPIC"], { error: "La IA solo puede rellenar eventos y temas nuevos" }),
   text: z
@@ -87,7 +87,7 @@ export const DraftProposalInputSchema = z.strictObject({
     .max(4000, { error: "El fragmento no puede superar los 4000 caracteres" }),
 });
 
-// The admin's decision. Rejecting needs a reason, which the user will read.
+// La decisión del administrador. Rechazar exige un motivo, que leerá el usuario.
 export const ReviewProposalInputSchema = z
   .strictObject({
     proposalId: EntityIdSchema,

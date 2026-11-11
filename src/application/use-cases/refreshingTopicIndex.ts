@@ -9,15 +9,16 @@ interface UseCase<Output, Failure extends Error> {
 
 const TopicIdInputSchema = z.object({ topicId: EntityIdSchema });
 
-// After a successful edit the use case has already validated its input, so its topicId is trustworthy.
+// Tras una edición correcta el caso de uso ya validó su entrada, así que su `topicId` es de fiar.
 function topicIdOfInput(input: unknown): EntityId | undefined {
   return TopicIdInputSchema.safeParse(input).data?.topicId;
 }
 
-// Wraps an admin use case that changes what the RAG indexes (title, summary, introduction, key facts,
-// timeline, status), so the index follows every edit without the use case knowing it exists.
-// The edit is already saved when the refresh runs: if the refresh fails (the model could not load), the
-// admin still gets their edit; the failure is reported and `npm run rag:index` puts the index right.
+// Envuelve un caso de uso de administración que cambia lo que indexa el RAG (título, resumen,
+// introducción, datos clave, cronología, estado), para que el índice siga cada edición sin que el caso de
+// uso sepa que existe (patrón decorator). La edición ya está guardada cuando se actualiza el índice: si
+// eso falla (no se pudo cargar el modelo), el administrador conserva su edición; el fallo se registra y
+// `npm run rag:index` deja el índice bien.
 export function refreshingTopicIndex<Output, Failure extends Error>(
   useCase: UseCase<Output, Failure>,
   refresh: Pick<RefreshTopicIndexUseCase, "execute">,

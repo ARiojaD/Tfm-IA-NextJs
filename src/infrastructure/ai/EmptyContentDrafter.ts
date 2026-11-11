@@ -3,7 +3,7 @@ import type { ProposalDrafter } from "@/application/ports/ProposalDrafter";
 import type { GeneratedEventProposal, GeneratedNewTopicProposal } from "@/domain/entities/ProposalDrafts";
 import type { GeneratedEvents, GeneratedQuiz } from "@/domain/entities/TopicDrafts";
 
-// Test double for the in-memory container: proposes nothing. No model needed.
+// Doble de prueba para el container en memoria: no propone nada. No necesita modelo.
 export class EmptyContentDrafter implements ContentDrafter, ProposalDrafter {
   draftEvents(): Promise<GeneratedEvents> {
     return Promise.resolve({ events: [] });

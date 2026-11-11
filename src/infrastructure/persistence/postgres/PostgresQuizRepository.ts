@@ -6,6 +6,8 @@ import type { Database } from "./client";
 import { toQuiz, toQuizRows } from "./mappers";
 import { quizQuestions, quizzes } from "./schema";
 
+// Los quizzes en PostgreSQL: el quiz en una tabla y sus preguntas en otra, con su posición para conservar
+// el orden.
 export class PostgresQuizRepository implements QuizRepository {
   constructor(private readonly db: Database) {}
 
@@ -21,7 +23,7 @@ export class PostgresQuizRepository implements QuizRepository {
     return toQuiz(quiz, questions);
   }
 
-  // In one transaction. Deleting the quiz deletes its questions (cascade); they come back in order.
+  // En una transacción. Borrar el quiz borra sus preguntas (en cascada); vuelven en orden.
   async replaceForTopic(topicId: EntityId, quiz: Quiz | null): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.delete(quizzes).where(eq(quizzes.topicId, topicId));

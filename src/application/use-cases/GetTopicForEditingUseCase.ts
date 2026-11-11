@@ -15,18 +15,18 @@ import type { RecommendationRepository } from "../ports/RecommendationRepository
 import type { TopicEditorRepository } from "../ports/TopicEditorRepository";
 import { type AdminAuthorizationDependencies, type AdminAuthorizationError, authorizeAdmin } from "./authorizeAdmin";
 
-// The topics the related-topics picker offers: just enough to choose one.
+// Los temas que ofrece el selector de temas relacionados: lo justo para elegir uno.
 export type TopicOption = Pick<HistoricalTopic, "id" | "title" | "era" | "status">;
 
-// Everything the editor of one topic shows. The quiz comes whole, with its correct answers: only an admin
-// gets here (the public side receives PublicQuiz, without them).
+// Todo lo que muestra el editor de un tema. El quiz llega entero, con sus respuestas correctas: aquí solo
+// llega un administrador (la cara pública recibe `PublicQuiz`, sin ellas).
 export interface TopicEditorData {
   topic: HistoricalTopic;
   events: HistoricalEvent[];
   quiz: Quiz | null;
   recommendations: Recommendation[];
   otherTopics: TopicOption[];
-  // The catalog images of the topic's civilization, and which one it uses now (null: no image).
+  // Las imágenes del catálogo de la civilización del tema y cuál usa ahora (null: ninguna).
   imageOptions: CatalogImage[];
   selectedImageId: string | null;
 }
@@ -39,7 +39,7 @@ export interface GetTopicForEditingDependencies extends AdminAuthorizationDepend
   images: ImageCatalog;
 }
 
-// The topic as the editor shows it, drafts included. The id comes from the URL.
+// El tema tal como lo muestra el editor, también si es un borrador. El id viene de la URL.
 export class GetTopicForEditingUseCase {
   constructor(private readonly dependencies: GetTopicForEditingDependencies) {}
 
@@ -61,7 +61,8 @@ export class GetTopicForEditingUseCase {
       topicEditor.listAll(),
       images.list(),
     ]);
-    // The image in use is matched by its file; it stays offered even if the topic changed civilization.
+    // La imagen en uso se busca por su archivo; se sigue ofreciendo aunque el tema haya cambiado de
+    // civilización.
     const selectedImageId = catalog.find((image) => image.src === topic.image?.src)?.id ?? null;
 
     return success({
@@ -69,7 +70,7 @@ export class GetTopicForEditingUseCase {
       events: topicEvents.toSorted((a, b) => compareHistoricalDates(a.date, b.date)),
       quiz,
       recommendations: topicRecommendations,
-      // By civilization (in the home page's order), then in time order within each.
+      // Por civilización (en el orden de la portada) y, dentro de cada una, en orden cronológico.
       otherTopics: allTopics
         .filter((other) => other.id !== topic.id)
         .toSorted((a, b) => HISTORICAL_ERAS.indexOf(a.era) - HISTORICAL_ERAS.indexOf(b.era) || compareTopicsChronologically(a, b))

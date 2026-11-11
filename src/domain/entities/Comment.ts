@@ -2,12 +2,13 @@ import { z } from "zod";
 import { DISPLAY_NAME_MAX_LENGTH, DISPLAY_NAME_MIN_LENGTH, DisplayNameSchema } from "../value-objects/DisplayName";
 import { EntityIdSchema } from "../value-objects/EntityId";
 
-// The author of a comment is a display name: the same rules apply.
+// El autor de un comentario es un nombre público: se aplican las mismas reglas.
 export const COMMENT_AUTHOR_MIN_LENGTH = DISPLAY_NAME_MIN_LENGTH;
 export const COMMENT_AUTHOR_MAX_LENGTH = DISPLAY_NAME_MAX_LENGTH;
 export const COMMENT_MESSAGE_MAX_LENGTH = 500;
 
-// userId is the account that wrote it. Missing only in the seed comments, written before accounts existed.
+// Un comentario de la zona social de un tema. `userId` es la cuenta que lo escribió; solo falta en los
+// comentarios del seed, escritos antes de que existieran las cuentas.
 export const CommentSchema = z.strictObject({
   id: EntityIdSchema,
   topicId: EntityIdSchema,

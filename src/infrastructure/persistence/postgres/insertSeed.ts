@@ -9,8 +9,9 @@ import {
 } from "./mappers";
 import { comments, historicalEvents, quizQuestions, quizzes, recommendations, topicRelations, topics } from "./schema";
 
-// Loads seed data into PostgreSQL in one transaction (all or nothing), parents before children so the
-// foreign keys are satisfied. Rows that already exist are skipped, so it can be run more than once.
+// Carga el seed en PostgreSQL en una sola transacción (todo o nada), los padres antes que los hijos para
+// que se cumplan las claves foráneas. Las filas que ya existen se saltan, así que se puede ejecutar más de
+// una vez.
 export async function insertSeed(db: Database, seed: Partial<Seed>) {
   const quizRows = (seed.quizzes ?? []).map(toQuizRows);
   const relationRows = (seed.topics ?? []).flatMap((topic) =>

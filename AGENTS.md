@@ -174,3 +174,9 @@ Toda la lógica de negocio en `domain/` y `application/` se desarrollará bajo T
 ## 6. Estándares de Código y Calidad
 - **Manejo de Errores:** Bloques `try/catch` centralizados en endpoints de la API devolviendo respuestas estructuradas (`{ success: false, error: string }`).
 - **Nomenclatura:** Inglés técnico para el código fuente (`getHistoricalEvents`, `HistoryRepository`), interfaz e idioma del producto final en español.
+- **Comentarios (en castellano):** el código dice *qué* hace; los comentarios cuentan *por qué* está hecho así.
+  - **Cabecera:** cada entidad, port, caso de uso, adaptador y módulo de composición empieza con un comentario breve (una a tres líneas) sobre qué representa o hace y por qué existe. Se omite solo cuando el archivo es trivial y su nombre lo dice todo (un error con un mensaje, un reexport).
+  - **Decisiones:** se comenta lo que no se deduce del código: una regla de negocio, un límite y de dónde sale, una alternativa descartada, un riesgo de seguridad (citando la regla OWASP: `OWASP API4`, `LLM01`…) o una peculiaridad de una librería.
+  - **Sin ruido:** nada de comentarios que repiten el código (`// incrementa el contador`), código comentado ni `TODO` sin explicación. Lo pendiente va a la documentación o se resuelve.
+  - **Estilo:** `//` en frases completas, con mayúscula inicial y punto final; `/** */` solo cuando un tipo o función exportada necesita documentación que aparezca en el editor. Los nombres del código se citan entre comillas invertidas (`` `topicId` ``) y se dejan en inglés.
+  - **Tests:** solo se comenta un test cuando su preparación no es evidente; el nombre del test ya explica lo que comprueba.

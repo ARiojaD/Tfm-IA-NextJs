@@ -1,6 +1,6 @@
 import type { BreachedPasswordChecker } from "@/application/ports/BreachedPasswordChecker";
 
-// Test double: a fixed list of "leaked" passwords instead of an external service.
+// Doble de prueba: una lista fija de contraseñas "filtradas" en lugar de un servicio externo.
 export class InMemoryBreachedPasswordChecker implements BreachedPasswordChecker {
   readonly checkedPasswords: string[] = [];
 

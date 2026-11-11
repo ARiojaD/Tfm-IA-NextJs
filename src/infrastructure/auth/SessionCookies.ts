@@ -1,9 +1,10 @@
-// How BetterAuthService reads the visitor's request (cookies, user agent, IP) and writes the cookies
-// Better Auth sets. In the app it is backed by Next.js (NextSessionCookies); in the integration tests,
-// by an in-memory jar. This keeps the adapter independent of the framework, and testable.
+// Cómo lee `BetterAuthService` la petición del visitante (cookies, user agent, IP) y cómo escribe las
+// cookies que pone Better Auth. En la aplicación se apoya en Next.js (`NextSessionCookies`); en los tests
+// de integración, en un tarro de cookies en memoria. Así el adaptador no depende del framework y se puede
+// probar.
 export interface SessionCookies {
-  // Headers of the current request, including its Cookie header.
+  // Las cabeceras de la petición en curso, incluida su cabecera Cookie.
   toHeaders(): Promise<Headers>;
-  // Applies the Set-Cookie headers of a Better Auth response (only possible in Server Actions).
+  // Aplica las cabeceras Set-Cookie de una respuesta de Better Auth (solo es posible en Server Actions).
   apply(responseHeaders: Headers): Promise<void>;
 }

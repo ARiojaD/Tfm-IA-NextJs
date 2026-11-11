@@ -2,20 +2,22 @@ import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { EntityId } from "@/domain/value-objects/EntityId";
 import type { Slug } from "@/domain/value-objects/Slug";
 
-// The admin panel's view of the topics: unlike TopicRepository (the public one, published topics only),
-// it sees drafts too, and it writes. Only the admin use cases receive it.
+// La vista de los temas que tiene el panel de administración: a diferencia de `TopicRepository` (la
+// pública, solo temas publicados), ve también los borradores y escribe. Solo la reciben los casos de uso
+// de administración.
 export interface TopicEditorRepository {
-  // Any status. Unknown ids → null.
+  // Cualquier estado. Un id desconocido devuelve null.
   findById(id: EntityId): Promise<HistoricalTopic | null>;
-  // Every topic, drafts included. The order is not guaranteed.
+  // Todos los temas, también los borradores. El orden no está garantizado.
   listAll(): Promise<HistoricalTopic[]>;
-  // Whether any topic (draft or published) already uses this slug: slugs are unique.
+  // Si algún tema (borrador o publicado) ya usa este slug: los slugs son únicos.
   slugExists(slug: Slug): Promise<boolean>;
-  // Creates the topic or replaces its own fields. Its related topics are kept as they are (they are
-  // managed apart, in both directions).
+  // Crea el tema o sustituye sus propios campos. Sus temas relacionados se quedan como están (se
+  // gestionan aparte, en los dos sentidos).
   save(topic: HistoricalTopic): Promise<void>;
   delete(id: EntityId): Promise<void>;
-  // Relations go both ways: relating A to B also lists A in B, and removing it removes both sides.
-  // Replaces the whole list of the topic; the ids must be of existing topics (checked by the use case).
+  // Las relaciones van en los dos sentidos: relacionar A con B también lista A en B, y quitarla quita las
+  // dos. Sustituye la lista entera del tema; los ids deben ser de temas existentes (lo comprueba el caso
+  // de uso).
   setRelatedTopics(topicId: EntityId, relatedTopicIds: EntityId[]): Promise<void>;
 }

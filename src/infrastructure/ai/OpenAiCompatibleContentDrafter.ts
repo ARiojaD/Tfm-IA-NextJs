@@ -12,9 +12,13 @@ import { type GeneratedEvents, GeneratedEventsSchema, type GeneratedQuiz, Genera
 import { buildEventProposalPrompt, buildEventsDraftPrompt, buildNewTopicProposalPrompt, buildQuizDraftPrompt } from "./draftPrompts";
 import { createLanguageModel, generateStructured, type LlmConfig } from "./languageModel";
 
-// A bound on what one proposal can cost (OWASP LLM10): larger than an answer, it is a whole list.
+// Un tope a lo que puede costar una propuesta (OWASP LLM10): mayor que el de una respuesta, porque es una
+// lista entera.
 const MAX_OUTPUT_TOKENS = 2000;
 
+// Las propuestas de la IA (cronología y quiz para el panel, campos de una propuesta para los usuarios) con
+// el modelo de lenguaje configurado. El nombre de cada esquema identifica la llamada en el registro de
+// fallos y en el servidor falso de los E2E.
 export class OpenAiCompatibleContentDrafter implements ContentDrafter, ProposalDrafter {
   private readonly model: LanguageModel;
 

@@ -1,12 +1,13 @@
 import type { GeneratedEvents, GeneratedQuiz } from "@/domain/entities/TopicDrafts";
 
+// Lo único que recibe el modelo de un tema: su título y el texto que escribió el administrador.
 export interface TopicSource {
   title: string;
   text: string;
 }
 
-// Proposes a timeline or a quiz from a topic's text, and nothing else. Rejects if the model is unavailable
-// or does not return a valid result.
+// Propone una cronología o un quiz a partir del texto de un tema, y nada más. Falla si el modelo no está
+// disponible o no devuelve un resultado válido.
 export interface ContentDrafter {
   draftEvents(source: TopicSource): Promise<GeneratedEvents>;
   draftQuiz(source: TopicSource): Promise<GeneratedQuiz>;

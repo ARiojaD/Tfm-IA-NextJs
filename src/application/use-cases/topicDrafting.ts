@@ -11,9 +11,10 @@ export interface TopicDraftingDependencies extends TopicEditingDependencies {
 
 export type TopicDraftingError = TopicEditingError | TopicDraftError;
 
-// The steps both proposals share: the usual admin checks, then the model over the topic's saved text.
-// Only the topic's id comes from the request, so the model never reads text chosen by the caller.
-// Nothing is saved: the rows go to the form, for the administrator to review.
+// Los pasos que comparten las dos propuestas de la IA: las comprobaciones habituales de administración y
+// luego el modelo sobre el texto guardado del tema. De la petición solo llega el id del tema, así que el
+// modelo nunca lee un texto elegido por quien llama. No se guarda nada: las filas van al formulario para
+// que las revise el administrador.
 export async function draftFromTopic<Generated, Row>(
   dependencies: TopicDraftingDependencies,
   input: unknown,

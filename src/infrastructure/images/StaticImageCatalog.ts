@@ -1,8 +1,8 @@
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
 import type { CatalogImage } from "@/domain/entities/CatalogImage";
 
-// The catalog as a list in the code (src/infrastructure/images/imageCatalog.ts): adding an image is a
-// commit, reviewed like any other change.
+// El catálogo como una lista en el código (`src/infrastructure/images/imageCatalog.ts`): añadir una imagen
+// es un commit, revisado como cualquier otro cambio.
 export class StaticImageCatalog implements ImageCatalog {
   private readonly images: CatalogImage[];
 

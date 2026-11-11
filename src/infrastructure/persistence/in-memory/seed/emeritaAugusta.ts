@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-emerita-augusta";
 
-// A city has a start but no end: the period is only its foundation.
+// Una ciudad tiene inicio pero no final: el periodo es solo su fundación.
 
 export const emeritaAugustaTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,

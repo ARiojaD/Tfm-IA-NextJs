@@ -3,7 +3,7 @@ import { success, type Result } from "@/shared/Result";
 import type { ProposalRepository } from "../ports/ProposalRepository";
 import { type AdminAuthorizationDependencies, type AdminAuthorizationError, authorizeAdmin } from "./authorizeAdmin";
 
-// The admin's inbox: everyone's pending proposals, oldest first.
+// La bandeja del administrador: las propuestas pendientes de todos, de la más antigua a la más reciente.
 export class ListPendingProposalsUseCase {
   constructor(private readonly dependencies: AdminAuthorizationDependencies & { proposals: ProposalRepository }) {}
 

@@ -21,9 +21,10 @@ import type {
   topics,
 } from "./schema";
 
-// Translation between table rows and domain entities. Rows read from the database are parsed with the
-// domain schemas: if the data ever drifts from the domain rules, the error shows up here, at the border,
-// and never reaches the use cases. Parsing also returns fresh objects, so callers never share references.
+// La traducción entre las filas de las tablas y las entidades del dominio. Las filas que se leen de la
+// base de datos se validan con los esquemas del dominio: si algún día los datos se apartan de sus reglas,
+// el error aparece aquí, en la frontera, y nunca llega a los casos de uso. Validar también devuelve
+// objetos nuevos, así que quien llama nunca comparte referencias.
 
 type TopicRow = typeof topics.$inferSelect;
 type EventRow = typeof historicalEvents.$inferSelect;
@@ -35,7 +36,8 @@ type EraFollowRow = typeof eraFollows.$inferSelect;
 type SavedTopicRow = typeof savedTopics.$inferSelect;
 type KnowledgeChunkRow = typeof knowledgeChunks.$inferSelect;
 
-// SQL NULL becomes a missing property, as optional fields are absent (not null) in the domain.
+// El NULL de SQL pasa a ser una propiedad ausente, porque en el dominio los campos opcionales no existen
+// (no valen null).
 function toDate(year: number, month: number | null): HistoricalDate {
   return month === null ? { year } : { year, month };
 }
@@ -102,7 +104,7 @@ export function toEventRow(event: HistoricalEvent): typeof historicalEvents.$inf
   };
 }
 
-// Questions must arrive sorted by position.
+// Las preguntas tienen que llegar ordenadas por posición.
 export function toQuiz(row: QuizRow, questionRows: QuizQuestionRow[]): Quiz {
   return QuizSchema.parse({
     id: row.id,
@@ -167,7 +169,7 @@ export function toRecommendationRow(recommendation: Recommendation): typeof reco
 
 type ProposalRow = typeof proposals.$inferSelect;
 
-// What each kind proposes, kept in `payload`; the common fields are columns.
+// Lo que propone cada tipo, guardado en `payload`; los campos comunes son columnas.
 function proposalPayload(proposal: Proposal): Record<string, unknown> {
   switch (proposal.kind) {
     case "EVENT":

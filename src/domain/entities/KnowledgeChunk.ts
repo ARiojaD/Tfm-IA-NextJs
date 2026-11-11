@@ -4,9 +4,10 @@ import { compareHistoricalDates, formatHistoricalDate } from "../value-objects/H
 import type { HistoricalEvent } from "./HistoricalEvent";
 import type { HistoricalTopic } from "./HistoricalTopic";
 
-// A piece of a published topic that the RAG can find and cite: a paragraph of the introduction, a key
-// fact or an event of the timeline. Only content written and reviewed by an admin is indexed; comments
-// and recommendations are not (unverified text in the prompt is the door to prompt injection, LLM01).
+// Un trozo de un tema publicado que el RAG puede encontrar y citar: un párrafo de la introducción, un dato
+// clave o un evento de la cronología. Solo se indexa contenido escrito y revisado por un administrador;
+// los comentarios y las recomendaciones no (un texto sin verificar en el prompt es la puerta a la
+// inyección de prompts, OWASP LLM01).
 export const KNOWLEDGE_SOURCES = ["INTRODUCTION", "KEY_FACT", "EVENT"] as const;
 
 export const KnowledgeSourceSchema = z.enum(KNOWLEDGE_SOURCES);
@@ -17,11 +18,11 @@ export const KnowledgeChunkSchema = z
   .strictObject({
     topicId: EntityIdSchema,
     source: KnowledgeSourceSchema,
-    // Order within its source, so a citation can point to the right paragraph.
+    // Posición dentro de su origen, para que una cita apunte al párrafo correcto.
     position: z.number().int().nonnegative(),
-    // Events are linked by id: their order changes when the timeline is edited.
+    // Los eventos se enlazan por id: su posición cambia cuando se edita la cronología.
     eventId: EntityIdSchema.optional(),
-    // The text as shown in a citation: it reads on its own ("Nacimiento: 12 de julio del 100 a.C.").
+    // El texto tal como aparece en una cita: se entiende solo ("Nacimiento: 12 de julio del 100 a.C.").
     content: z.string().trim().min(1),
   })
   .refine((chunk) => (chunk.source === "EVENT") === (chunk.eventId !== undefined), {
@@ -31,13 +32,15 @@ export const KnowledgeChunkSchema = z
 
 export type KnowledgeChunk = z.infer<typeof KnowledgeChunkSchema>;
 
+// Cómo se llama cada origen en las citas y en el texto que se convierte en vector.
 export const KNOWLEDGE_SOURCE_NAMES: Record<KnowledgeSource, string> = {
   INTRODUCTION: "Introducción",
   KEY_FACT: "Dato clave",
   EVENT: "Cronología",
 };
 
-// The fragments of a topic, in the order the page shows them: introduction, key facts, timeline.
+// Los fragmentos de un tema, en el orden en que los muestra la página: introducción, datos clave y
+// cronología.
 export function buildTopicChunks(topic: HistoricalTopic, events: HistoricalEvent[]): KnowledgeChunk[] {
   const topicId = topic.id;
   const timeline = events
@@ -67,8 +70,8 @@ export function buildTopicChunks(topic: HistoricalTopic, events: HistoricalEvent
   ];
 }
 
-// What is turned into a vector: the fragment with its topic's title and summary in front. A paragraph
-// rarely repeats the topic's name, and without it a question about "Julio César" would miss it.
+// Lo que se convierte en vector: el fragmento con el título y el resumen de su tema delante. Un párrafo
+// rara vez repite el nombre del tema, y sin él una pregunta sobre "Julio César" no lo encontraría.
 export function chunkEmbeddingText(topic: Pick<HistoricalTopic, "title" | "summary">, chunk: KnowledgeChunk): string {
   return `${topic.title}. ${topic.summary}\n${KNOWLEDGE_SOURCE_NAMES[chunk.source]}: ${chunk.content}`;
 }

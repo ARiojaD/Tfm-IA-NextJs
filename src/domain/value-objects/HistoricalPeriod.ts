@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { compareHistoricalDates, HistoricalDateSchema } from "./HistoricalDate";
 
-// When a topic happened: a life, a war, a period of government. `end` is optional for single
-// events (a siege dated only by its year) and for cities, which have a foundation but no end.
+// Cuándo ocurrió un tema: una vida, una guerra, un gobierno. `end` es opcional para los hechos puntuales
+// (un asedio fechado solo por su año) y para las ciudades, que tienen fundación pero no final.
 export const HistoricalPeriodSchema = z
   .strictObject({
     start: HistoricalDateSchema,
@@ -15,7 +15,7 @@ export const HistoricalPeriodSchema = z
 
 export type HistoricalPeriod = z.infer<typeof HistoricalPeriodSchema>;
 
-// Chronological comparator for Array.prototype.sort: by start date.
+// Comparador cronológico para `Array.prototype.sort`: por la fecha de inicio.
 export function compareHistoricalPeriods(a: HistoricalPeriod, b: HistoricalPeriod): number {
   return compareHistoricalDates(a.start, b.start);
 }

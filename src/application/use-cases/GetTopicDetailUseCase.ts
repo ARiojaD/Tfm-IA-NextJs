@@ -32,12 +32,13 @@ export interface GetTopicDetailDependencies {
   recommendations: RecommendationRepository;
 }
 
-// Loads everything a topic page shows: the topic, its four modules and its related topics, already in display order.
+// Carga todo lo que muestra la página de un tema: el tema, sus cuatro módulos y sus temas relacionados, ya
+// en el orden en que se muestran.
 export class GetTopicDetailUseCase {
   constructor(private readonly repositories: GetTopicDetailDependencies) {}
 
   async execute(slug: string): Promise<Result<TopicDetail, TopicNotFoundError>> {
-    // The slug comes from the URL: anything that is not a valid slug cannot match a topic.
+    // El slug viene de la URL: algo que no es un slug válido no puede coincidir con ningún tema.
     const parsedSlug = SlugSchema.safeParse(slug);
     if (!parsedSlug.success) {
       return failure(new TopicNotFoundError(slug));
@@ -51,8 +52,8 @@ export class GetTopicDetailUseCase {
   }
 }
 
-// Shared with the admin preview, so a draft is previewed exactly as its public page will look. Related
-// topics come from the public side: only the published ones are shown.
+// Se comparte con la vista previa del panel, así un borrador se ve exactamente como se verá su página
+// pública. Los temas relacionados salen de la cara pública: solo se muestran los publicados.
 export async function loadTopicDetail(
   topic: HistoricalTopic,
   repositories: GetTopicDetailDependencies,
@@ -87,7 +88,8 @@ function newestFirst(a: Comment, b: Comment): number {
   return b.createdAt.getTime() - a.createdAt.getTime();
 }
 
-// Books, then films, then series (the order of RECOMMENDATION_TYPES); oldest first within each type.
+// Libros, luego películas y luego series (el orden de `RECOMMENDATION_TYPES`); dentro de cada tipo, de la
+// más antigua a la más reciente.
 function byTypeThenYear(a: Recommendation, b: Recommendation): number {
   return RECOMMENDATION_TYPES.indexOf(a.type) - RECOMMENDATION_TYPES.indexOf(b.type) || a.year - b.year;
 }

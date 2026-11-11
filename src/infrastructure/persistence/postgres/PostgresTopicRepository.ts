@@ -9,9 +9,11 @@ import type { Database } from "./client";
 import { toTopic, toTopicRow } from "./mappers";
 import { topicRelations, topics } from "./schema";
 
-// The public methods filter by status in SQL, so a draft never even leaves the database for a public page.
+// Los métodos públicos filtran por estado en el SQL, así que un borrador ni siquiera sale de la base de
+// datos hacia una página pública.
 const isPublished = eq(topics.status, "PUBLISHED");
 
+// Un solo repositorio para los dos ports: la cara pública y el editor del panel.
 export class PostgresTopicRepository implements TopicRepository, TopicEditorRepository {
   constructor(private readonly db: Database) {}
 
@@ -47,7 +49,7 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
     return rows.length > 0;
   }
 
-  // Insert or update the topic's own row; topic_relations is not touched.
+  // Inserta o actualiza la fila propia del tema; `topic_relations` no se toca.
   async save(topic: HistoricalTopic): Promise<void> {
     const { id, ...fields } = toTopicRow(topic);
     await this.db
@@ -56,13 +58,14 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
       .onConflictDoUpdate({ target: topics.id, set: fields });
   }
 
-  // Its events, quiz, comments, recommendations, relations and library entries go with it (cascade).
+  // Sus eventos, quiz, comentarios, recomendaciones, relaciones y entradas de biblioteca se van con él (en
+  // cascada).
   async delete(id: EntityId): Promise<void> {
     await this.db.delete(topics).where(eq(topics.id, id));
   }
 
-  // Both directions in one transaction: every row where the topic appears goes, then each pair comes
-  // back twice (A → B and B → A).
+  // Los dos sentidos en una transacción: se borran todas las filas en las que aparece el tema y cada par
+  // vuelve dos veces (A → B y B → A).
   async setRelatedTopics(topicId: EntityId, relatedTopicIds: EntityId[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx
@@ -79,8 +82,8 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
     });
   }
 
-  // One extra query for all the relations of the loaded topics (not one per topic). Ordered by id, so a topic
-  // always comes back the same: without ORDER BY, PostgreSQL does not guarantee any order.
+  // Una sola consulta más para todas las relaciones de los temas cargados (no una por tema). Ordenadas por
+  // id para que un tema vuelva siempre igual: sin ORDER BY, PostgreSQL no garantiza ningún orden.
   private async withRelatedTopicIds(rows: (typeof topics.$inferSelect)[]): Promise<HistoricalTopic[]> {
     if (rows.length === 0) return [];
     const relations = await this.db

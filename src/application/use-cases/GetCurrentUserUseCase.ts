@@ -1,13 +1,13 @@
 import type { AuthenticatedUser, AuthService } from "../ports/AuthService";
 import type { UserRoleRepository } from "../ports/UserRoleRepository";
 
-// What the interface knows about the signed-in user. isAdmin only decides whether to show the panel
-// link; the admin use cases check the role again on their own.
+// Lo que sabe la interfaz del usuario con sesión. `isAdmin` solo decide si se muestra el enlace al panel;
+// los casos de uso de administración vuelven a comprobar el rol por su cuenta.
 export interface CurrentUser extends AuthenticatedUser {
   isAdmin: boolean;
 }
 
-// Who is signed in for this request, or null for an anonymous visitor.
+// Quién ha iniciado sesión en esta petición, o null para un visitante anónimo.
 export class GetCurrentUserUseCase {
   constructor(private readonly dependencies: { auth: AuthService; roles: UserRoleRepository }) {}
 

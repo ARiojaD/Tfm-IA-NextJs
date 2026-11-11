@@ -3,8 +3,9 @@ import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { HistoricalDate } from "@/domain/value-objects/HistoricalDate";
 import type { HistoricalEra } from "@/domain/value-objects/HistoricalEra";
 
-// The editor's form shows years without sign plus a.C./d.C., as people write them; the domain stores BC
-// years as negative numbers. TopicEditorInputs does the opposite conversion on the server.
+// El formulario del editor muestra los años sin signo y con a.C./d.C., como los escribe la gente; el
+// dominio guarda los años antes de Cristo como números negativos. `TopicEditorInputs` hace la conversión
+// contraria en el servidor.
 
 export function toDateFields(date: HistoricalDate | undefined) {
   if (!date) return { year: "", era: "BC", month: "" };
@@ -29,7 +30,7 @@ export function toTopicBasicsValues(topic: HistoricalTopic): TopicBasicsValues {
   };
 }
 
-// Most topics of this site are BC, so that is the default.
+// La mayoría de los temas de este sitio son antes de Cristo, así que es el valor por defecto.
 export function emptyTopicBasicsValues(era: HistoricalEra): TopicBasicsValues {
   return {
     title: "",

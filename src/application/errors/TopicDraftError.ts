@@ -4,7 +4,8 @@ const MESSAGES = {
   EMPTY: "La IA no ha encontrado nada que proponer a partir de este texto.",
 } as const;
 
-// Why the AI could not propose anything. The message is for the administrator: technical causes stay on the server.
+// Por qué la IA no pudo proponer nada. El mensaje es para el administrador: las causas técnicas se quedan
+// en el servidor.
 export class TopicDraftError extends Error {
   constructor(readonly reason: keyof typeof MESSAGES) {
     super(MESSAGES[reason]);

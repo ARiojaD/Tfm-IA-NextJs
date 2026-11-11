@@ -28,19 +28,20 @@ export type AddCommentError =
   | InvalidCommentError
   | TopicNotFoundError;
 
-// Posts the signed-in user's comment to a topic's social zone.
+// Publica el comentario del usuario con sesión en la zona social de un tema.
 export class AddCommentUseCase {
   constructor(private readonly dependencies: AddCommentDependencies) {}
 
-  // The input is `unknown` on purpose: it comes from a form, so nothing about it is trusted until validated.
+  // La entrada es `unknown` a propósito: viene de un formulario, así que no se confía en nada de ella
+  // hasta validarla.
   async execute(input: unknown): Promise<Result<Comment, AddCommentError>> {
-    // Who comments comes from the session, never from the input.
+    // Quién comenta sale de la sesión, nunca de la entrada.
     const user = await this.dependencies.auth.getCurrentUser();
     if (!user) {
       return failure(new AuthenticationRequiredError("comentar"));
     }
 
-    // Per user and checked before validating, so every attempt counts, valid or not.
+    // Por usuario y antes de validar, para que cuenten todos los intentos, válidos o no.
     const decision = await this.dependencies.rateLimiter.consume(`user:${user.id}`);
     if (!decision.allowed) {
       return failure(new RateLimitExceededError(decision.retryAfterSeconds));
@@ -58,7 +59,8 @@ export class AddCommentUseCase {
       return failure(new TopicNotFoundError(topicSlug));
     }
 
-    // The server decides id, topic, author and date; the domain schema is the last check before saving.
+    // El servidor decide el id, el tema, el autor y la fecha; el esquema del dominio es la última
+    // comprobación antes de guardar.
     const comment = CommentSchema.parse({
       id: this.dependencies.ids.generate(),
       topicId: topic.id,

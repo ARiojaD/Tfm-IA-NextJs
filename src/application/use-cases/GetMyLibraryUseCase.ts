@@ -22,8 +22,8 @@ export interface GetMyLibraryDependencies {
   auth: AuthService;
 }
 
-// The "Mi biblioteca" page: every topic of each followed civilization (read at request time, so topics
-// added later appear on their own) and the topics saved one by one.
+// La página "Mi biblioteca": todos los temas de cada civilización que se sigue (se leen en cada petición,
+// así que los temas que se añadan después aparecen solos) y los temas guardados uno a uno.
 export class GetMyLibraryUseCase {
   constructor(private readonly dependencies: GetMyLibraryDependencies) {}
 
@@ -39,7 +39,7 @@ export class GetMyLibraryUseCase {
       library.listSavedTopicIds(user.id),
     ]);
 
-    // Civilizations in the fixed order of the home page; their topics in time order.
+    // Las civilizaciones en el orden fijo de la portada; sus temas, en orden cronológico.
     const followedEras = await Promise.all(
       HISTORICAL_ERAS.filter((era) => followed.includes(era)).map(async (era) => ({
         era,
@@ -47,7 +47,8 @@ export class GetMyLibraryUseCase {
       })),
     );
 
-    // findByIds does not keep the order: put the topics back in saved order, skipping deleted ones.
+    // `findByIds` no conserva el orden: los temas se recolocan en el orden en que se guardaron, saltando
+    // los que se hayan borrado.
     const topicsById = new Map((await topics.findByIds(savedTopicIds)).map((topic) => [topic.id, topic]));
     const savedTopics = savedTopicIds.flatMap((id) => topicsById.get(id) ?? []);
 

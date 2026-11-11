@@ -4,10 +4,10 @@ import { type GeneratedAnswer, GeneratedAnswerSchema } from "@/domain/entities/E
 import { buildAnswerPrompt } from "./answerPrompt";
 import { createLanguageModel, generateStructured, type LlmConfig } from "./languageModel";
 
-// A bound on what one answer can cost (OWASP LLM10).
+// Un tope a lo que puede costar una respuesta (OWASP LLM10).
 const MAX_OUTPUT_TOKENS = 700;
 
-// Writes the answers of the RAG with the configured language model.
+// Redacta las respuestas del RAG con el modelo de lenguaje configurado.
 export class OpenAiCompatibleAnswerGenerator implements AnswerGenerator {
   private readonly model: LanguageModel;
 

@@ -1,7 +1,7 @@
 import type { HistoricalPeriod } from "@/domain/value-objects/HistoricalPeriod";
 import { formatHistoricalDate } from "./formatHistoricalDate";
 
-// Years only, as a topic heading reads them: "52 a.C.", "100 – 44 a.C.", "63 a.C. – 14 d.C.".
+// Solo los años, como se leen en la cabecera de un tema: "52 a.C.", "100 – 44 a.C.", "63 a.C. – 14 d.C.".
 export function formatHistoricalPeriod({ start, end }: HistoricalPeriod): string {
   const startLabel = formatHistoricalDate({ year: start.year });
   if (!end || end.year === start.year) {

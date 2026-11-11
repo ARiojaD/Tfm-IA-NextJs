@@ -26,9 +26,9 @@ export type AnswerQuizQuestionError =
   | TopicNotFoundError
   | QuizQuestionNotFoundError;
 
-// Grades one answer on the server. The correct option is revealed only after the player answers,
-// so the page never ships the solutions to the browser. The rate limit throttles scripts and abuse;
-// it does not make the solutions secret (anyone can learn them by playing).
+// Corrige una respuesta en el servidor. La opción correcta solo se revela después de que el jugador
+// responda, así que la página nunca envía las soluciones al navegador. El límite de peticiones frena los
+// scripts y el abuso; no hace secretas las soluciones (cualquiera puede aprenderlas jugando).
 export class AnswerQuizQuestionUseCase {
   constructor(private readonly dependencies: AnswerQuizQuestionDependencies) {}
 

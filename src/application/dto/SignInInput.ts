@@ -2,9 +2,9 @@ import { z } from "zod";
 import { EmailSchema } from "@/domain/value-objects/Email";
 import { PASSWORD_MAX_LENGTH } from "@/domain/value-objects/Password";
 
-// What a visitor sends to sign in. No per-field messages on purpose: any problem ends in the same
-// generic "Email o contraseña incorrectos". Only the maximum length is checked on the password (the
-// minimum was enforced when the account was created), so huge inputs never reach the hashing.
+// Lo que envía un visitante para iniciar sesión. Sin mensajes por campo a propósito: cualquier problema
+// acaba en el mismo "Email o contraseña incorrectos". De la contraseña solo se comprueba el máximo (el
+// mínimo se exigió al crear la cuenta), para que un texto enorme nunca llegue al cálculo del hash.
 export const SignInInputSchema = z.strictObject({
   email: EmailSchema,
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),

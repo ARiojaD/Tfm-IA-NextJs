@@ -8,9 +8,10 @@ import { PostgresHistoricalEventRepository } from "@/infrastructure/persistence/
 import { PostgresKnowledgeIndex } from "@/infrastructure/persistence/postgres/PostgresKnowledgeIndex";
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
 
-// npm run rag:index — rebuilds the RAG index of every published topic (drafts are left out). The panel
-// keeps it up to date on its own; this is for after `npm run db:seed`, after changing the embedding model,
-// or if an automatic refresh failed. Safe to run again: each topic's fragments are replaced, never doubled.
+// npm run rag:index — reconstruye el índice del RAG con todos los temas publicados (los borradores se
+// quedan fuera). El panel lo mantiene al día solo; esto es para después de `npm run db:seed`, después de
+// cambiar el modelo de embeddings o si falló una actualización automática. Se puede volver a ejecutar sin
+// peligro: los fragmentos de cada tema se sustituyen, nunca se duplican.
 async function main() {
   if (existsSync(".env.local")) {
     process.loadEnvFile(".env.local");
@@ -35,7 +36,7 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  // Only the message: a driver error could otherwise print connection details.
+  // Solo el mensaje: un error del driver podría mostrar los datos de conexión.
   console.error(`No se pudo crear el índice del RAG: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 });

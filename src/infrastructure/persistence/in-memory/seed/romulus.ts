@@ -6,7 +6,7 @@ import { catalogImage } from "./catalogImage";
 
 const TOPIC_ID = "topic-romulus";
 
-// The founding of Rome is a legend: its dates are the ones the Romans themselves gave.
+// La fundación de Roma es una leyenda: sus fechas son las que daban los propios romanos.
 
 export const romulusTopic = HistoricalTopicSchema.parse({
   id: TOPIC_ID,
