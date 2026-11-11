@@ -20,9 +20,19 @@ describe("Datos de ejemplo (seed)", () => {
     expect(slugs).toEqual(expect.arrayContaining(["julio-cesar", "asedio-de-alesia"]));
   });
 
-  it("los dos temas de Roma tienen imagen", () => {
-    for (const slug of ["julio-cesar", "asedio-de-alesia"]) {
-      expect(SEED.topics.find((topic) => topic.slug === slug)?.image, `${slug} sin imagen`).toBeDefined();
+  it("incluye temas de las tres civilizaciones", () => {
+    expect(new Set(SEED.topics.map((topic) => topic.era))).toEqual(new Set(["ROMAN", "ANCIENT_GREECE", "HISPANIA"]));
+  });
+
+  it("todos los temas tienen imagen", () => {
+    for (const topic of SEED.topics) {
+      expect(topic.image, `${topic.slug} sin imagen`).toBeDefined();
+    }
+  });
+
+  it("todos los temas están publicados", () => {
+    for (const topic of SEED.topics) {
+      expect(topic.status, `${topic.slug} no está publicado`).toBe("PUBLISHED");
     }
   });
 
@@ -38,6 +48,12 @@ describe("Datos de ejemplo (seed)", () => {
       for (const relatedId of topic.relatedTopicIds) {
         expect(topicIds, `${topic.slug} enlaza a un tema inexistente: ${relatedId}`).toContain(relatedId);
       }
+    }
+  });
+
+  it("los temas relacionados van ordenados por id, como los devuelve PostgreSQL", () => {
+    for (const topic of SEED.topics) {
+      expect(topic.relatedTopicIds, topic.slug).toEqual([...topic.relatedTopicIds].sort());
     }
   });
 

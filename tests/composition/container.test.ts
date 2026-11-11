@@ -115,6 +115,10 @@ describe("createContainer (en memoria)", () => {
     const library = await container.getMyLibrary.execute();
 
     expect(library.success && library.data.followedEras[0].topics.map((topic) => topic.slug)).toEqual([
+      "romulo-y-la-fundacion-de-roma",
+      "la-monarquia-romana",
+      "el-nacimiento-de-la-republica",
+      "el-saqueo-galo-de-roma",
       "julio-cesar",
       "asedio-de-alesia",
     ]);
@@ -147,11 +151,11 @@ describe("createContainer (en memoria)", () => {
     expect(!topics.success && topics.error).toBeInstanceOf(AdminRequiredError);
   });
 
-  it("conecta ListTopicsByEra: el asedio de Alesia aparece en las guerras y batallas de Roma", async () => {
+  it("conecta ListTopicsByEra: las guerras y batallas de Roma, en orden cronológico", async () => {
     const overview = await createContainer().listTopicsByEra.execute("ROMAN");
 
     const battles = overview.categories.find((group) => group.category === "WARS_AND_BATTLES");
-    expect(battles?.topics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
+    expect(battles?.topics.map((topic) => topic.slug)).toEqual(["el-saqueo-galo-de-roma", "asedio-de-alesia"]);
   });
 
   it("conecta el RAG: con el índice creado, una pregunta con sesión responde citando un tema", async () => {

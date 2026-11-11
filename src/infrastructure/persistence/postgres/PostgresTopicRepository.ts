@@ -79,7 +79,8 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
     });
   }
 
-  // One extra query for all the relations of the loaded topics (not one per topic).
+  // One extra query for all the relations of the loaded topics (not one per topic). Ordered by id, so a topic
+  // always comes back the same: without ORDER BY, PostgreSQL does not guarantee any order.
   private async withRelatedTopicIds(rows: (typeof topics.$inferSelect)[]): Promise<HistoricalTopic[]> {
     if (rows.length === 0) return [];
     const relations = await this.db
@@ -90,7 +91,8 @@ export class PostgresTopicRepository implements TopicRepository, TopicEditorRepo
           topicRelations.topicId,
           rows.map((row) => row.id),
         ),
-      );
+      )
+      .orderBy(topicRelations.relatedTopicId);
 
     return rows.map((row) =>
       toTopic(

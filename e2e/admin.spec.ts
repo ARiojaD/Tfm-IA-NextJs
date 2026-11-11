@@ -32,7 +32,7 @@ test.describe("Panel de administración", () => {
       const rome = page.getByRole("region", { name: "Roma" });
       await expect(rome.getByText("Julio César")).toBeVisible();
       await expect(rome.getByText("Asedio de Alesia")).toBeVisible();
-      await expect(page.getByRole("region", { name: "Hispania" }).getByText("Todavía no hay temas.")).toBeVisible();
+      await expect(page.getByRole("region", { name: "Hispania" }).getByText("Viriato")).toBeVisible();
     });
 
     // The whole life of a topic, from the empty form to deleting it. It ends deleted, so other tests
@@ -85,7 +85,8 @@ test.describe("Panel de administración", () => {
       await page.goto("/admin");
       await expect(page.getByRole("region", { name: "Antigua Grecia" }).getByText("Sin imagen")).toBeVisible();
       await page.goto("/grecia");
-      await page.getByRole("link", { name: /Leónidas/ }).click();
+      // By its heading: the card of the Termópilas mentions Leónidas in its summary too.
+      await page.getByRole("link").filter({ has: page.getByRole("heading", { name: "Leónidas", exact: true }) }).click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Leónidas");
       await expect(page.getByText("Murió en las Termópilas.")).toBeVisible();
       await expect(page.locator("#cronologia").getByText("Batalla de las Termópilas")).toBeVisible();

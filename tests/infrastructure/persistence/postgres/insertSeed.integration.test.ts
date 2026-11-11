@@ -40,7 +40,9 @@ describe("insertSeed con los datos reales", () => {
     await insertSeed(testDb, SEED);
 
     const caesarId = SEED.topics[0].id;
-    expect(await new PostgresTopicRepository(testDb).listByEra("ROMAN")).toHaveLength(SEED.topics.length);
+    expect(await new PostgresTopicRepository(testDb).listByEra("ROMAN")).toHaveLength(
+      SEED.topics.filter((topic) => topic.era === "ROMAN").length,
+    );
     expect(await new PostgresCommentRepository(testDb).listByTopic(caesarId)).toHaveLength(
       SEED.comments.filter((comment) => comment.topicId === caesarId).length,
     );
