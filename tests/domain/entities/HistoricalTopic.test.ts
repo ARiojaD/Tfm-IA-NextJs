@@ -173,6 +173,16 @@ describe("compareTopicsChronologically", () => {
     expect(topics.toSorted(compareTopicsChronologically).map((t) => t.title)).toEqual(["Monarquía", "República", "Imperio"]);
   });
 
+  it("si empiezan a la vez, va antes el que abarca más: la etapa grande delante de su subetapa", () => {
+    const birth = { title: "El nacimiento de la República", period: { start: { year: -509 }, end: { year: -450 } } };
+    const republic = { title: "La República romana", period: { start: { year: -509 }, end: { year: -27 } } };
+
+    expect([birth, republic].toSorted(compareTopicsChronologically).map((t) => t.title)).toEqual([
+      "La República romana",
+      "El nacimiento de la República",
+    ]);
+  });
+
   it("si empiezan a la vez, ordena por título según el español (las tildes no van al final)", () => {
     const topics = [topic("Zama", -202), topic("Ávila", -202), topic("Cannas", -202)];
 

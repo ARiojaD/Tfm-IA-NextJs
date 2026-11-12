@@ -7,7 +7,6 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TopicCard } from "@/components/topic/TopicCard";
 import { getContainer } from "@/composition/container";
-import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_DESCRIPTIONS, ERA_LABELS } from "@/lib/eraLabels";
 import { CATEGORY_ROUTE_SLUGS, eraFromRouteSlug, eraTimelinePath } from "@/lib/routes";
@@ -33,9 +32,6 @@ export default async function EraPage({ params }: PageProps<"/[era]">) {
     container.listTopicsByEra.execute(era),
     container.getLibraryStatus.execute(),
   ]);
-  const upcomingCategories = TOPIC_CATEGORIES.filter(
-    (category) => !overview.categories.some((group) => group.category === category),
-  );
 
   return (
     <>
@@ -113,12 +109,6 @@ export default async function EraPage({ params }: PageProps<"/[era]">) {
               </div>
             </section>
           ))}
-
-          {overview.totalTopics > 0 && upcomingCategories.length > 0 && (
-            <p className="text-sm text-muted">
-              Próximamente: {upcomingCategories.map((category) => CATEGORY_LABELS[category]).join(" · ")}
-            </p>
-          )}
         </div>
       </main>
 

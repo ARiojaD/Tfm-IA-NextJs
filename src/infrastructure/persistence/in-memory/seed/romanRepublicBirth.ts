@@ -29,7 +29,7 @@ export const romanRepublicBirthTopic = HistoricalTopicSchema.parse({
     { label: "Fuente", value: "Tito Livio, Historia de Roma desde su fundación, libros I a III" },
   ],
   image: catalogImage("republica-bruto-david"),
-  relatedTopicIds: ["topic-gallic-sack-of-rome", "topic-roman-kingdom"],
+  relatedTopicIds: ["topic-gallic-sack-of-rome", "topic-roman-kingdom", "topic-roman-republic"],
   status: "PUBLISHED",
 });
 

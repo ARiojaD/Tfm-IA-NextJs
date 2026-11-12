@@ -38,7 +38,7 @@ export const juliusCaesarTopic = HistoricalTopicSchema.parse({
     width: 960,
     height: 1694,
   },
-  relatedTopicIds: ["topic-siege-of-alesia"],
+  relatedTopicIds: ["topic-roman-empire", "topic-roman-republic", "topic-siege-of-alesia"],
   status: "PUBLISHED",
 });
 

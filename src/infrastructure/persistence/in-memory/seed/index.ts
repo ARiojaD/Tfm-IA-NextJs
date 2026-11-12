@@ -28,6 +28,8 @@ import { thermopylaeEvents, thermopylaeQuiz, thermopylaeRecommendations, thermop
 import { classicalAthensEvents, classicalAthensQuiz, classicalAthensRecommendations, classicalAthensTopic } from "./classicalAthens";
 import { viriathusEvents, viriathusQuiz, viriathusRecommendations, viriathusTopic } from "./viriathus";
 import { siegeOfNumantiaEvents, siegeOfNumantiaQuiz, siegeOfNumantiaRecommendations, siegeOfNumantiaTopic } from "./siegeOfNumantia";
+import { romanRepublicEvents, romanRepublicQuiz, romanRepublicRecommendations, romanRepublicTopic } from "./romanRepublic";
+import { romanEmpireEvents, romanEmpireQuiz, romanEmpireRecommendations, romanEmpireTopic } from "./romanEmpire";
 import { greekTimeline } from "./greekTimeline";
 import { hispaniaTimeline } from "./hispaniaTimeline";
 import { romanTimeline } from "./romanTimeline";
@@ -48,9 +50,9 @@ export interface Seed {
 // Solo los dos primeros traen comentarios de ejemplo: los demás empiezan, como un tema real, sin
 // conversación.
 export const SEED: Seed = {
-  topics: [juliusCaesarTopic, siegeOfAlesiaTopic, romulusTopic, romanKingdomTopic, romanRepublicBirthTopic, gallicSackOfRomeTopic, periclesTopic, alexanderTheGreatTopic, thermopylaeTopic, classicalAthensTopic, viriathusTopic, siegeOfNumantiaTopic, emeritaAugustaTopic],
-  events: [...juliusCaesarEvents, ...siegeOfAlesiaEvents, ...romulusEvents, ...romanKingdomEvents, ...romanRepublicBirthEvents, ...gallicSackOfRomeEvents, ...periclesEvents, ...alexanderTheGreatEvents, ...thermopylaeEvents, ...classicalAthensEvents, ...viriathusEvents, ...siegeOfNumantiaEvents, ...emeritaAugustaEvents],
-  quizzes: [juliusCaesarQuiz, siegeOfAlesiaQuiz, romulusQuiz, romanKingdomQuiz, romanRepublicBirthQuiz, gallicSackOfRomeQuiz, periclesQuiz, alexanderTheGreatQuiz, thermopylaeQuiz, classicalAthensQuiz, viriathusQuiz, siegeOfNumantiaQuiz, emeritaAugustaQuiz],
+  topics: [juliusCaesarTopic, siegeOfAlesiaTopic, romulusTopic, romanKingdomTopic, romanRepublicBirthTopic, gallicSackOfRomeTopic, romanRepublicTopic, romanEmpireTopic, periclesTopic, alexanderTheGreatTopic, thermopylaeTopic, classicalAthensTopic, viriathusTopic, siegeOfNumantiaTopic, emeritaAugustaTopic],
+  events: [...juliusCaesarEvents, ...siegeOfAlesiaEvents, ...romulusEvents, ...romanKingdomEvents, ...romanRepublicBirthEvents, ...gallicSackOfRomeEvents, ...romanRepublicEvents, ...romanEmpireEvents, ...periclesEvents, ...alexanderTheGreatEvents, ...thermopylaeEvents, ...classicalAthensEvents, ...viriathusEvents, ...siegeOfNumantiaEvents, ...emeritaAugustaEvents],
+  quizzes: [juliusCaesarQuiz, siegeOfAlesiaQuiz, romulusQuiz, romanKingdomQuiz, romanRepublicBirthQuiz, gallicSackOfRomeQuiz, romanRepublicQuiz, romanEmpireQuiz, periclesQuiz, alexanderTheGreatQuiz, thermopylaeQuiz, classicalAthensQuiz, viriathusQuiz, siegeOfNumantiaQuiz, emeritaAugustaQuiz],
   comments: [...juliusCaesarComments, ...siegeOfAlesiaComments],
   recommendations: [
     ...juliusCaesarRecommendations,
@@ -59,6 +61,8 @@ export const SEED: Seed = {
     ...romanKingdomRecommendations,
     ...romanRepublicBirthRecommendations,
     ...gallicSackOfRomeRecommendations,
+    ...romanRepublicRecommendations,
+    ...romanEmpireRecommendations,
     ...periclesRecommendations,
     ...alexanderTheGreatRecommendations,
     ...thermopylaeRecommendations,

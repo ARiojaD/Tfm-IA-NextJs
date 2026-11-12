@@ -30,7 +30,11 @@ describe("getContainer (PostgreSQL)", () => {
   it("carga el detalle completo de un tema, con su quiz sin soluciones", async () => {
     const result = await getContainer().getTopicDetail.execute("julio-cesar");
 
-    expect(result.success && result.data.relatedTopics.map((topic) => topic.slug)).toEqual(["asedio-de-alesia"]);
+    expect(result.success && result.data.relatedTopics.map((topic) => topic.slug)).toEqual([
+      "la-republica-romana",
+      "asedio-de-alesia",
+      "el-imperio-romano",
+    ]);
     expect(result.success && result.data.quiz?.questions[0]).not.toHaveProperty("correctOptionIndex");
   });
 

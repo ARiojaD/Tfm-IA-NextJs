@@ -38,22 +38,36 @@ function DateLabel({ date, quiet = false }: { date: HistoricalDate; quiet?: bool
   );
 }
 
-// El inicio de una etapa abre una banda con su resumen, que ya está escrito en el tema de la etapa.
+// El inicio de una etapa abre una banda con su resumen, que ya está escrito en el tema de la etapa. Una
+// subetapa (una etapa dentro de otra) se pinta más pequeña y metida hacia dentro, para que se lea como
+// parte de la grande.
 function PeriodBand({ item }: { item: Extract<TimelineItem, { kind: "PERIOD" }> }) {
+  const Heading = item.nested ? "h3" : "h2";
+
   return (
-    <li className="relative pl-8 pt-4 md:pl-[11rem]">
+    <li className={`relative pl-8 ${item.nested ? "md:pl-[13rem]" : "pt-4 md:pl-[11rem]"}`}>
       <span
-        className="absolute left-[0.0625rem] top-6 h-6 w-[0.75rem] rounded-sm bg-accent md:left-[9.0625rem]"
+        className={`absolute rounded-sm bg-accent ${
+          item.nested
+            ? "left-[0.1875rem] top-4 h-4 w-[0.5rem] opacity-60 md:left-[9.1875rem]"
+            : "left-[0.0625rem] top-6 h-6 w-[0.75rem] md:left-[9.0625rem]"
+        }`}
         aria-hidden="true"
       />
-      <section className="rounded-2xl border-l-4 border-accent bg-accent-soft p-5">
+      <section
+        className={
+          item.nested
+            ? "rounded-2xl border-l-2 border-accent/60 bg-surface p-4"
+            : "rounded-2xl border-l-4 border-accent bg-accent-soft p-5"
+        }
+      >
         <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-          Etapa · {formatHistoricalPeriod(item.period)}
+          {item.nested ? "Subetapa" : "Etapa"} · {formatHistoricalPeriod(item.period)}
         </p>
-        <h2 className="mt-1 font-serif text-2xl font-semibold">{item.topic.title}</h2>
+        <Heading className={`mt-1 font-serif font-semibold ${item.nested ? "text-xl" : "text-2xl"}`}>{item.topic.title}</Heading>
         <p className="mt-2 text-sm leading-6 text-muted">{item.summary}</p>
         <Link href={topicPath(item.topic)} className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
-          Leer la etapa <span aria-hidden="true">→</span>
+          Leer la {item.nested ? "subetapa" : "etapa"} <span aria-hidden="true">→</span>
         </Link>
       </section>
     </li>

@@ -94,6 +94,32 @@ describe("GetEraTimelineUseCase", () => {
     });
   });
 
+  it("una etapa que cae dentro de otra es una subetapa, y va después de la grande que empieza el mismo año", async () => {
+    const republic = aTopic({ id: "t-republic", slug: "republica", category: "PERIODS", period: { start: { year: -509 }, end: { year: -27 } } });
+    const republicBirth = aTopic({
+      id: "t-birth",
+      slug: "nacimiento-republica",
+      category: "PERIODS",
+      period: { start: { year: -509 }, end: { year: -450 } },
+    });
+
+    const result = await timeline({ topics: [republicBirth, monarchy, republic] }).execute({ era: "ROMAN" });
+
+    expect(result.items.map((item) => item.kind === "PERIOD" && [item.key, item.nested])).toEqual([
+      ["period-t-monarchy", false],
+      ["period-t-republic", false],
+      ["period-t-birth", true],
+    ]);
+  });
+
+  it("dos etapas que solo comparten el año de cambio no se anidan", async () => {
+    const republic = aTopic({ id: "t-republic", slug: "republica", category: "PERIODS", period: { start: { year: -509 }, end: { year: -27 } } });
+
+    const result = await timeline({ topics: [monarchy, republic] }).execute({ era: "ROMAN" });
+
+    expect(result.items.every((item) => item.kind === "PERIOD" && !item.nested)).toBe(true);
+  });
+
   it("solo muestra los eventos de los temas cuando se piden, intercalados por fecha y enlazados a su tema", async () => {
     // La misma fecha que el hito de la fundación: en un empate, primero el hito y después el detalle.
     const remus = anEvent({ id: "e-remus", topicId: "t-romulus", title: "Muerte de Remo", date: { year: -753, month: 4 } });

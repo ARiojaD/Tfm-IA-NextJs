@@ -124,10 +124,12 @@ describe("createContainer (en memoria)", () => {
     expect(library.success && library.data.followedEras[0].topics.map((topic) => topic.slug)).toEqual([
       "romulo-y-la-fundacion-de-roma",
       "la-monarquia-romana",
+      "la-republica-romana",
       "el-nacimiento-de-la-republica",
       "el-saqueo-galo-de-roma",
       "julio-cesar",
       "asedio-de-alesia",
+      "el-imperio-romano",
     ]);
     expect(library.success && library.data.savedTopics.map((topic) => topic.slug)).toEqual(["julio-cesar"]);
     expect(await container.getLibraryStatus.execute()).toEqual({

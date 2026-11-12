@@ -11,10 +11,20 @@ export type TimelineTopicLink = Pick<HistoricalTopic, "title" | "era" | "categor
 
 // Las piezas de la cronología, en una sola lista ordenada por fecha:
 // - PERIOD: el inicio de una etapa (un tema de la categoría Etapas), con su resumen, que abre una banda.
+//   `nested` marca una subetapa: una etapa que cae dentro de otra (el nacimiento de la República dentro
+//   de la República), para pintarla más discreta.
 // - MILESTONE: un hito de la civilización, enlazado a su tema si está publicado.
 // - EVENT: un evento de un tema, solo si se piden (el detalle, además de los hitos).
 export type TimelineItem =
-  | { kind: "PERIOD"; key: string; date: HistoricalDate; period: HistoricalPeriod; summary: string; topic: TimelineTopicLink }
+  | {
+      kind: "PERIOD";
+      key: string;
+      date: HistoricalDate;
+      period: HistoricalPeriod;
+      summary: string;
+      nested: boolean;
+      topic: TimelineTopicLink;
+    }
   | { kind: "MILESTONE"; key: string; date: HistoricalDate; title: string; description: string; topic: TimelineTopicLink | null }
   | { kind: "EVENT"; key: string; eventId: string; date: HistoricalDate; title: string; description: string; topic: TimelineTopicLink };
 
@@ -55,15 +65,15 @@ export class GetEraTimelineUseCase {
       return topic ? { title: topic.title, era: topic.era, category: topic.category, slug: topic.slug } : null;
     };
 
+    const periods = eraTopics.filter((topic) => topic.category === "PERIODS");
     const items: TimelineItem[] = [
-      ...eraTopics
-        .filter((topic) => topic.category === "PERIODS")
-        .map((topic): TimelineItem => ({
+      ...periods.map((topic): TimelineItem => ({
           kind: "PERIOD",
           key: `period-${topic.id}`,
           date: topic.period.start,
           period: topic.period,
           summary: topic.summary,
+          nested: periods.some((other) => other.id !== topic.id && contains(other.period, topic.period)),
           topic: linkTo(topic.id)!,
         })),
       ...eraMilestones.map((milestone): TimelineItem => ({
@@ -88,10 +98,29 @@ export class GetEraTimelineUseCase {
     return {
       era,
       items: items.toSorted(
-        (a, b) => compareHistoricalDates(a.date, b.date) || KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.key.localeCompare(b.key),
+        (a, b) =>
+          compareHistoricalDates(a.date, b.date) ||
+          KIND_ORDER[a.kind] - KIND_ORDER[b.kind] ||
+          Number(isNested(a)) - Number(isNested(b)) ||
+          a.key.localeCompare(b.key),
       ),
       milestoneCount: eraMilestones.length,
       topicEventCount: topicEvents.length,
     };
   }
+}
+
+// Si una etapa cae entera dentro de otra. Dos etapas con el mismo periodo no se anidan entre sí, y dos que
+// solo comparten el año de cambio (la Monarquía acaba en el 509 a.C. y la República empieza en él) tampoco.
+function contains(outer: HistoricalPeriod, inner: HistoricalPeriod): boolean {
+  const outerEnd = outer.end ?? outer.start;
+  const innerEnd = inner.end ?? inner.start;
+  const within = compareHistoricalDates(outer.start, inner.start) <= 0 && compareHistoricalDates(innerEnd, outerEnd) <= 0;
+  const same = compareHistoricalDates(outer.start, inner.start) === 0 && compareHistoricalDates(innerEnd, outerEnd) === 0;
+  return within && !same;
+}
+
+// En una misma fecha, la etapa grande se abre antes que su subetapa.
+function isNested(item: TimelineItem): boolean {
+  return item.kind === "PERIOD" && item.nested;
 }

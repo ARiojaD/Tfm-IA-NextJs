@@ -31,7 +31,7 @@ export const emeritaAugustaTopic = HistoricalTopicSchema.parse({
     { label: "Hoy", value: "Mérida. Patrimonio de la Humanidad desde 1993" },
   ],
   image: catalogImage("hispania-teatro-merida"),
-  relatedTopicIds: ["topic-siege-of-numantia", "topic-viriathus"],
+  relatedTopicIds: ["topic-roman-empire", "topic-siege-of-numantia", "topic-viriathus"],
   status: "PUBLISHED",
 });
 

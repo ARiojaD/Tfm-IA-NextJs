@@ -32,7 +32,7 @@ export const gallicSackOfRomeTopic = HistoricalTopicSchema.parse({
     { label: "Consecuencia", value: "La construcción de la muralla serviana" },
   ],
   image: catalogImage("breno-balanza"),
-  relatedTopicIds: ["topic-roman-republic-birth"],
+  relatedTopicIds: ["topic-roman-republic", "topic-roman-republic-birth"],
   status: "PUBLISHED",
 });
 

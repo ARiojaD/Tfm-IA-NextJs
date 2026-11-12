@@ -118,6 +118,7 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: -133 },
     title: "Tiberio Graco, tribuno de la plebe",
     description: "Su reforma agraria y su asesinato abren un siglo de luchas civiles en la República.",
+    topicId: "topic-roman-republic",
   },
   {
     id: "milestone-rome-sulla",
@@ -171,6 +172,7 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: -31, month: 9 },
     title: "Batalla de Accio",
     description: "Octavio derrota a Marco Antonio y Cleopatra y se queda como único dueño de Roma.",
+    topicId: "topic-roman-republic",
   },
   {
     id: "milestone-rome-augustus",
@@ -178,6 +180,7 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: -27, month: 1 },
     title: "Augusto, primer emperador",
     description: "El Senado concede a Octavio el título de Augusto: termina la República y empieza el Imperio.",
+    topicId: "topic-roman-empire",
   },
   {
     id: "milestone-rome-teutoburg",
@@ -206,6 +209,7 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: 117 },
     title: "Máxima extensión del Imperio",
     description: "Con Trajano, nacido en Hispania, el Imperio alcanza su mayor tamaño, de Britania a Mesopotamia.",
+    topicId: "topic-roman-empire",
   },
   {
     id: "milestone-rome-caracalla",
@@ -234,6 +238,7 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: 395, month: 1 },
     title: "División del Imperio",
     description: "A la muerte de Teodosio, el Imperio queda repartido entre sus hijos: Arcadio en Oriente y Honorio en Occidente.",
+    topicId: "topic-roman-empire",
   },
   {
     id: "milestone-rome-alaric",
@@ -248,5 +253,6 @@ export const romanTimeline = TimelineMilestoneSchema.array().parse([
     date: { year: 476, month: 9 },
     title: "Caída del Imperio de Occidente",
     description: "Odoacro depone a Rómulo Augústulo, el último emperador de Occidente. El de Oriente durará casi mil años más.",
+    topicId: "topic-roman-empire",
   },
 ]);

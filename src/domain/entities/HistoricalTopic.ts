@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { EntityIdSchema } from "../value-objects/EntityId";
 import { HistoricalEraSchema } from "../value-objects/HistoricalEra";
+import { compareHistoricalDates } from "../value-objects/HistoricalDate";
 import { compareHistoricalPeriods, HistoricalPeriodSchema } from "../value-objects/HistoricalPeriod";
 import { KeyFactSchema } from "../value-objects/KeyFact";
 import { SlugSchema } from "../value-objects/Slug";
@@ -50,11 +51,17 @@ export const HistoricalTopicSchema = z
 export type HistoricalTopic = z.infer<typeof HistoricalTopicSchema>;
 
 // La historia se lee en orden cronológico (Monarquía → República → Imperio, que el orden alfabético
-// rompería). Los empates se ordenan con la intercalación española, para que los títulos con tilde ("Ávila")
-// queden donde los espera un lector.
+// rompería). Si dos temas empiezan a la vez, va antes el que abarca más, para que una etapa salga delante
+// de su subetapa (la República antes que su nacimiento). Los últimos empates se ordenan con la
+// intercalación española, para que los títulos con tilde ("Ávila") queden donde los espera un lector.
 export function compareTopicsChronologically(
   a: Pick<HistoricalTopic, "title" | "period">,
   b: Pick<HistoricalTopic, "title" | "period">,
 ): number {
-  return compareHistoricalPeriods(a.period, b.period) || a.title.localeCompare(b.title, "es");
+  const endOf = (topic: Pick<HistoricalTopic, "period">) => topic.period.end ?? topic.period.start;
+  return (
+    compareHistoricalPeriods(a.period, b.period) ||
+    compareHistoricalDates(endOf(b), endOf(a)) ||
+    a.title.localeCompare(b.title, "es")
+  );
 }
