@@ -8,6 +8,8 @@ import {
   ERA_ROUTE_SLUGS,
   eraFromRouteSlug,
   eraPath,
+  eraTimelinePath,
+  eventPath,
   knowledgeChunkPath,
   topicPath,
 } from "@/lib/routes";
@@ -73,5 +75,22 @@ describe("knowledgeChunkPath", () => {
     expect(knowledgeChunkPath(topic, { source: "EVENT", position: 0, eventId: "event-rubicon" })).toBe(
       "/roma/personajes/julio-cesar#evento-event-rubicon",
     );
+  });
+});
+
+describe("rutas de la cronología", () => {
+  const topic = { era: "ROMAN" as const, category: "PEOPLE" as const, slug: "julio-cesar" };
+
+  it("la cronología completa de una civilización cuelga de su página", () => {
+    expect(eraTimelinePath("ROMAN")).toBe("/roma/cronologia");
+    expect(eraTimelinePath("ANCIENT_GREECE")).toBe("/grecia/cronologia");
+  });
+
+  it("la versión con los eventos de los temas lo indica en la URL, para poder compartirla", () => {
+    expect(eraTimelinePath("ROMAN", { withTopicEvents: true })).toBe("/roma/cronologia?eventos=todos");
+  });
+
+  it("un evento de la cronología enlaza a ese evento dentro de su tema", () => {
+    expect(eventPath(topic, "event-rubicon")).toBe("/roma/personajes/julio-cesar#evento-event-rubicon");
   });
 });

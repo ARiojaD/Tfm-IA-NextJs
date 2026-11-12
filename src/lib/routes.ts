@@ -40,6 +40,21 @@ export function topicPath(topic: Pick<HistoricalTopic, "era" | "category" | "slu
   return `${eraPath(topic.era)}/${CATEGORY_ROUTE_SLUGS[topic.category]}/${topic.slug}`;
 }
 
+// La cronología completa de una civilización. Con los eventos de los temas, lo dice la URL: así esa vista
+// se puede compartir y funciona sin JavaScript.
+export const TIMELINE_ROUTE_SLUG = "cronologia";
+export const TIMELINE_EVENTS_PARAM = { name: "eventos", value: "todos" } as const;
+
+export function eraTimelinePath(era: HistoricalEra, { withTopicEvents = false } = {}): string {
+  const path = `${eraPath(era)}/${TIMELINE_ROUTE_SLUG}`;
+  return withTopicEvents ? `${path}?${TIMELINE_EVENTS_PARAM.name}=${TIMELINE_EVENTS_PARAM.value}` : path;
+}
+
+// Un evento concreto dentro de la página de su tema (el ancla que pinta su cronología).
+export function eventPath(topic: Pick<HistoricalTopic, "era" | "category" | "slug">, eventId: string): string {
+  return `${topicPath(topic)}#evento-${eventId}`;
+}
+
 // Adónde lleva una cita del RAG: el párrafo, el dato o el evento exacto de la página del tema.
 export function knowledgeChunkPath(
   topic: Pick<HistoricalTopic, "era" | "category" | "slug">,

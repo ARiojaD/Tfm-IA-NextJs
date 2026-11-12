@@ -1,0 +1,138 @@
+import { TimelineMilestoneSchema } from "@/domain/entities/TimelineMilestone";
+
+// La cronología de la Antigua Grecia, de los primeros Juegos Olímpicos a la conquista romana. Los hitos sin
+// `topicId` todavía no tienen tema.
+
+const era = "ANCIENT_GREECE";
+
+export const greekTimeline = TimelineMilestoneSchema.array().parse([
+  {
+    id: "milestone-greece-olympics",
+    era,
+    date: { year: -776 },
+    title: "Primeros Juegos Olímpicos",
+    description: "La fecha tradicional de los primeros Juegos de Olimpia, a partir de la cual los griegos contaban los años.",
+  },
+  {
+    id: "milestone-greece-solon",
+    era,
+    date: { year: -594 },
+    title: "Reformas de Solón",
+    description: "El arconte ateniense cancela las deudas que esclavizaban a los campesinos y reparte los derechos según la riqueza.",
+  },
+  {
+    id: "milestone-greece-cleisthenes",
+    era,
+    date: { year: -508 },
+    title: "Reformas de Clístenes",
+    description: "Clístenes reorganiza a los atenienses en diez tribus y pone las bases de la democracia.",
+  },
+  {
+    id: "milestone-greece-marathon",
+    era,
+    date: { year: -490, month: 9 },
+    title: "Batalla de Maratón",
+    description: "Los atenienses derrotan al ejército persa de Darío I en la Primera Guerra Médica.",
+  },
+  {
+    id: "milestone-greece-thermopylae",
+    era,
+    date: { year: -480 },
+    title: "Batalla de las Termópilas",
+    description: "Leónidas y sus aliados frenan durante tres días al ejército de Jerjes en la Segunda Guerra Médica.",
+    topicId: "topic-thermopylae",
+  },
+  {
+    id: "milestone-greece-salamis",
+    era,
+    date: { year: -480, month: 9 },
+    title: "Batalla de Salamina",
+    description: "La flota griega, dirigida por el ateniense Temístocles, destruye a la persa en el estrecho de Salamina.",
+  },
+  {
+    id: "milestone-greece-delian-league",
+    era,
+    date: { year: -478 },
+    title: "Fundación de la Liga de Delos",
+    description: "Atenas encabeza una alianza de ciudades contra Persia que acabará convirtiéndose en su imperio.",
+    topicId: "topic-classical-athens",
+  },
+  {
+    id: "milestone-greece-pericles",
+    era,
+    date: { year: -461 },
+    title: "Pericles, al frente de Atenas",
+    description: "Tras el ostracismo de Cimón empieza la época de Pericles, el político que guiará Atenas durante tres décadas.",
+    topicId: "topic-pericles",
+  },
+  {
+    id: "milestone-greece-parthenon",
+    era,
+    date: { year: -447 },
+    title: "Comienza el Partenón",
+    description: "Atenas levanta el gran templo de Atenea en la Acrópolis, símbolo de su edad de oro.",
+    topicId: "topic-classical-athens",
+  },
+  {
+    id: "milestone-greece-peloponnesian-war",
+    era,
+    date: { year: -431 },
+    title: "Comienza la Guerra del Peloponeso",
+    description: "Atenas y Esparta se enfrentan en una guerra que durará casi treinta años y arrastrará a toda Grecia.",
+    topicId: "topic-classical-athens",
+  },
+  {
+    id: "milestone-greece-athens-surrender",
+    era,
+    date: { year: -404 },
+    title: "Rendición de Atenas",
+    description: "Atenas se rinde a Esparta y pierde su imperio, su flota y sus Muros Largos.",
+    topicId: "topic-classical-athens",
+  },
+  {
+    id: "milestone-greece-socrates",
+    era,
+    date: { year: -399 },
+    title: "Muerte de Sócrates",
+    description: "Un tribunal ateniense condena a muerte al filósofo, acusado de impiedad y de corromper a los jóvenes.",
+  },
+  {
+    id: "milestone-greece-chaeronea",
+    era,
+    date: { year: -338, month: 8 },
+    title: "Batalla de Queronea",
+    description: "Filipo II de Macedonia, con su hijo Alejandro al mando de la caballería, vence a Atenas y Tebas y se impone a Grecia.",
+    topicId: "topic-alexander-the-great",
+  },
+  {
+    id: "milestone-greece-alexander-king",
+    era,
+    date: { year: -336 },
+    title: "Alejandro, rey de Macedonia",
+    description: "Tras el asesinato de su padre Filipo, Alejandro sube al trono con veinte años.",
+    topicId: "topic-alexander-the-great",
+  },
+  {
+    id: "milestone-greece-gaugamela",
+    era,
+    date: { year: -331, month: 10 },
+    title: "Batalla de Gaugamela",
+    description: "Alejandro derrota a Darío III y se convierte en el señor del Imperio persa.",
+    topicId: "topic-alexander-the-great",
+  },
+  {
+    id: "milestone-greece-alexander-death",
+    era,
+    date: { year: -323, month: 6 },
+    title: "Muerte de Alejandro",
+    description: "Muere en Babilonia con treinta y dos años. Sus generales se reparten el imperio: empieza la época helenística.",
+    topicId: "topic-alexander-the-great",
+  },
+  {
+    id: "milestone-greece-roman-conquest",
+    era,
+    date: { year: -146 },
+    title: "Grecia, bajo el dominio de Roma",
+    description: "Roma destruye Corinto y somete a las ciudades griegas, aunque su cultura conquistará a sus vencedores.",
+  },
+]);

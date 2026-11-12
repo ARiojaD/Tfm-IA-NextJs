@@ -128,6 +128,26 @@ export const historicalEvents = pgTable(
   ],
 );
 
+// Los hitos de la cronología completa de cada civilización. El tema enlazado es opcional, y borrar el tema
+// no borra el hito: se queda sin enlace (SET NULL), porque el hito sigue siendo parte de la historia.
+export const timelineMilestones = pgTable(
+  "timeline_milestones",
+  {
+    id: text("id").primaryKey(),
+    era: historicalEra("era").notNull(),
+    dateYear: integer("date_year").notNull(),
+    dateMonth: smallint("date_month"),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    topicId: text("topic_id").references(() => topics.id, { onDelete: "set null" }),
+  },
+  (table) => [
+    index("timeline_milestones_era_idx").on(table.era),
+    check("timeline_milestones_year_valid", validYear(table.dateYear)),
+    check("timeline_milestones_month_valid", validMonth(table.dateMonth)),
+  ],
+);
+
 // Un quiz por tema; sus preguntas conservan el orden con `position`.
 export const quizzes = pgTable("quizzes", {
   id: text("id").primaryKey(),

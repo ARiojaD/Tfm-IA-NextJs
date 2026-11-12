@@ -10,7 +10,7 @@ import { getContainer } from "@/composition/container";
 import { TOPIC_CATEGORIES } from "@/domain/value-objects/TopicCategory";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_DESCRIPTIONS, ERA_LABELS } from "@/lib/eraLabels";
-import { CATEGORY_ROUTE_SLUGS, eraFromRouteSlug } from "@/lib/routes";
+import { CATEGORY_ROUTE_SLUGS, eraFromRouteSlug, eraTimelinePath } from "@/lib/routes";
 
 // One template for every civilization (/roma, /grecia, /hispania): its topics grouped by category.
 
@@ -67,25 +67,32 @@ export default async function EraPage({ params }: PageProps<"/[era]">) {
               <FollowEraButton era={era} status={libraryStatus} />
             </div>
 
-            {overview.categories.length > 0 && (
-              <nav aria-label="Categorías" className="mt-10">
-                <ul className="flex flex-wrap gap-2">
-                  {overview.categories.map((group) => (
-                    <li key={group.category}>
-                      <a
-                        href={`#${CATEGORY_ROUTE_SLUGS[group.category]}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/30"
-                      >
-                        {CATEGORY_LABELS[group.category]}
-                        <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">
-                          {group.topics.length}
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            )}
+            <nav aria-label="Categorías" className="mt-10">
+              <ul className="flex flex-wrap gap-2">
+                {overview.categories.map((group) => (
+                  <li key={group.category}>
+                    <a
+                      href={`#${CATEGORY_ROUTE_SLUGS[group.category]}`}
+                      className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/30"
+                    >
+                      {CATEGORY_LABELS[group.category]}
+                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">
+                        {group.topics.length}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+                {/* La cronología es una página propia, no una sección: resume toda la civilización. */}
+                <li>
+                  <Link
+                    href={eraTimelinePath(era)}
+                    className="inline-flex items-center gap-2 rounded-full border border-accent bg-accent-soft px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-background"
+                  >
+                    Cronología completa <span aria-hidden="true">→</span>
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
         </section>
 

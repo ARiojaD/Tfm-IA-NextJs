@@ -11,6 +11,7 @@ import type { EmbeddingService } from "@/application/ports/EmbeddingService";
 import type { HistoricalEventRepository } from "@/application/ports/HistoricalEventRepository";
 import type { ImageCatalog } from "@/application/ports/ImageCatalog";
 import type { KnowledgeIndex } from "@/application/ports/KnowledgeIndex";
+import type { TimelineMilestoneRepository } from "@/application/ports/TimelineMilestoneRepository";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { ProposalDrafter } from "@/application/ports/ProposalDrafter";
 import type { ProposalRepository } from "@/application/ports/ProposalRepository";
@@ -40,6 +41,7 @@ import { ListMyProposalsUseCase } from "@/application/use-cases/ListMyProposalsU
 import { ListPendingProposalsUseCase } from "@/application/use-cases/ListPendingProposalsUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
+import { GetEraTimelineUseCase } from "@/application/use-cases/GetEraTimelineUseCase";
 import { RebuildKnowledgeIndexUseCase } from "@/application/use-cases/RebuildKnowledgeIndexUseCase";
 import { RefreshTopicIndexUseCase } from "@/application/use-cases/RefreshTopicIndexUseCase";
 import { refreshingTopicIndex } from "@/application/use-cases/refreshingTopicIndex";
@@ -77,6 +79,7 @@ import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { InMemoryCommentRepository } from "@/infrastructure/persistence/in-memory/InMemoryCommentRepository";
 import { InMemoryHistoricalEventRepository } from "@/infrastructure/persistence/in-memory/InMemoryHistoricalEventRepository";
 import { InMemoryKnowledgeIndex } from "@/infrastructure/persistence/in-memory/InMemoryKnowledgeIndex";
+import { InMemoryTimelineMilestoneRepository } from "@/infrastructure/persistence/in-memory/InMemoryTimelineMilestoneRepository";
 import { InMemoryLibraryRepository } from "@/infrastructure/persistence/in-memory/InMemoryLibraryRepository";
 import { InMemoryProposalRepository } from "@/infrastructure/persistence/in-memory/InMemoryProposalRepository";
 import { InMemoryQuizRepository } from "@/infrastructure/persistence/in-memory/InMemoryQuizRepository";
@@ -88,6 +91,7 @@ import { createDatabase, type Database } from "@/infrastructure/persistence/post
 import { PostgresCommentRepository } from "@/infrastructure/persistence/postgres/PostgresCommentRepository";
 import { PostgresHistoricalEventRepository } from "@/infrastructure/persistence/postgres/PostgresHistoricalEventRepository";
 import { PostgresKnowledgeIndex } from "@/infrastructure/persistence/postgres/PostgresKnowledgeIndex";
+import { PostgresTimelineMilestoneRepository } from "@/infrastructure/persistence/postgres/PostgresTimelineMilestoneRepository";
 import { PostgresLibraryRepository } from "@/infrastructure/persistence/postgres/PostgresLibraryRepository";
 import { PostgresProposalRepository } from "@/infrastructure/persistence/postgres/PostgresProposalRepository";
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
@@ -144,6 +148,8 @@ interface Repositories {
   proposals: ProposalRepository;
   // El RAG: los fragmentos de los temas publicados con sus vectores.
   knowledge: KnowledgeIndex;
+  // La cronología completa de cada civilización.
+  milestones: TimelineMilestoneRepository;
 }
 
 // Los tests unitarios: repositorios en memoria con el seed. Un solo almacén de temas detrás de los dos
@@ -163,6 +169,7 @@ function inMemoryRepositories(seed: Seed): Repositories {
     images: new StaticImageCatalog(IMAGE_CATALOG),
     proposals: new InMemoryProposalRepository(),
     knowledge: new InMemoryKnowledgeIndex(),
+    milestones: new InMemoryTimelineMilestoneRepository(seed.milestones),
   };
 }
 
@@ -182,6 +189,7 @@ function postgresRepositories(db: Database): Repositories {
     images: new StaticImageCatalog(IMAGE_CATALOG),
     proposals: new PostgresProposalRepository(db),
     knowledge: new PostgresKnowledgeIndex(db),
+    milestones: new PostgresTimelineMilestoneRepository(db),
   };
 }
 
@@ -238,6 +246,7 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
 
   return {
     listTopicsByEra: new ListTopicsByEraUseCase({ topics }),
+    getEraTimeline: new GetEraTimelineUseCase({ milestones: repositories.milestones, topics, events: repositories.events }),
     getTopicDetail: new GetTopicDetailUseCase(repositories),
     addComment: new AddCommentUseCase({
       topics,
@@ -399,6 +408,7 @@ function isBuiltWithCurrentClasses(state: State | undefined): state is State {
     repositories.images instanceof StaticImageCatalog &&
     repositories.proposals instanceof PostgresProposalRepository &&
     repositories.knowledge instanceof PostgresKnowledgeIndex &&
+    repositories.milestones instanceof PostgresTimelineMilestoneRepository &&
     ai.embeddings instanceof TransformersEmbeddingService &&
     ai.answers instanceof OpenAiCompatibleAnswerGenerator &&
     ai.drafter instanceof OpenAiCompatibleContentDrafter &&

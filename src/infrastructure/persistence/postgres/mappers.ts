@@ -5,6 +5,7 @@ import { type KnowledgeChunk, KnowledgeChunkSchema } from "@/domain/entities/Kno
 import { type Proposal, ProposalSchema } from "@/domain/entities/Proposal";
 import { type Quiz, QuizSchema } from "@/domain/entities/Quiz";
 import { type Recommendation, RecommendationSchema } from "@/domain/entities/Recommendation";
+import { type TimelineMilestone, TimelineMilestoneSchema } from "@/domain/entities/TimelineMilestone";
 import { type EntityId, EntityIdSchema } from "@/domain/value-objects/EntityId";
 import type { HistoricalDate } from "@/domain/value-objects/HistoricalDate";
 import { type HistoricalEra, HistoricalEraSchema } from "@/domain/value-objects/HistoricalEra";
@@ -18,6 +19,7 @@ import type {
   quizzes,
   recommendations,
   savedTopics,
+  timelineMilestones,
   topics,
 } from "./schema";
 
@@ -28,6 +30,7 @@ import type {
 
 type TopicRow = typeof topics.$inferSelect;
 type EventRow = typeof historicalEvents.$inferSelect;
+type MilestoneRow = typeof timelineMilestones.$inferSelect;
 type QuizRow = typeof quizzes.$inferSelect;
 type QuizQuestionRow = typeof quizQuestions.$inferSelect;
 type CommentRow = typeof comments.$inferSelect;
@@ -101,6 +104,29 @@ export function toEventRow(event: HistoricalEvent): typeof historicalEvents.$inf
     dateMonth: event.date.month ?? null,
     era: event.era,
     description: event.description,
+  };
+}
+
+export function toMilestone(row: MilestoneRow): TimelineMilestone {
+  return TimelineMilestoneSchema.parse({
+    id: row.id,
+    era: row.era,
+    date: toDate(row.dateYear, row.dateMonth),
+    title: row.title,
+    description: row.description,
+    ...(row.topicId !== null && { topicId: row.topicId }),
+  });
+}
+
+export function toMilestoneRow(milestone: TimelineMilestone): typeof timelineMilestones.$inferInsert {
+  return {
+    id: milestone.id,
+    era: milestone.era,
+    dateYear: milestone.date.year,
+    dateMonth: milestone.date.month ?? null,
+    title: milestone.title,
+    description: milestone.description,
+    topicId: milestone.topicId ?? null,
   };
 }
 

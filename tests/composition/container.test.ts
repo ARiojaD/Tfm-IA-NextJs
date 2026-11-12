@@ -36,6 +36,13 @@ describe("createContainer (en memoria)", () => {
     expect(people?.topics.map((topic) => topic.slug)).toContain("julio-cesar");
   });
 
+  it("conecta GetEraTimeline: las etapas de Roma abren bandas y los eventos de sus temas se pueden añadir", async () => {
+    const timeline = await createContainer().getEraTimeline.execute({ era: "ROMAN", includeTopicEvents: true });
+
+    expect(timeline.items.filter((item) => item.kind === "PERIOD").map((item) => item.topic.slug)).toContain("la-monarquia-romana");
+    expect(timeline.items.some((item) => item.kind === "EVENT" && item.title === "Idus de marzo")).toBe(true);
+  });
+
   it("AddComment y GetTopicDetail comparten el mismo repositorio de comentarios", async () => {
     const container = await containerWithLivia();
 

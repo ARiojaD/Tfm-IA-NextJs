@@ -50,6 +50,13 @@
       "when": 1793879821145,
       "tag": "0006_knowledge_chunks",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794481195204,
+      "tag": "0007_timeline_milestones",
+      "breakpoints": true
     }
   ]
 }

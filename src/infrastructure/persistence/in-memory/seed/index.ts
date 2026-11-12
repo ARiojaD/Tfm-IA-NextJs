@@ -3,6 +3,7 @@ import type { HistoricalEvent } from "@/domain/entities/HistoricalEvent";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { Quiz } from "@/domain/entities/Quiz";
 import type { Recommendation } from "@/domain/entities/Recommendation";
+import type { TimelineMilestone } from "@/domain/entities/TimelineMilestone";
 import {
   juliusCaesarComments,
   juliusCaesarEvents,
@@ -27,6 +28,9 @@ import { thermopylaeEvents, thermopylaeQuiz, thermopylaeRecommendations, thermop
 import { classicalAthensEvents, classicalAthensQuiz, classicalAthensRecommendations, classicalAthensTopic } from "./classicalAthens";
 import { viriathusEvents, viriathusQuiz, viriathusRecommendations, viriathusTopic } from "./viriathus";
 import { siegeOfNumantiaEvents, siegeOfNumantiaQuiz, siegeOfNumantiaRecommendations, siegeOfNumantiaTopic } from "./siegeOfNumantia";
+import { greekTimeline } from "./greekTimeline";
+import { hispaniaTimeline } from "./hispaniaTimeline";
+import { romanTimeline } from "./romanTimeline";
 import { emeritaAugustaEvents, emeritaAugustaQuiz, emeritaAugustaRecommendations, emeritaAugustaTopic } from "./emeritaAugusta";
 
 export interface Seed {
@@ -35,6 +39,8 @@ export interface Seed {
   quizzes: Quiz[];
   comments: Comment[];
   recommendations: Recommendation[];
+  // Los hitos de la cronología completa de cada civilización.
+  milestones: TimelineMilestone[];
 }
 
 // Los datos iniciales de la enciclopedia: los usan los repositorios en memoria y `npm run db:seed` para
@@ -61,4 +67,5 @@ export const SEED: Seed = {
     ...siegeOfNumantiaRecommendations,
     ...emeritaAugustaRecommendations,
   ],
+  milestones: [...romanTimeline, ...greekTimeline, ...hispaniaTimeline],
 };
