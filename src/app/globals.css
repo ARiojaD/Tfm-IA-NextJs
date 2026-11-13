@@ -6,15 +6,15 @@
    the system preference by default, or the user's choice stored in data-theme. */
 :root {
   color-scheme: light dark;
-  --background: light-dark(#f7f3ec, #0f1020);
-  --surface: light-dark(#fffdf9, #181a2e);
+  --background: light-dark(#f7f3ec, #140f1c);
+  --surface: light-dark(#fffdf9, #1d1727);
   --foreground: light-dark(#1f1a17, #ece6dc);
-  --muted: light-dark(#6b625a, #a59d92);
-  --border: light-dark(#e6ddd0, #2a2c44);
+  --muted: light-dark(#6b625a, #ada296);
+  --border: light-dark(#e6ddd0, #352a3f);
   --accent: light-dark(#b4532a, #f08a5d);
   --accent-soft: light-dark(#f5e3d7, #3a2430);
   --dawn-from: light-dark(#f6c9a8, #5a2f3d);
-  --dawn-to: light-dark(#e9a6a6, #2c2550);
+  --dawn-to: light-dark(#e9a6a6, #33224a);
   --era-greece: light-dark(#2f6f9f, #7fb3dc);
   --era-rome: light-dark(#9e2b35, #e07a83);
   --era-hispania: light-dark(#5f7d3a, #a9c77a);
@@ -52,9 +52,14 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-cormorant);
+  --font-display: var(--font-cinzel);
 }
 
+/* Estilo "Aurora y piedra": un grano de piedra muy sutil sobre el color de fondo, dibujado con un filtro
+   SVG de ruido (feTurbulence) en lugar de una imagen, así que no pesa ni hay que descargar nada. El mismo
+   ruido gris funciona en claro y en oscuro. */
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27220%27 height=%27220%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.85%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.07 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E");
   color: var(--foreground);
 }

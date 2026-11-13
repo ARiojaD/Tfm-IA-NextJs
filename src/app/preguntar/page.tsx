@@ -8,9 +8,16 @@ import { askEncyclopedia } from "./actions";
 
 export const metadata: Metadata = { title: "Preguntar · MemnonHistory AI" };
 
-// Asking needs an account (the use case enforces it): visitors see what it is and how to get in.
-export default async function AskPage() {
+// Preguntar exige una cuenta (lo comprueba el caso de uso): los visitantes ven qué es y cómo entrar. La
+// pregunta puede llegar escrita desde la portada (?q=…); solo rellena el formulario, no se envía sola, y al
+// volver de iniciar sesión se conserva.
+const QUESTION_MAX_LENGTH = 300;
+
+export default async function AskPage({ searchParams }: PageProps<"/preguntar">) {
   const user = await getContainer().getCurrentUser.execute();
+  const { q } = await searchParams;
+  const question = typeof q === "string" ? q.trim().slice(0, QUESTION_MAX_LENGTH) : "";
+  const returnTo = question ? `/preguntar?q=${encodeURIComponent(question)}` : "/preguntar";
 
   return (
     <>
@@ -23,9 +30,9 @@ export default async function AskPage() {
           </p>
           <div className="mt-10">
             {user ? (
-              <AskForm action={askEncyclopedia} />
+              <AskForm action={askEncyclopedia} initialQuestion={question} />
             ) : (
-              <SignInToSave label="Inicia sesión para preguntar" hint="Es gratis y solo necesitas un email." returnTo="/preguntar" />
+              <SignInToSave label="Inicia sesión para preguntar" hint="Es gratis y solo necesitas un email." returnTo={returnTo} />
             )}
           </div>
         </div>

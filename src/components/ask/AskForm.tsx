@@ -16,8 +16,14 @@ const QUESTION_MAX_LENGTH = 300;
 
 // maxLength only helps the visitor; the real validation happens on the server (AskEncyclopediaUseCase).
 // After an action React resets the form to defaultValue, which is the question just asked.
-export function AskForm({ action }: { action: (state: AskFormState, formData: FormData) => Promise<AskFormState> }) {
-  const [state, formAction, isPending] = useActionState(action, INITIAL_STATE);
+export function AskForm({
+  action,
+  initialQuestion = "",
+}: {
+  action: (state: AskFormState, formData: FormData) => Promise<AskFormState>;
+  initialQuestion?: string;
+}) {
+  const [state, formAction, isPending] = useActionState(action, { ...INITIAL_STATE, question: initialQuestion });
 
   return (
     <div className="space-y-6">

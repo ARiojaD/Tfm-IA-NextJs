@@ -40,7 +40,7 @@ src/
 │   ├── (dashboard)/        # Vistas de la aplicación protegida
 │   └── layout.tsx
 ├── components/             # ⚪ PRESENTACIÓN: componentes de UI (React + Tailwind CSS)
-└── lib/                    # ⚪ PRESENTACIÓN: utilidades de la interfaz (formato de fechas, tema, datos demo)
+└── lib/                    # ⚪ PRESENTACIÓN: utilidades de la interfaz (formato de fechas, rutas, tema, escala de la portada)
 
 tests/                      # Tests, fuera de src/, replicando su estructura
 ├── domain/                 # Unitarios del dominio

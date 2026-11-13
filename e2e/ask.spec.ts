@@ -10,8 +10,28 @@ test.describe("Preguntar a la enciclopedia", () => {
     await expect(page).toHaveURL("/iniciar-sesion?volver=%2Fpreguntar");
   });
 
+  test("la pregunta escrita en la portada se conserva al pasar por iniciar sesión", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByRole("searchbox", { name: "Tu pregunta a la enciclopedia" }).fill("¿Quién fundó Emerita Augusta?");
+    await page.getByRole("button", { name: "Preguntar" }).click();
+
+    await expect(page).toHaveURL(/\/preguntar\?q=/);
+    await expect(page.getByRole("link", { name: "Inicia sesión para preguntar" })).toHaveAttribute(
+      "href",
+      `/iniciar-sesion?volver=${encodeURIComponent(`/preguntar?q=${encodeURIComponent("¿Quién fundó Emerita Augusta?")}`)}`,
+    );
+  });
+
   test.describe("con sesión", () => {
     test.use({ storageState: AUTHOR_STORAGE_STATE });
+
+    test("la pregunta que llega desde la portada aparece escrita, sin enviarse sola", async ({ page }) => {
+      await page.goto(`/preguntar?q=${encodeURIComponent("¿Quién fundó Emerita Augusta?")}`);
+
+      await expect(page.getByLabel("Tu pregunta")).toHaveValue("¿Quién fundó Emerita Augusta?");
+      await expect(page.getByRole("region", { name: "Respuesta" })).toBeEmpty();
+    });
 
     test("responde citando la fuente, y la cita lleva al evento exacto de la cronología", async ({ page }) => {
       await page.goto("/preguntar");

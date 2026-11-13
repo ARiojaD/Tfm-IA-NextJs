@@ -86,7 +86,9 @@ Todo funciona **sin coste y sin enviar datos fuera** en desarrollo: los embeddin
   - **Propuestas:** bandeja `/admin/propuestas` con las pendientes; aprobar aplica la propuesta (el evento o la recomendación se añaden al tema, un tema nuevo se crea como borrador, una corrección se marca como resuelta) y rechazar exige un motivo.
   - **Acceso:** sin sesión lleva a iniciar sesión; a una cuenta normal le responde 404.
 - **Propuestas** (`/mi-biblioteca/propuestas`, y "Proponer una mejora" en cada tema): los usuarios proponen eventos, recomendaciones, correcciones o temas nuevos, solo texto y siempre con su fuente. Ven el estado de cada una (pendiente, aprobada o rechazada con su motivo). Como mucho 10 propuestas por hora.
-- **Portada de presentación** con una cronología de ejemplo y una consulta RAG ilustrativa.
+- **Portada** con una caja para preguntar a la enciclopedia, las cifras reales, las civilizaciones, la **Línea de la Antigüedad** (las tres civilizaciones en una misma escala de tiempo, con sus etapas e hitos enlazados) y un ejemplo de consulta con fuentes reales.
+- **Cronología completa de cada civilización** (`/roma/cronologia`…): los hitos en orden, las etapas como bandas (y las subetapas dentro), enlaces a los temas y, si se pide, los eventos de los temas. Se edita desde el panel.
+- **Estilo «Aurora y piedra»:** la identidad de Memnón, hijo de la Aurora, con grano de piedra, grecas y las capitulares de las inscripciones romanas (Cinzel).
 - **Modo claro y oscuro:** sigue la preferencia del sistema y recuerda la elección del usuario.
 - **Diseño adaptado a móvil** e interfaz en español.
 

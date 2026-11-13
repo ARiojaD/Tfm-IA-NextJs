@@ -97,3 +97,23 @@ test.describe("Editor de la cronología en el panel", () => {
     });
   });
 });
+
+test.describe("La portada", () => {
+  test("muestra las cifras reales y la Línea de la Antigüedad, cuyos hitos llevan a su tema", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByText("hitos en la cronología")).toBeVisible();
+    const timeline = page.locator("#cronologia");
+    await expect(timeline.getByRole("link", { name: "La República romana" })).toBeVisible();
+
+    await timeline.getByRole("link", { name: "753 a.C.: Fundación de Roma" }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Rómulo y la fundación de Roma");
+  });
+
+  test("cada civilización enlaza a sus temas y a su cronología", async ({ page }) => {
+    await page.goto("/");
+
+    await page.locator("#civilizaciones").getByRole("link", { name: "Cronología" }).first().click();
+    await expect(page).toHaveURL("/roma/cronologia");
+  });
+});

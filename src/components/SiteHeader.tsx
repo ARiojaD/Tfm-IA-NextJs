@@ -15,7 +15,7 @@ export async function SiteHeader() {
 
   return (
     <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-      <Link href="/" className="font-serif text-xl font-bold tracking-tight">
+      <Link href="/" className="font-display text-lg font-semibold tracking-wide">
         Memnon<span className="text-accent">History</span> AI
       </Link>
       <div className="flex items-center gap-4 sm:gap-6">
