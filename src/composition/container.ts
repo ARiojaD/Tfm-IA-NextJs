@@ -41,7 +41,9 @@ import { ListMyProposalsUseCase } from "@/application/use-cases/ListMyProposalsU
 import { ListPendingProposalsUseCase } from "@/application/use-cases/ListPendingProposalsUseCase";
 import { ListTopicsByEraUseCase } from "@/application/use-cases/ListTopicsByEraUseCase";
 import { ListTopicsForAdminUseCase } from "@/application/use-cases/ListTopicsForAdminUseCase";
+import { GetEraTimelineForEditingUseCase } from "@/application/use-cases/GetEraTimelineForEditingUseCase";
 import { GetEraTimelineUseCase } from "@/application/use-cases/GetEraTimelineUseCase";
+import { UpdateEraMilestonesUseCase } from "@/application/use-cases/UpdateEraMilestonesUseCase";
 import { RebuildKnowledgeIndexUseCase } from "@/application/use-cases/RebuildKnowledgeIndexUseCase";
 import { RefreshTopicIndexUseCase } from "@/application/use-cases/RefreshTopicIndexUseCase";
 import { refreshingTopicIndex } from "@/application/use-cases/refreshingTopicIndex";
@@ -268,6 +270,9 @@ function createUseCases({ clock, repositories, rateLimiters, breachedPasswords, 
     getAdminAccess: new GetAdminAccessUseCase({ auth, roles }),
     listTopicsForAdmin: new ListTopicsForAdminUseCase({ topicEditor, auth, roles }),
     getTopicForEditing: new GetTopicForEditingUseCase({ ...repositories, auth, roles }),
+    getEraTimelineForEditing: new GetEraTimelineForEditingUseCase({ ...repositories, auth, roles }),
+    // Los hitos no se indexan en el RAG, así que guardarlos no reindexa nada.
+    updateEraMilestones: new UpdateEraMilestonesUseCase({ ...editor, milestones: repositories.milestones, ids }),
     getTopicPreview: new GetTopicPreviewUseCase({ ...repositories, auth, roles }),
     createTopic: new CreateTopicUseCase({ ...editor, ids }),
     updateTopicBasics: indexed(new UpdateTopicBasicsUseCase(editor)),

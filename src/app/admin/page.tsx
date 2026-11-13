@@ -8,6 +8,7 @@ import { getContainer } from "@/composition/container";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
 import { ERA_LABELS } from "@/lib/eraLabels";
 import { formatHistoricalPeriod } from "@/lib/formatHistoricalPeriod";
+import { ERA_ROUTE_SLUGS } from "@/lib/routes";
 import { adminPageMetadata, denyAdminPage } from "./adminPageAccess";
 
 export function generateMetadata(): Promise<Metadata> {
@@ -72,9 +73,14 @@ export default async function AdminPage() {
                   <span className="text-sm text-muted">
                     {topics.length} {topics.length === 1 ? "tema" : "temas"}
                   </span>
-                  <Link href={`/admin/temas/nuevo?era=${era}`} className="ml-auto text-sm font-medium text-accent hover:underline">
-                    Añadir tema a {ERA_LABELS[era]}
-                  </Link>
+                  <div className="ml-auto flex flex-wrap gap-4">
+                    <Link href={`/admin/cronologia/${ERA_ROUTE_SLUGS[era]}`} className="text-sm font-medium text-accent hover:underline">
+                      Editar la cronología de {ERA_LABELS[era]}
+                    </Link>
+                    <Link href={`/admin/temas/nuevo?era=${era}`} className="text-sm font-medium text-accent hover:underline">
+                      Añadir tema a {ERA_LABELS[era]}
+                    </Link>
+                  </div>
                 </div>
 
                 {topics.length > 0 ? (

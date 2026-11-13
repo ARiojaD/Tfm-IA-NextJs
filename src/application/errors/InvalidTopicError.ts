@@ -7,6 +7,7 @@ const ROW_LABELS: Record<string, string> = {
   questions: "Pregunta",
   recommendations: "Recomendación",
   relatedTopicIds: "Tema",
+  milestones: "Hito",
 };
 
 // Fallo de validación en el editor de temas. `fieldErrors` asigna a cada campo del formulario sus
