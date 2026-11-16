@@ -1,22 +1,26 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PageHero } from "@/components/PageHero";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { HERO_IMAGE } from "@/lib/eraImages";
 
-// Frame of the panel's inner pages: a way back to the panel, the title and the content.
+// El marco de las páginas interiores del panel: la cabecera común (con el rótulo "Administración" y la
+// vuelta al panel), el título y el contenido.
 export function AdminPageLayout({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
     <>
       <SiteHeader />
       <main className="flex-1">
-        <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
+        <PageHero image={HERO_IMAGE} width="max-w-3xl">
           <Link href="/admin" className="text-sm text-muted hover:text-foreground">
             ← Volver al panel
           </Link>
-          <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{title}</h1>
+          <p className="mt-6 font-display text-sm font-medium uppercase tracking-[0.3em] text-accent">Administración</p>
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{title}</h1>
           {intro && <div className="mt-4 text-muted">{intro}</div>}
-          <div className="mt-10 space-y-10">{children}</div>
-        </div>
+        </PageHero>
+        <div className="mx-auto max-w-3xl space-y-10 px-4 pb-20 pt-12 sm:px-6">{children}</div>
       </main>
       <SiteFooter />
     </>

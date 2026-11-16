@@ -129,7 +129,7 @@ export const romanKingdomQuiz = QuizSchema.parse({
       id: "question-kingdom-election",
       question: "¿Cómo llegaba al trono un rey de Roma?",
       options: [
-        "Lo votaba el pueblo, con la aprobación de los dioses",
+        "Lo elegía el pueblo, a propuesta del Senado y con el favor de los auspicios",
         "Lo heredaba el hijo mayor del rey anterior",
         "Lo nombraba el rey de Alba Longa",
         "Lo sorteaban los senadores",

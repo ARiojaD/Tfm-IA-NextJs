@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { AskForm } from "@/components/ask/AskForm";
 import { SignInToSave } from "@/components/library/SignInToSave";
+import { Eyebrow, PageHero } from "@/components/PageHero";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getContainer } from "@/composition/container";
+import { HERO_IMAGE } from "@/lib/eraImages";
 import { askEncyclopedia } from "./actions";
 
 export const metadata: Metadata = { title: "Preguntar · MemnonHistory AI" };
@@ -23,12 +25,15 @@ export default async function AskPage({ searchParams }: PageProps<"/preguntar">)
     <>
       <SiteHeader />
       <main className="flex-1">
-        <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
-          <h1 className="font-serif text-4xl font-semibold tracking-tight sm:text-5xl">Pregunta a la enciclopedia</h1>
-          <p className="mt-4 text-muted">
+        <PageHero image={HERO_IMAGE} width="max-w-3xl">
+          <Eyebrow>Consulta</Eyebrow>
+          <h1 className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">Pregunta a la enciclopedia</h1>
+          <p className="mt-6 text-lg leading-8 text-muted">
             La respuesta sale solo del contenido revisado de la web, y cada dato enlaza al sitio donde se habla de ello.
           </p>
-          <div className="mt-10">
+        </PageHero>
+        <div className="mx-auto max-w-3xl px-4 pb-20 pt-12 sm:px-6">
+          <div>
             {user ? (
               <AskForm action={askEncyclopedia} initialQuestion={question} />
             ) : (

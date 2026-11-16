@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import { EraBadge } from "@/components/EraBadge";
 import { FollowEraButton } from "@/components/library/FollowEraButton";
 import { SaveTopicButton } from "@/components/library/SaveTopicButton";
+import { Eyebrow, PageHero } from "@/components/PageHero";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TopicCard } from "@/components/topic/TopicCard";
 import { getContainer } from "@/composition/container";
+import { HERO_IMAGE } from "@/lib/eraImages";
 import { ERA_LABELS } from "@/lib/eraLabels";
 import { eraPath } from "@/lib/routes";
 
@@ -32,23 +34,18 @@ export default async function MyLibraryPage() {
       <SiteHeader />
 
       <main className="flex-1">
-        <section className="relative isolate">
-          <div
-            className="pointer-events-none absolute inset-x-0 -top-40 -z-10 mx-auto h-96 max-w-4xl rounded-full bg-gradient-to-r from-dawn-from to-dawn-to opacity-50 blur-3xl"
-            aria-hidden="true"
-          />
-          <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6 sm:pt-16">
-            <h1 className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">Mi biblioteca</h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-              Las civilizaciones que sigues, con todos sus temas, y los temas que has guardado.
-            </p>
-            <Link href="/mi-biblioteca/propuestas" className="mt-4 inline-block text-sm font-medium text-accent hover:underline">
-              Mis propuestas: ayuda a completar la enciclopedia →
-            </Link>
-          </div>
-        </section>
+        <PageHero image={HERO_IMAGE}>
+          <Eyebrow>Tu cuenta</Eyebrow>
+          <h1 className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">Mi biblioteca</h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
+            Las civilizaciones que sigues, con todos sus temas, y los temas que has guardado.
+          </p>
+          <Link href="/mi-biblioteca/propuestas" className="mt-4 inline-block text-sm font-medium text-accent hover:underline">
+            Mis propuestas: ayuda a completar la enciclopedia →
+          </Link>
+        </PageHero>
 
-        <div className="mx-auto max-w-6xl space-y-16 px-4 pb-20 sm:px-6">
+        <div className="mx-auto max-w-6xl space-y-16 px-4 pb-20 pt-12 sm:px-6">
           {isEmpty && (
             <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
               <p>Tu biblioteca está vacía.</p>

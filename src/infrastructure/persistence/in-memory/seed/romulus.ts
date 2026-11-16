@@ -116,10 +116,10 @@ export const romulusQuiz = QuizSchema.parse({
     },
     {
       id: "question-romulus-quirinus",
-      question: "¿Como qué dios fue venerado Rómulo tras su desaparición?",
+      question: "Tras su desaparición, Rómulo fue venerado como un dios. ¿Con qué nombre?",
       options: ["Quirino", "Marte", "Jano", "Júpiter"],
       correctOptionIndex: 0,
-      explanation: "El monte Quirinal de Roma lleva su nombre.",
+      explanation: "Según la tradición, la colina del Quirinal debe su nombre a este dios.",
     },
   ],
 });

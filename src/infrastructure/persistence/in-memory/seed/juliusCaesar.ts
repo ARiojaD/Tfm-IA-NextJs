@@ -132,7 +132,7 @@ export const juliusCaesarQuiz = QuizSchema.parse({
   questions: [
     {
       id: "question-caesar-rubicon",
-      question: "¿Qué río cruzó César en el 49 a.C., desencadenando la guerra civil?",
+      question: "¿Al cruzar qué río desencadenó César la guerra civil en el 49 a.C.?",
       options: ["Tíber", "Rubicón", "Po", "Arno"],
       correctOptionIndex: 1,
       explanation:

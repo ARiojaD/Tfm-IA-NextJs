@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProposalDetails } from "@/components/proposals/ProposalDetails";
 import { ProposalForm } from "@/components/proposals/ProposalForm";
+import { Breadcrumbs, PageHero } from "@/components/PageHero";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getContainer } from "@/composition/container";
+import { HERO_IMAGE } from "@/lib/eraImages";
 import { HISTORICAL_ERAS } from "@/domain/value-objects/HistoricalEra";
 import { SlugSchema } from "@/domain/value-objects/Slug";
 import { draftProposal, submitProposal } from "./actions";
@@ -36,17 +37,16 @@ export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-b
     <>
       <SiteHeader />
       <main className="flex-1">
-        <div className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
-          <Link href="/mi-biblioteca" className="text-sm text-muted hover:text-foreground">
-            ← Mi biblioteca
-          </Link>
-          <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight sm:text-5xl">Mis propuestas</h1>
-          <p className="mt-4 text-muted">
+        <PageHero image={HERO_IMAGE} width="max-w-3xl">
+          <Breadcrumbs items={[{ label: "Mi biblioteca", href: "/mi-biblioteca" }, { label: "Mis propuestas" }]} />
+          <h1 className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">Mis propuestas</h1>
+          <p className="mt-6 text-lg leading-8 text-muted">
             Ayuda a completar la enciclopedia: propón un evento, una recomendación, una corrección o un tema nuevo. Un
             administrador lo revisa antes de publicarlo.
           </p>
-
-          <section aria-labelledby="nueva-propuesta" className="mt-10 rounded-3xl border border-border bg-surface p-6 sm:p-8">
+        </PageHero>
+        <div className="mx-auto max-w-3xl px-4 pb-20 pt-12 sm:px-6">
+          <section aria-labelledby="nueva-propuesta" className="rounded-3xl border border-border bg-surface p-6 sm:p-8">
             <h2 id="nueva-propuesta" className="mb-6 font-serif text-2xl font-semibold">
               Nueva propuesta
             </h2>

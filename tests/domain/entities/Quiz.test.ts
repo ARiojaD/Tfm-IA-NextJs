@@ -3,7 +3,7 @@ import { QuizSchema } from "@/domain/entities/Quiz";
 
 const validQuestion = {
   id: "q-1",
-  question: "¿Qué río cruzó César en el 49 a.C., desencadenando la guerra civil?",
+  question: "¿Al cruzar qué río desencadenó César la guerra civil en el 49 a.C.?",
   options: ["Tíber", "Rubicón", "Po"],
   correctOptionIndex: 1,
   explanation: "Cruzar el Rubicón con sus legiones era ilegal y equivalía a declarar la guerra al Senado.",

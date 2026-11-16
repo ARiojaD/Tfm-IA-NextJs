@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { EraBadge } from "@/components/EraBadge";
+import { Breadcrumbs, PageHero } from "@/components/PageHero";
 import { EraTimelineView } from "@/components/era/EraTimelineView";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getContainer } from "@/composition/container";
+import { ERA_IMAGES } from "@/lib/eraImages";
 import { ERA_LABELS } from "@/lib/eraLabels";
 import { eraFromRouteSlug, eraPath, eraTimelinePath, TIMELINE_EVENTS_PARAM } from "@/lib/routes";
 
@@ -40,58 +42,42 @@ export default async function EraTimelinePage({ params, searchParams }: PageProp
       <SiteHeader />
 
       <main className="flex-1">
-        <section className="relative isolate">
-          <div
-            className="pointer-events-none absolute inset-x-0 -top-40 -z-10 mx-auto h-96 max-w-4xl rounded-full bg-gradient-to-r from-dawn-from to-dawn-to opacity-50 blur-3xl"
-            aria-hidden="true"
+        <PageHero image={ERA_IMAGES[era].src} width="max-w-5xl">
+          <Breadcrumbs
+          items={[{ label: "Inicio", href: "/" }, { label: ERA_LABELS[era], href: eraPath(era) }, { label: "Cronología completa" }]}
           />
-          <div className="mx-auto max-w-5xl px-4 pb-10 pt-10 sm:px-6 sm:pt-16">
-            <nav aria-label="Ruta de navegación" className="mb-8 text-sm text-muted">
-              <ol className="flex flex-wrap items-center gap-2">
+
+          <EraBadge era={era} />
+          <h1 className="mt-4 font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+            Cronología de {ERA_LABELS[era]}
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
+            Los momentos clave en orden, de un vistazo. Cada hito lleva a su tema, y los que aún no tienen tema se
+            pueden proponer.
+          </p>
+
+          {timeline.topicEventCount > 0 && (
+            <nav aria-label="Qué mostrar" className="mt-8">
+              <ul className="flex flex-wrap gap-2">
                 <li>
-                  <Link href="/" className="hover:text-foreground">Inicio</Link>
+                  <ViewOption href={eraTimelinePath(era)} current={!includeTopicEvents}>
+                    Solo los hitos
+                  </ViewOption>
                 </li>
-                <li aria-hidden="true">/</li>
                 <li>
-                  <Link href={eraPath(era)} className="hover:text-foreground">{ERA_LABELS[era]}</Link>
+                  <ViewOption href={eraTimelinePath(era, { withTopicEvents: true })} current={includeTopicEvents}>
+                    Con los eventos de los temas
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">
+                      {timeline.topicEventCount}
+                    </span>
+                  </ViewOption>
                 </li>
-                <li aria-hidden="true">/</li>
-                <li aria-current="page" className="text-foreground">Cronología completa</li>
-              </ol>
+              </ul>
             </nav>
+          )}
+        </PageHero>
 
-            <EraBadge era={era} />
-            <h1 className="mt-4 font-serif text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-              Cronología de {ERA_LABELS[era]}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-              Los momentos clave en orden, de un vistazo. Cada hito lleva a su tema, y los que aún no tienen tema se
-              pueden proponer.
-            </p>
-
-            {timeline.topicEventCount > 0 && (
-              <nav aria-label="Qué mostrar" className="mt-8">
-                <ul className="flex flex-wrap gap-2">
-                  <li>
-                    <ViewOption href={eraTimelinePath(era)} current={!includeTopicEvents}>
-                      Solo los hitos
-                    </ViewOption>
-                  </li>
-                  <li>
-                    <ViewOption href={eraTimelinePath(era, { withTopicEvents: true })} current={includeTopicEvents}>
-                      Con los eventos de los temas
-                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs text-accent">
-                        {timeline.topicEventCount}
-                      </span>
-                    </ViewOption>
-                  </li>
-                </ul>
-              </nav>
-            )}
-          </div>
-        </section>
-
-        <div className="mx-auto max-w-5xl px-4 pb-20 sm:px-6">
+        <div className="mx-auto max-w-5xl px-4 pb-20 pt-12 sm:px-6">
           {isEmpty ? (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
               Muy pronto añadiremos la cronología de {ERA_LABELS[era]}.

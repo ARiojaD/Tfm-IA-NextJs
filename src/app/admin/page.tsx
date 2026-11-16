@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TopicStatusBadge } from "@/components/admin/TopicStatusBadge";
 import { EraBadge } from "@/components/EraBadge";
+import { Eyebrow, PageHero } from "@/components/PageHero";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getContainer } from "@/composition/container";
 import { CATEGORY_LABELS } from "@/lib/categoryLabels";
+import { HERO_IMAGE } from "@/lib/eraImages";
 import { ERA_LABELS } from "@/lib/eraLabels";
 import { formatHistoricalPeriod } from "@/lib/formatHistoricalPeriod";
 import { ERA_ROUTE_SLUGS } from "@/lib/routes";
@@ -36,9 +38,9 @@ export default async function AdminPage() {
       <SiteHeader />
 
       <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
-          <p className="text-sm font-medium uppercase tracking-wider text-accent">Administración</p>
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+        <PageHero image={HERO_IMAGE}>
+          <Eyebrow>Administración</Eyebrow>
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <h1 className="font-serif text-5xl font-semibold leading-[1.05] tracking-tight">Panel</h1>
             <Link
               href="/admin/temas/nuevo"
@@ -61,8 +63,10 @@ export default async function AdminPage() {
               {withoutImage} {withoutImage === 1 ? "tema sin imagen" : "temas sin imagen"}: puedes elegirla en su editor cuando la haya en el catálogo.
             </p>
           )}
+        </PageHero>
 
-          <div className="mt-12 space-y-12">
+        <div className="mx-auto max-w-6xl px-4 pb-20 pt-12 sm:px-6">
+          <div className="space-y-12">
             {result.data.map(({ era, topics }) => (
               <section key={era} aria-labelledby={`admin-${era}`}>
                 <div className="flex flex-wrap items-center gap-3">

@@ -121,7 +121,7 @@ export const periclesQuiz = QuizSchema.parse({
     },
     {
       id: "question-pericles-war",
-      question: "¿Contra qué ciudad comenzó Atenas la Guerra del Peloponeso?",
+      question: "¿Contra qué ciudad se enfrentó Atenas en la Guerra del Peloponeso?",
       options: ["Tebas", "Corinto", "Siracusa", "Esparta"],
       correctOptionIndex: 3,
     },
