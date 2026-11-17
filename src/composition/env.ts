@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { REASONING_EFFORTS } from "@/infrastructure/ai/reasoningEffort";
 
 // La configuración del servidor, validada la primera vez que se usa (OWASP A05): una variable que falta o
 // está mal formada detiene la aplicación con un mensaje claro, en lugar de fallar más tarde de forma
@@ -24,6 +25,9 @@ export const LlmEnvSchema = z.object({
   LLM_BASE_URL: z.url({ protocol: /^https?$/ }).default("http://127.0.0.1:11434/v1"),
   LLM_MODEL: z.string().trim().min(1).default("qwen2.5:7b"),
   LLM_API_KEY: z.string().trim().min(1).optional(),
+  // Solo para los modelos que razonan antes de responder (gpt-oss en Groq): cuánto pensar. Sin la variable
+  // no se envía nada, que es lo que espera Ollama.
+  LLM_REASONING_EFFORT: z.enum(REASONING_EFFORTS).optional(),
 });
 
 export type DatabaseEnv = z.infer<typeof DatabaseEnvSchema>;

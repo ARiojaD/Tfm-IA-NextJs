@@ -1,6 +1,11 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText, type LanguageModel, Output } from "ai";
 import type { z } from "zod";
+import type { ReasoningEffort } from "./reasoningEffort";
+
+// Un modelo que razona gasta tokens pensando antes de escribir la respuesta, y cuentan dentro del mismo
+// tope: sin este margen, la respuesta se cortaría a medias y no sería JSON válido.
+const REASONING_TOKEN_ALLOWANCE = 1024;
 
 // La configuración del modelo de lenguaje, que sale de las variables `LLM_*` (ver `composition/container.ts`).
 export interface LlmConfig {
@@ -8,6 +13,7 @@ export interface LlmConfig {
   model: string;
   apiKey?: string;
   timeoutMs: number;
+  reasoningEffort?: ReasoningEffort;
 }
 
 // Cualquier servidor que hable el protocolo de OpenAI: Ollama en desarrollo y, cambiando `LLM_BASE_URL`,
@@ -39,7 +45,8 @@ export async function generateStructured<Schema extends z.ZodType<object>>(
       prompt,
       output: Output.object({ schema, name }),
       temperature: 0.1,
-      maxOutputTokens,
+      maxOutputTokens: maxOutputTokens + (config.reasoningEffort ? REASONING_TOKEN_ALLOWANCE : 0),
+      ...(config.reasoningEffort && { providerOptions: { llm: { reasoningEffort: config.reasoningEffort } } }),
       maxRetries: 0,
       abortSignal: AbortSignal.timeout(config.timeoutMs),
     });

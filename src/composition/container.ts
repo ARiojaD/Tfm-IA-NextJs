@@ -376,8 +376,14 @@ function getDatabase(): Database {
 }
 
 function llmConfig(): LlmConfig {
-  const { LLM_BASE_URL, LLM_MODEL, LLM_API_KEY } = parseLlmEnv(process.env);
-  return { baseURL: LLM_BASE_URL, model: LLM_MODEL, apiKey: LLM_API_KEY, timeoutMs: LLM_TIMEOUT_MS };
+  const { LLM_BASE_URL, LLM_MODEL, LLM_API_KEY, LLM_REASONING_EFFORT } = parseLlmEnv(process.env);
+  return {
+    baseURL: LLM_BASE_URL,
+    model: LLM_MODEL,
+    apiKey: LLM_API_KEY,
+    timeoutMs: LLM_TIMEOUT_MS,
+    reasoningEffort: LLM_REASONING_EFFORT,
+  };
 }
 
 function getBetterAuth(): BetterAuth {

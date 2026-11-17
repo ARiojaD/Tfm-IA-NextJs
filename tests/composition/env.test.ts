@@ -102,4 +102,12 @@ describe("parseLlmEnv", () => {
     expect(() => parseLlmEnv({ LLM_BASE_URL: "ftp://secreto.example.com" })).toThrow(/LLM_BASE_URL/);
     expect(() => parseLlmEnv({ LLM_BASE_URL: "ftp://secreto.example.com" })).not.toThrow(/secreto/);
   });
+
+  it("acepta cuánto debe razonar el modelo, para los que razonan antes de responder (gpt-oss)", () => {
+    expect(parseLlmEnv({ LLM_REASONING_EFFORT: "low" })).toMatchObject({ LLM_REASONING_EFFORT: "low" });
+  });
+
+  it("rechaza un nivel de razonamiento desconocido", () => {
+    expect(() => parseLlmEnv({ LLM_REASONING_EFFORT: "máximo" })).toThrow(/LLM_REASONING_EFFORT/);
+  });
 });

@@ -84,7 +84,7 @@ describe("OpenAiCompatibleAnswerGenerator", () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
-  const generator = (options: { apiKey?: string; timeoutMs?: number } = {}) =>
+  const generator = (options: { apiKey?: string; timeoutMs?: number; reasoningEffort?: "low" | "medium" | "high" } = {}) =>
     new OpenAiCompatibleAnswerGenerator({ baseURL, model: "modelo-de-prueba", timeoutMs: 5_000, ...options });
 
   it("devuelve la respuesta estructurada del modelo", async () => {
@@ -105,6 +105,25 @@ describe("OpenAiCompatibleAnswerGenerator", () => {
     });
     const messages = requestBody?.messages as { role: string }[];
     expect(messages.map((message) => message.role)).toEqual(["system", "user"]);
+  });
+
+  it("sin nivel de razonamiento configurado no lo envía (Ollama no lo necesita)", async () => {
+    respond = chatResponse(JSON.stringify({ coverage: "NONE", answer: "", missing: "" }));
+
+    await generator().answer("¿Cuándo?", sources);
+
+    expect(requestBody).not.toHaveProperty("reasoning_effort");
+  });
+
+  it("con nivel de razonamiento lo envía y deja más tokens, porque el razonamiento también los gasta", async () => {
+    respond = chatResponse(JSON.stringify({ coverage: "NONE", answer: "", missing: "" }));
+    await generator().answer("¿Cuándo?", sources);
+    const withoutReasoning = requestBody?.max_tokens as number;
+
+    await generator({ reasoningEffort: "low" }).answer("¿Cuándo?", sources);
+
+    expect(requestBody?.reasoning_effort).toBe("low");
+    expect(requestBody?.max_tokens).toBeGreaterThan(withoutReasoning);
   });
 
   it("envía la clave solo si la hay", async () => {

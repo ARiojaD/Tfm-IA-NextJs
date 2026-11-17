@@ -19,7 +19,12 @@
     "admin:grant": "tsx scripts/admin-role.ts grant",
     "admin:revoke": "tsx scripts/admin-role.ts revoke",
     "rag:index": "tsx scripts/rag-index.ts",
-    "auth:secret": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('base64'))\""
+    "model:download": "tsx scripts/model-download.ts",
+    "auth:secret": "node -e \"console.log(require('node:crypto').randomBytes(32).toString('base64'))\"",
+    "neon:migrate": "node --env-file=.env.neon node_modules/drizzle-kit/bin.cjs migrate",
+    "neon:seed": "tsx --env-file=.env.neon scripts/db-seed.ts",
+    "neon:index": "tsx --env-file=.env.neon scripts/rag-index.ts",
+    "neon:admin": "tsx --env-file=.env.neon scripts/admin-role.ts grant"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.73",
@@ -27,7 +32,7 @@
     "ai": "7.0.145",
     "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.4",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -41,7 +46,7 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
