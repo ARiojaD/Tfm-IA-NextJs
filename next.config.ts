@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 // El motor de ONNX para Linux x64, que es lo que ejecuta Vercel. Los binarios de otros sistemas y los de GPU
-// (CUDA) no se usan y harían pasar a las funciones del límite de tamaño.
+// (CUDA) no se usan y harían pasar a las funciones del límite de tamaño. onnxruntime-node carga la versión
+// CommonJS de onnxruntime-common, y el rastreo solo ve la ESM (la que importa Transformers.js).
 const ONNX_RUNTIME_FILES = [
+  "./node_modules/onnxruntime-common/**/*",
   "./node_modules/onnxruntime-node/package.json",
   "./node_modules/onnxruntime-node/dist/**/*",
   "./node_modules/onnxruntime-node/bin/napi-v6/linux/x64/onnxruntime_binding.node",
