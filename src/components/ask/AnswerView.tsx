@@ -3,9 +3,10 @@ import type { AnswerSourceView, EncyclopediaAnswer } from "@/application/use-cas
 import { KNOWLEDGE_SOURCE_NAMES } from "@/domain/entities/KnowledgeChunk";
 import { knowledgeChunkPath } from "@/lib/routes";
 
-// The answer is rendered as React text and links built from our own data: nothing the model wrote can
-// become HTML or a URL (OWASP LLM02). Citations are plain <a>, not <Link>: client-side navigation does not
-// update the browser's :target, and that is what highlights the cited paragraph on arrival.
+// La respuesta se pinta como texto de React y enlaces construidos con nuestros datos: nada de lo que
+// escribió el modelo puede convertirse en HTML o en una URL (OWASP LLM02). Las citas son <a> normales, no
+// <Link>: la navegación en el cliente no actualiza el :target del navegador, que es lo que resalta el
+// párrafo citado al llegar.
 export function AnswerView({ answer }: { answer: EncyclopediaAnswer }) {
   if (answer.status === "NO_INFORMATION") {
     return <NoInformation />;

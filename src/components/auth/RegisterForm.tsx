@@ -7,7 +7,7 @@ import { AuthField } from "./AuthField";
 import { type AuthFormState, INITIAL_AUTH_FORM_STATE } from "./authFormState";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 
-// The browser limits (maxLength, type="email") only help the visitor; the server validates everything.
+// Los límites del navegador (maxLength, type="email") solo ayudan al visitante; el servidor lo valida todo.
 export function RegisterForm({
   action,
   volver,
@@ -18,7 +18,7 @@ export function RegisterForm({
   const [password, setPassword] = useState("");
   const [state, formAction, isPending] = useActionState(async (previous: AuthFormState, formData: FormData) => {
     const next = await action(previous, formData);
-    setPassword(""); // The password field is emptied after every attempt: so is its meter.
+    setPassword(""); // El campo de contraseña se vacía tras cada intento, y su indicador también.
     return next;
   }, INITIAL_AUTH_FORM_STATE);
 

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { defineConfig } from "drizzle-kit";
 import { parseDatabaseEnv } from "./src/composition/env";
 
-// drizzle-kit does not read .env.local on its own (Next.js does). Variables already set in the shell win.
+// drizzle-kit no lee .env.local por su cuenta (Next.js sí). Las variables que ya estén en la terminal ganan.
 if (existsSync(".env.local")) {
   process.loadEnvFile(".env.local");
 }

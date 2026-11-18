@@ -3,7 +3,7 @@ import type { ProposalRepository } from "@/application/ports/ProposalRepository"
 import type { Proposal } from "@/domain/entities/Proposal";
 import { aProposal } from "../../fixtures/proposals";
 
-// In PostgreSQL the users and the topic must exist (foreign keys): the integration test creates them.
+// En PostgreSQL los usuarios y el tema tienen que existir (claves ajenas): el test de integración los crea.
 export const PROPOSAL_CONTRACT_USERS = ["user-1", "user-2"] as const;
 export const PROPOSAL_CONTRACT_TOPIC = "topic-caesar";
 

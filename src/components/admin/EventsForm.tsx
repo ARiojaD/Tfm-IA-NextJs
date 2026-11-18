@@ -13,7 +13,7 @@ import { useFormAction } from "./useFormAction";
 
 const EMPTY_EVENT = { id: "", title: "", year: "", era: "BC", month: "", description: "" };
 
-// The topic's timeline. The order does not matter: the page sorts the events by date.
+// La cronología del tema. El orden da igual: la página ordena los eventos por fecha.
 export function EventsForm({
   action,
   draftAction,

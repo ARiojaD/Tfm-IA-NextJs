@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 
 export type AiDraftResult<Row> = { status: "success"; rows: Row[] } | { status: "error"; message: string };
 
-// Asks the AI for rows and hands them to the list, which adds them below the existing ones. Nothing is
-// saved here: the rows are one more edit of the form, until the administrator reviews them and saves.
+// Pide filas a la IA y se las pasa a la lista, que las añade debajo de las que ya hay. Aquí no se guarda
+// nada: las filas son un cambio más del formulario, hasta que el administrador las revisa y guarda.
 export function AiDraftButton<Row>({
   action,
   topicId,
@@ -13,7 +13,7 @@ export function AiDraftButton<Row>({
 }: {
   action: (topicId: string) => Promise<AiDraftResult<Row>>;
   topicId: string;
-  // Adds the rows that fit in the list and returns how many it added.
+  // Añade las filas que caben en la lista y devuelve cuántas añadió.
   onDraft: (rows: Row[]) => number;
 }) {
   const [isPending, startTransition] = useTransition();

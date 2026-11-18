@@ -5,7 +5,7 @@ import { topicPath } from "@/lib/routes";
 import { LibraryToggle } from "./LibraryToggle";
 import { SignInToSave } from "./SignInToSave";
 
-// "☆ Guardar": keeps one topic in "Mi biblioteca". `status` is null without a session.
+// «☆ Guardar»: guarda un tema en «Mi biblioteca». `status` es null sin sesión.
 export function SaveTopicButton({ topic, status }: { topic: HistoricalTopic; status: LibraryStatus | null }) {
   if (!status) {
     return (

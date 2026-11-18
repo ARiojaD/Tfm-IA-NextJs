@@ -4,8 +4,8 @@ import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import { aTopic } from "../../fixtures/historicalTopics";
 
-// Both ports are implemented by the same class, so the contract also checks that what the editor saves
-// is what the public side shows.
+// La misma clase implementa los dos ports, así que el contrato comprueba también que lo que guarda el
+// editor es lo que muestra la parte pública.
 type TopicRepositories = TopicEditorRepository & TopicRepository;
 
 export function describeTopicEditorRepositoryContract(

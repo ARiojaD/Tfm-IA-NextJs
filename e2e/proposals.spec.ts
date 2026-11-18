@@ -30,7 +30,7 @@ test.describe("Propuestas de los usuarios", () => {
     await expect(author.getByLabel("Año")).toHaveValue("216");
     await expect(author.getByLabel("Mes (opcional)")).toHaveValue("8");
     await expect(author.getByLabel("Fuente")).toHaveValue("Polibio, Historias");
-    await expect(author.getByText("Evento rellenado por la IA")).toHaveCount(0); // not sent: not in the list
+    await expect(author.getByText("Evento rellenado por la IA")).toHaveCount(0); // no se envió: no está en la lista
     await author.context().close();
   });
 
@@ -46,7 +46,7 @@ test.describe("Propuestas de los usuarios", () => {
     await author.context().close();
   });
 
-  // The whole loop with two accounts: the author proposes, the admin approves, the site changes.
+  // El ciclo entero con dos cuentas: el autor propone, el administrador aprueba y la web cambia.
   test("un evento propuesto y aprobado aparece en la cronología del tema", async ({ browser }) => {
     const title = `Batalla de Munda ${Date.now()}`;
     const author = await pageAs(browser, AUTHOR_STORAGE_STATE);

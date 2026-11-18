@@ -30,7 +30,7 @@ const book = aRecommendation({ id: "rec-book", topicId: "topic-caesar", title: "
 
 const frozenClock: Clock = { now: () => new Date("2026-11-03T10:00:00Z") };
 
-// What the forms send: the rows as the admin wrote them, years and months as text.
+// Lo que envían los formularios: las filas tal como las escribió el administrador, años y meses como texto.
 const eventRow = { id: "", title: "Batalla de Farsalia", year: "48", era: "BC", month: "8", description: "Derrota de Pompeyo." };
 const questionRow = {
   id: "",
@@ -113,6 +113,17 @@ describe("Editor de temas: cronología, quiz, recomendaciones y relacionados", (
         "Evento 2: El año 0 no existe: al 1 a.C. le sigue el 1 d.C.",
       ]);
       expect(await events.listByTopic("topic-caesar")).toEqual([rubicon]);
+    });
+
+    it("un año vacío da un solo mensaje, no también el de «con números»", async () => {
+      const result = await new UpdateTopicEventsUseCase(deps()).execute({
+        topicId: "topic-caesar",
+        events: [{ ...eventRow, year: "" }],
+      });
+
+      expect(!result.success && result.error instanceof InvalidTopicError && result.error.fieldErrors.events).toEqual([
+        "Evento 1: escribe el año",
+      ]);
     });
 
     it("una lista vacía deja el tema sin cronología", async () => {

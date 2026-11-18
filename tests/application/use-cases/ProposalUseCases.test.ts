@@ -32,7 +32,7 @@ const NOW = new Date("2026-11-04T10:00:00Z");
 const clock: Clock = { now: () => NOW };
 const PROPOSAL_LIMIT = 3;
 
-// What the forms send: every value a string, as in a real form.
+// Lo que envían los formularios: todos los valores son texto, como en un formulario real.
 const eventForm = {
   kind: "EVENT",
   topicSlug: "julio-cesar",
@@ -93,7 +93,7 @@ describe("Propuestas de los usuarios", () => {
     const registeredAdmin = await auth.register(admin);
     adminUser = registeredAdmin.ok ? registeredAdmin.user : { id: "", name: "" };
     await roles.setRole(adminUser.id, "ADMIN");
-    const registered = await auth.register(livia); // Livia stays signed in
+    const registered = await auth.register(livia); // Livia se queda con la sesión iniciada
     user = registered.ok ? registered.user : { id: "", name: "" };
   });
 
@@ -184,7 +184,7 @@ describe("Propuestas de los usuarios", () => {
     });
 
     it("limita las propuestas por usuario (OWASP API4)", async () => {
-      const useCase = submit(); // one limiter for every attempt
+      const useCase = submit(); // un mismo limitador para todos los intentos
       for (let attempt = 0; attempt < PROPOSAL_LIMIT; attempt++) await useCase.execute(correctionForm);
 
       const blocked = await useCase.execute(correctionForm);

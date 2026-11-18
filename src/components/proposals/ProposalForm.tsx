@@ -32,7 +32,7 @@ const EMPTY_VALUES: Record<string, string> = {
   type: "BOOK",
   creator: "",
   message: "",
-  // The civilization of a new topic: sent as "era" too, but kept apart from the a.C./d.C. of an event.
+  // La civilización de un tema nuevo: también se envía como "era", pero separada del a.C./d.C. de un evento.
   topicEra: "ROMAN",
   category: "PEOPLE",
   summary: "",
@@ -45,8 +45,8 @@ const EMPTY_VALUES: Record<string, string> = {
   source: "",
 };
 
-// One form for the four kinds of proposal: only the fields of the chosen kind are shown and sent. The
-// inputs are controlled, so a failed attempt keeps what was typed; a successful one clears it.
+// Un solo formulario para los cuatro tipos de propuesta: solo se muestran y envían los campos del tipo
+// elegido. Los campos son controlados: un intento fallido conserva lo escrito y uno correcto lo vacía.
 export function ProposalForm({
   action,
   draftAction,
@@ -76,7 +76,7 @@ export function ProposalForm({
     onChange: (event: { target: { value: string } }) => setValues({ ...values, [key]: event.target.value }),
   });
   const aboutTopic = kind !== "NEW_TOPIC";
-  // From the current values: the AI takes seconds and the source may be written meanwhile.
+  // Sobre los valores actuales: la IA tarda segundos y mientras tanto se puede escribir la fuente.
   const applyDraft = (draft: ProposalDraft) => {
     if (draft.kind === "EVENT") {
       setValues((current) => ({ ...current, ...draft.values }));
@@ -212,7 +212,7 @@ type FieldProps = (name: string) => {
   onChange: (event: { target: { value: string } }) => void;
 };
 
-// Year, a.C./d.C. and optional month. Without prefix (an event) the names are year/era/month.
+// Año, a.C./d.C. y mes opcional. Sin prefijo (un evento), los nombres son year/era/month.
 function DateFields({ field, prefix }: { field: FieldProps; prefix: "" | "start" | "end" }) {
   const name = (part: "Year" | "Era" | "Month") => (prefix === "" ? part.toLowerCase() : `${prefix}${part}`);
 

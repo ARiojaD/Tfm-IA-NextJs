@@ -10,8 +10,8 @@ export function generateMetadata(): Promise<Metadata> {
   return adminPageMetadata("Vista previa");
 }
 
-// A topic exactly as its public page shows it (same TopicView), drafts included. Only the interactive
-// parts are placeholders: the quiz is played and comments are written on the published page.
+// Un tema tal como lo muestra su página pública (el mismo TopicView), borradores incluidos. Solo las partes
+// interactivas son marcadores: el quiz se juega y los comentarios se escriben en la página publicada.
 export default async function TopicPreviewPage({ params }: PageProps<"/admin/temas/[id]/vista-previa">) {
   const { id } = await params;
   const result = await getContainer().getTopicPreview.execute(id);

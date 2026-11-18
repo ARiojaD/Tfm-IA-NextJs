@@ -16,9 +16,9 @@ import { prepareTestDatabase, truncateAllTables } from "../tests/infrastructure/
 import { testDatabaseUrl } from "../tests/infrastructure/persistence/postgres/testDatabaseUrl";
 import { ADMIN, AUTHOR, READER } from "./testUsers";
 
-// Before the end-to-end tests: the app under test (playwright.config.ts) points at the test database,
-// which starts every run with exactly the seed data plus the test accounts. Nothing the tests post ever
-// reaches the development database.
+// Antes de los tests end-to-end: la app que se prueba (playwright.config.ts) apunta a la base de datos de
+// test, que empieza cada ejecución exactamente con los datos del seed más las cuentas de prueba. Nada de lo
+// que publican los tests llega nunca a la base de datos de desarrollo.
 export default async function globalSetup() {
   await prepareTestDatabase();
 
@@ -27,7 +27,7 @@ export default async function globalSetup() {
     await truncateAllTables(db);
     await insertSeed(db, SEED);
 
-    // The RAG searches the real index, with the real embedding model.
+    // El RAG busca en el índice real, con el modelo de embeddings real.
     const topicEditor = new PostgresTopicRepository(db);
     const refresh = new RefreshTopicIndexUseCase({
       topicEditor,
@@ -37,7 +37,7 @@ export default async function globalSetup() {
     });
     await new RebuildKnowledgeIndexUseCase({ topicEditor, refresh }).execute();
 
-    // Created through Better Auth itself, so they are real accounts (scrypt hash, credential provider).
+    // Creadas con el propio Better Auth, así que son cuentas reales (hash scrypt, proveedor de credenciales).
     const betterAuth = createBetterAuth(db, parseAuthEnv(process.env));
     for (const account of [AUTHOR, READER, ADMIN]) {
       const registration = await new BetterAuthService(betterAuth, new InMemorySessionCookies()).register(account);

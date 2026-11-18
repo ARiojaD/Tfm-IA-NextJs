@@ -44,7 +44,7 @@ function createUseCase(answerLimit: number) {
   });
 }
 
-// Shared by the functional tests below, with a limit high enough never to be reached.
+// Compartido por los tests funcionales de abajo, con un límite tan alto que nunca se alcanza.
 const useCase = createUseCase(1_000);
 
 const validAnswer = { topicSlug: "julio-cesar", questionId: "question-rubicon", optionIndex: 1 };

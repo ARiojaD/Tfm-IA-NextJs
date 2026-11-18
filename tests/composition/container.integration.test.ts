@@ -6,12 +6,12 @@ import { SEED } from "@/infrastructure/persistence/in-memory/seed";
 import { resetDatabase } from "../infrastructure/persistence/postgres/testDatabase";
 import { testDatabaseUrl } from "../infrastructure/persistence/postgres/testDatabaseUrl";
 
-// Comments need a session, which only exists inside a real Next.js request: that path is covered by
-// BetterAuthService.integration.test.ts (sessions against PostgreSQL) and by the end-to-end tests.
+// Los comentarios necesitan sesión, que solo existe dentro de una petición real de Next.js: ese camino lo
+// cubren BetterAuthService.integration.test.ts (sesiones contra PostgreSQL) y los tests end-to-end.
 const globalWithState = globalThis as typeof globalThis & { __memnonState?: unknown; __memnonDatabase?: unknown };
 
-// getContainer() is what the app uses: it must read and write PostgreSQL (DATABASE_URL points to the
-// test database here), and share its state and connection between calls.
+// getContainer() es lo que usa la app: tiene que leer y escribir en PostgreSQL (DATABASE_URL apunta aquí a
+// la base de datos de test) y compartir su estado y su conexión entre llamadas.
 describe("getContainer (PostgreSQL)", () => {
   beforeEach(async () => {
     await closeContainer();
@@ -63,7 +63,7 @@ describe("getContainer (PostgreSQL)", () => {
   });
 
   it("reconstruye el estado si se creó con clases anteriores a una recarga en caliente", async () => {
-    // Simulates instances built before a hot reload: same shape, but not of the current classes.
+    // Simula instancias creadas antes de una recarga en caliente: la misma forma, pero no de las clases actuales.
     globalWithState.__memnonState = {
       clock: { now: () => new Date() },
       repositories: { topics: { findBySlug: () => Promise.resolve(null) } },

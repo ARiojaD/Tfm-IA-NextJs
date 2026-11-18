@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from "react";
 
-// A labelled input with its error message, linked for screen readers (aria-invalid, aria-describedby).
+// Un campo con su etiqueta y su mensaje de error, enlazados para los lectores de pantalla (aria-invalid, aria-describedby).
 export function AuthField({
   id,
   label,

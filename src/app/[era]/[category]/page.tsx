@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { categoryFromRouteSlug, categoryPath, eraFromRouteSlug } from "@/lib/routes";
 
-// Categories are sections of the civilization page, not pages of their own:
-// /roma/personajes takes the visitor to /roma#personajes.
+// Las categorías son secciones de la página de la civilización, no páginas propias:
+// /roma/personajes lleva al visitante a /roma#personajes.
 export default async function CategoryPage({ params }: PageProps<"/[era]/[category]">) {
   const { era: eraSlug, category: categorySlug } = await params;
   const era = eraFromRouteSlug(eraSlug);

@@ -7,8 +7,8 @@ export type ProposalDraftResult = { status: "success"; draft: ProposalDraft } | 
 
 const FRAGMENT_MAX_LENGTH = 4000;
 
-// Fills the form from a pasted fragment. It has no name, so the fragment is not sent with the proposal.
-// Nothing is sent here either: the user reviews the fields and adds the source.
+// Rellena el formulario a partir de un fragmento pegado. No tiene name, así que el fragmento no se envía
+// con la propuesta. Aquí tampoco se envía nada: el usuario revisa los campos y añade la fuente.
 export function ProposalAiFill({
   kind,
   action,

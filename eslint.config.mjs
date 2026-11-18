@@ -7,14 +7,14 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // An async function without await is usually a forgotten await. Ports return Promise even for
-      // in-memory adapters: return Promise.resolve(...) there instead of a pointless async.
+      // Una función async sin await suele ser un await olvidado. Los ports devuelven Promise incluso en los
+      // adaptadores en memoria: ahí, return Promise.resolve(...) en lugar de un async inútil.
       "require-await": "error",
     },
   },
-  // Override default ignores of eslint-config-next.
+  // Sustituye los archivos ignorados por defecto de eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
+    // Los ignorados por defecto de eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",

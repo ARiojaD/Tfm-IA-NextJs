@@ -7,7 +7,7 @@ test.describe("Página de un tema", () => {
   test("se llega a Julio César desde la portada, pasando por Roma", async ({ page }) => {
     await page.goto("/");
 
-    // Anchored: the Hispania card also mentions Rome in its description.
+    // Anclado: la tarjeta de Hispania también nombra Roma en su descripción.
     await page.locator("#civilizaciones").getByRole("link", { name: /^Roma/ }).click();
     await expect(page).toHaveURL("/roma");
 
@@ -65,7 +65,7 @@ test.describe("Comentarios con sesión", () => {
     const community = page.locator("#comunidad");
 
     await expect(community.getByText(`Comentas como ${AUTHOR.name}`)).toBeVisible();
-    await expect(community.getByLabel("Tu nombre")).toHaveCount(0); // the author cannot be chosen
+    await expect(community.getByLabel("Tu nombre")).toHaveCount(0); // el autor no se puede elegir
     await community.getByLabel("Comentario").fill(message);
     await community.getByRole("button", { name: "Publicar comentario" }).click();
 

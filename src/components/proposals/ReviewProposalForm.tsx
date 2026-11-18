@@ -6,8 +6,8 @@ import { TextAreaField } from "../admin/AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "../admin/adminFormState";
 import { useFormAction } from "../admin/useFormAction";
 
-// The admin's decision on one proposal. The note is optional to approve and required to reject: the user
-// reads it in "Mis propuestas".
+// La decisión del administrador sobre una propuesta. La nota es opcional para aprobar y obligatoria para
+// rechazar: el usuario la lee en «Mis propuestas».
 export function ReviewProposalForm({
   action,
   proposalId,

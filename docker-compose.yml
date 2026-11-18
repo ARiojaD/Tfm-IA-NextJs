@@ -1,5 +1,5 @@
-# Local development database: PostgreSQL 17 with the pgvector extension (for the RAG embeddings).
-# Credentials come from .env.local (see .env.example): npm run db:up passes it with --env-file.
+# Base de datos local de desarrollo: PostgreSQL 17 con la extensión pgvector (para los embeddings del RAG).
+# Las credenciales salen de .env.local (ver .env.example): npm run db:up se lo pasa con --env-file.
 services:
   db:
     image: pgvector/pgvector:0.8.7-pg17
@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env.local}
       POSTGRES_DB: ${POSTGRES_DB:?Falta POSTGRES_DB en .env.local}
     ports:
-      # Bound to localhost only: the database is not reachable from other machines on the network.
+      # Solo en localhost: la base de datos no es accesible desde otras máquinas de la red.
       - "127.0.0.1:5432:5432"
     volumes:
       - memnon-db-data:/var/lib/postgresql/data

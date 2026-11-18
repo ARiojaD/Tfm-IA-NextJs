@@ -12,7 +12,7 @@ import { useFormAction } from "./useFormAction";
 
 const EMPTY_RECOMMENDATION = { id: "", type: "BOOK", title: "", creator: "", year: "", description: "" };
 
-// Books, films and series to keep learning about the topic. The page groups them by type.
+// Libros, películas y series para seguir aprendiendo sobre el tema. La página los agrupa por tipo.
 export function RecommendationsForm({
   action,
   topicId,

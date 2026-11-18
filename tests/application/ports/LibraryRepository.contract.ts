@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 
-// Users and topics the contract works with. In PostgreSQL they must exist (foreign keys): the
-// integration test creates them before running the contract.
+// Usuarios y temas con los que trabaja el contrato. En PostgreSQL tienen que existir (claves ajenas): el
+// test de integración los crea antes de ejecutar el contrato.
 export const LIBRARY_CONTRACT_USERS = ["user-1", "user-2"] as const;
 export const LIBRARY_CONTRACT_TOPICS = ["topic-caesar", "topic-alesia", "topic-pericles"] as const;
 

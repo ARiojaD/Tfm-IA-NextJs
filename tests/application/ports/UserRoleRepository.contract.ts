@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { UserRoleRepository } from "@/application/ports/UserRoleRepository";
 
-// Users the contract works with. In PostgreSQL they must exist: the integration test creates them.
+// Usuarios con los que trabaja el contrato. En PostgreSQL tienen que existir: el test de integración los crea.
 export const ROLE_CONTRACT_USERS = ["user-1", "user-2"] as const;
 
 const [livia, marco] = ROLE_CONTRACT_USERS;

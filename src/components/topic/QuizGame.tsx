@@ -19,8 +19,8 @@ interface QuestionProgress {
   error?: string;
 }
 
-// Receives the quiz without solutions. Each answer is graded on the server through
-// answerQuestion (a Server Action); only then does the browser learn the correct option.
+// Recibe el quiz sin soluciones. Cada respuesta se corrige en el servidor con answerQuestion (una Server
+// Action); solo entonces sabe el navegador cuál era la correcta.
 export function QuizGame({
   quiz,
   topicSlug,

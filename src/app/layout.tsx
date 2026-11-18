@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -37,13 +38,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} ${cinzel.variable} h-full antialiased`}
-      // The init script sets data-theme before hydration, so server and client attributes differ by design.
+      // El script del tema pone data-theme antes de hidratar: el atributo del servidor y el del navegador
+      // difieren a propósito.
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
-      <body className="min-h-full flex flex-col overflow-x-clip font-sans">{children}</body>
+      <body className="min-h-full flex flex-col overflow-x-clip font-sans">
+        {/* beforeInteractive: Next lo coloca en el <head> y lo ejecuta antes del primer pintado. Con una
+            etiqueta <script> escrita a mano, React avisa de que no la ejecutará al renderizar en el cliente. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

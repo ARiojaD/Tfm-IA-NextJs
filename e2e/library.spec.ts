@@ -22,7 +22,7 @@ test.describe("Mi biblioteca sin sesión", () => {
 test.describe("Mi biblioteca con sesión", () => {
   test.use({ storageState: AUTHOR_STORAGE_STATE });
 
-  // One story from start to end: the library belongs to the shared test account, so it is left empty again.
+  // Una historia de principio a fin: la biblioteca es de la cuenta de prueba compartida, así que se deja vacía otra vez.
   test("seguir Roma y guardar un tema los lleva a la biblioteca, y se pueden quitar", async ({ page }) => {
     await page.goto("/roma");
     await page.getByRole("button", { name: "Seguir Roma" }).click();
@@ -36,7 +36,7 @@ test.describe("Mi biblioteca con sesión", () => {
     await expect(page).toHaveURL("/mi-biblioteca");
     const followed = page.getByRole("region", { name: "Civilizaciones que sigues" });
     const saved = page.getByRole("region", { name: "Temas guardados" });
-    // Following Roma brings every Roman topic, not only the saved one.
+    // Seguir Roma trae todos los temas romanos, no solo el guardado.
     await expect(followed.getByRole("link", { name: /Julio César/ })).toBeVisible();
     await expect(followed.getByRole("link", { name: /Asedio de Alesia/ })).toBeVisible();
     await expect(saved.getByRole("link", { name: /Asedio de Alesia/ })).toBeVisible();

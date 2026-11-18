@@ -11,12 +11,12 @@ export function ThemeToggle() {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch {
-      // Storage unavailable (e.g. private mode): the choice lasts for this visit only.
+      // Almacenamiento no disponible (por ejemplo, modo privado): la elección dura solo esta visita.
     }
   }
 
-  // The current theme lives in data-theme, so icons and labels switch with the dark: variant
-  // instead of React state; this keeps server and client markup identical.
+  // El tema actual vive en data-theme, así que iconos y textos cambian con la variante dark: en lugar de
+  // con estado de React; así el HTML del servidor y el del navegador son idénticos.
   return (
     <button
       type="button"

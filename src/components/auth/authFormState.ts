@@ -1,5 +1,5 @@
-// What the sign-in and sign-up forms show after a failed attempt. The values the visitor typed are sent
-// back so they do not have to retype them, except the password, which never travels back to the browser.
+// Lo que muestran los formularios de inicio de sesión y registro tras un intento fallido. Se devuelven los
+// valores escritos para no tener que repetirlos, salvo la contraseña, que nunca vuelve al navegador.
 export interface AuthFormState {
   status: "idle" | "error";
   fieldErrors?: { name?: string[]; email?: string[]; password?: string[] };

@@ -1,6 +1,6 @@
 import { prepareTestDatabase } from "./prepareTestDatabase";
 
-// Runs once before the integration tests, so they always see the current schema.
+// Se ejecuta una vez antes de los tests de integración, para que siempre vean el esquema actual.
 export default async function setup() {
   await prepareTestDatabase();
 }

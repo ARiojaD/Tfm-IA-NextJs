@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs";
 import { parseDatabaseEnv } from "@/composition/env";
 
-// The test database lives next to the development one, with "_test" appended to its name
-// (memnon → memnon_test). TEST_DATABASE_URL overrides it (e.g. in CI). The "_test" suffix is
-// mandatory: tests truncate every table, and must never run against real data.
-// Computed once: some tests point DATABASE_URL at the test database, and deriving again from it
-// would append "_test" twice.
+// La base de datos de test vive junto a la de desarrollo, con "_test" añadido a su nombre
+// (memnon → memnon_test). TEST_DATABASE_URL la sustituye (por ejemplo, en CI). El sufijo "_test" es
+// obligatorio: los tests vacían todas las tablas y nunca deben ejecutarse contra datos reales.
+// Se calcula una vez: algunos tests apuntan DATABASE_URL a la base de datos de test, y derivarla otra vez
+// de ella añadiría "_test" dos veces.
 let cachedUrl: string | undefined;
 
 export function testDatabaseUrl(): string {

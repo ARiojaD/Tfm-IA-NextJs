@@ -1,13 +1,13 @@
 import { createServer } from "node:http";
 
-// Stands in for the language model in the end-to-end tests, so they give the same result on every run and
-// need no Ollama. Speaks the OpenAI protocol and replies according to the JSON schema it is asked for.
-// The real model is checked by hand; the search (embeddings and pgvector) is real in these tests.
+// Sustituye al modelo de lenguaje en los tests end-to-end, para que den el mismo resultado en cada ejecución
+// y no necesiten Ollama. Habla el protocolo de OpenAI y responde según el esquema JSON que se le pide.
+// El modelo real se comprueba a mano; la búsqueda (embeddings y pgvector) sí es real en estos tests.
 const PORT = Number(process.argv[2] ?? 3101);
 
 const REPLIES: Record<string, unknown> = {
   respuesta: { coverage: "FULL", answer: "Respuesta de prueba del modelo [1].", missing: "" },
-  // 44 appears in the text of Julio César: an invented year would be discarded.
+  // El 44 aparece en el texto de Julio César: un año inventado se descartaría.
   cronologia: { events: [{ title: "Evento propuesto por la IA", year: 44, era: "BC", month: 3, description: "Descripción propuesta." }] },
   propuesta_evento: { found: true, title: "Evento rellenado por la IA", year: 216, era: "BC", month: 8, description: "Descripción rellenada." },
   quiz: {
@@ -16,7 +16,7 @@ const REPLIES: Record<string, unknown> = {
 };
 
 createServer((request, response) => {
-  // Playwright waits for the server by requesting its root.
+  // Playwright espera al servidor pidiendo su raíz.
   if (request.method !== "POST") {
     response.end("ok");
     return;

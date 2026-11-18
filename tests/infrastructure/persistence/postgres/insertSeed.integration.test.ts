@@ -8,8 +8,8 @@ import { PostgresRecommendationRepository } from "@/infrastructure/persistence/p
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
 import { resetDatabase, testDb } from "./testDatabase";
 
-// The real seed (César and Alesia) goes into PostgreSQL and comes back identical: this exercises every
-// mapping the contracts' minimal data does not (image, key facts, months, relations, explanations…).
+// El seed real (César y Alesia) entra en PostgreSQL y sale idéntico: así se prueba cada conversión que los
+// datos mínimos de los contratos no cubren (imagen, datos clave, meses, relaciones, explicaciones…).
 describe("insertSeed con los datos reales", () => {
   beforeAll(() => resetDatabase(SEED));
 

@@ -12,8 +12,8 @@ const STATUS_CLASSES: Record<Proposal["status"], string> = {
   REJECTED: "bg-danger-soft text-danger",
 };
 
-// What a proposal says, the same for its author ("Mis propuestas") and for the admin (the inbox). All of
-// it is text written by a user: React escapes it, and the source is never turned into a link.
+// Lo que dice una propuesta, igual para su autor («Mis propuestas») y para el administrador (la bandeja).
+// Todo es texto escrito por un usuario: React lo escapa, y la fuente nunca se convierte en enlace.
 export function ProposalDetails({ proposal, showAuthor = false }: { proposal: Proposal; showAuthor?: boolean }) {
   return (
     <div className="space-y-3 text-sm">

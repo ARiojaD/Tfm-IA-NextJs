@@ -42,7 +42,7 @@ test.describe("Preguntar a la enciclopedia", () => {
       const answer = page.getByRole("region", { name: "Respuesta" });
       await expect(answer.getByText("Respuesta de prueba del modelo")).toBeVisible();
       await expect(answer.getByRole("list", { name: "Fuentes" })).toContainText("Cruce del Rubicón");
-      // The question stays in the box after the answer arrives.
+      // La pregunta se queda en la caja cuando llega la respuesta.
       await expect(page.getByLabel("Tu pregunta")).toHaveValue("¿Cuándo cruzó César el Rubicón?");
 
       await answer.getByRole("link", { name: "Fuente 1" }).click();

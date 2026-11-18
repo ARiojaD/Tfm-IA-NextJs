@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { AuthService } from "@/application/ports/AuthService";
 
-// Contract every AuthService implementation must pass (in-memory today, Better Auth + PostgreSQL too).
-// createAuthService returns a service with no accounts and nobody signed in.
+// Contrato que tiene que cumplir cada implementación de AuthService (en memoria y Better Auth + PostgreSQL).
+// createAuthService devuelve un servicio sin cuentas y sin nadie con sesión.
 export function describeAuthServiceContract(name: string, createAuthService: () => AuthService | Promise<AuthService>) {
   describe(`${name} cumple el contrato de AuthService`, () => {
     const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };

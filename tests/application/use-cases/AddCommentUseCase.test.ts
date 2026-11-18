@@ -20,7 +20,7 @@ import { aComment, aTopic } from "../../fixtures/historicalTopics";
 const NOW = new Date("2026-10-19T12:00:00Z");
 const caesar = aTopic({ id: "topic-caesar", slug: "julio-cesar" });
 
-// Test doubles for the ports: a frozen clock and a predictable id make results exact.
+// Dobles de prueba de los ports: un reloj congelado y un id predecible hacen exactos los resultados.
 const fixedClock: Clock = { now: () => NOW };
 const fixedIds: IdGenerator = { generate: () => "comment-generated" };
 

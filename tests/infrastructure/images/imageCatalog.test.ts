@@ -6,10 +6,10 @@ import { IMAGE_CATALOG } from "@/infrastructure/images/imageCatalog";
 import { StaticImageCatalog } from "@/infrastructure/images/StaticImageCatalog";
 import { SEED } from "@/infrastructure/persistence/in-memory/seed";
 
-// The real size of a JPEG, read from its "start of frame" marker. Enough to check the catalog: a wrong
-// width or height would show the image stretched on the page.
+// El tamaño real de un JPEG, leído de su marcador «start of frame». Basta para comprobar el catálogo: un
+// ancho o un alto equivocados mostrarían la imagen deformada en la página.
 function jpegSize(file: Buffer): { width: number; height: number } {
-  let offset = 2; // after the FFD8 start-of-image marker
+  let offset = 2; // tras el marcador FFD8 de inicio de imagen
   while (offset < file.length) {
     const marker = file[offset + 1];
     const isStartOfFrame = marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker);

@@ -14,7 +14,7 @@ class ManualClock implements Clock {
   }
 }
 
-// Contract every RateLimiter must pass (in-memory today, Redis or PostgreSQL when deployed).
+// Contrato que tiene que cumplir cada RateLimiter (hoy en memoria; compartido en PostgreSQL más adelante).
 export function describeRateLimiterContract(
   name: string,
   createLimiter: (policy: RateLimitPolicy, clock: Clock) => RateLimiter | Promise<RateLimiter>,
@@ -38,7 +38,7 @@ export function describeRateLimiterContract(
       await limiter.consume("visitante-1");
       await limiter.consume("visitante-1");
 
-      // The oldest request (t=0) frees its slot at t=60s; we are at t=10s → 50s to wait.
+      // La petición más antigua (t=0) libera su hueco en t=60 s; estamos en t=10 s → quedan 50 s de espera.
       expect(await limiter.consume("visitante-1")).toEqual({ allowed: false, retryAfterSeconds: 50 });
     });
 
@@ -66,7 +66,7 @@ export function describeRateLimiterContract(
       clock.advance(30_000);
       await limiter.consume("visitante-1"); // t=30s
       await limiter.consume("visitante-1"); // t=30s
-      clock.advance(30_000); // t=60s: only the first one has expired
+      clock.advance(30_000); // t=60 s: solo ha caducado la primera
 
       expect((await limiter.consume("visitante-1")).allowed).toBe(true);
       expect((await limiter.consume("visitante-1")).allowed).toBe(false);
@@ -76,7 +76,7 @@ export function describeRateLimiterContract(
       const clock = new ManualClock();
       const limiter = await createLimiter(policy, clock);
       for (let attempt = 0; attempt < 3; attempt++) await limiter.consume("visitante-1");
-      for (let attempt = 0; attempt < 10; attempt++) await limiter.consume("visitante-1"); // all rejected
+      for (let attempt = 0; attempt < 10; attempt++) await limiter.consume("visitante-1"); // todos rechazados
 
       clock.advance(60_000);
 

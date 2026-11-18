@@ -14,14 +14,14 @@ afterAll(() => connection.close());
 
 export const testDb = connection.db;
 
-// Topic ids the contract tests hang events, quizzes, comments, recommendations and saved topics from. In
-// PostgreSQL those rows need their topic to exist (foreign keys), so placeholder topics are created for them.
+// Ids de los temas de los que los tests de contrato cuelgan eventos, quizzes, comentarios, recomendaciones
+// y temas guardados. En PostgreSQL esas filas necesitan que su tema exista (claves ajenas), así que se crean temas de relleno.
 const CONTRACT_TOPIC_IDS = [...new Set(["topic-1", "topic-caesar", "topic-pericles", "topic-persian-wars", ...LIBRARY_CONTRACT_TOPICS])];
 
-// Users the contract tests attach comments and libraries to (user_id is a foreign key to users).
+// Usuarios a los que los tests de contrato asignan comentarios y bibliotecas (user_id es clave ajena de users).
 const CONTRACT_USER_IDS = [...new Set(["user-1", ...LIBRARY_CONTRACT_USERS, ...ROLE_CONTRACT_USERS])];
 
-// Empties every table and loads the given data. Without topics, the placeholder topics are created.
+// Vacía todas las tablas y carga los datos indicados. Sin temas, se crean los temas de relleno.
 export async function resetDatabase(seed: Partial<Seed> = {}) {
   await truncateAllTables(testDb);
   await testDb

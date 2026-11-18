@@ -2,10 +2,10 @@ import Image from "next/image";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { TopicImage } from "@/domain/value-objects/TopicImage";
 
-// Keys use the position: an admin may write two equal paragraphs or labels.
-// The narrative of a topic next to its fact sheet, which stay balanced side by side; the image comes
-// after both, closing the introduction. A landscape image (a painting of a battle) spans the full width;
-// a portrait one (a bust) is centred at a contained width, so it does not tower over the page.
+// Las keys usan la posición: un administrador puede escribir dos párrafos o etiquetas iguales.
+// El relato del tema junto a su ficha de datos, equilibrados uno al lado del otro; la imagen va después de
+// ambos y cierra la introducción. Una imagen apaisada (el cuadro de una batalla) ocupa todo el ancho; una
+// vertical (un busto) se centra con un ancho contenido, para que no domine la página.
 export function TopicIntroduction({ topic }: { topic: HistoricalTopic }) {
   const { introduction, keyFacts, image } = topic;
 
@@ -50,7 +50,7 @@ function TopicFigure({ image }: { image: TopicImage }) {
         height={image.height}
         sizes={isLandscape ? "(min-width: 896px) 848px, 100vw" : "20rem"}
         className={`h-auto w-full rounded-2xl border border-border bg-surface ${
-          // A bust's pedestal adds height without adding anything: crop from the bottom.
+          // El pedestal de un busto añade altura sin aportar nada: se recorta por abajo.
           isLandscape ? "" : "max-h-[26rem] object-cover object-top"
         }`}
       />

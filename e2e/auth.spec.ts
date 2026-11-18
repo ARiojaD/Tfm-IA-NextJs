@@ -15,7 +15,7 @@ test.describe("Registro", () => {
 
     const header = page.getByRole("banner");
     await expect(header.getByText("Hola, Nueva Cuenta")).toBeVisible();
-    await expect(header).not.toContainText(email); // the email is never shown
+    await expect(header).not.toContainText(email); // el correo nunca se muestra
 
     await header.getByRole("button", { name: "Cerrar sesión" }).click();
     await expect(header.getByRole("link", { name: "Iniciar sesión" })).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("Inicio de sesión", () => {
     await page.getByLabel("Contraseña").fill("no es la contraseña del lector");
     await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
-    // Scoped to <main>: Next.js adds its own role="alert" element (the route announcer for screen readers).
+    // Dentro de <main>: Next.js añade su propio elemento role="alert" (el anunciador de rutas para lectores de pantalla).
     await expect(page.getByRole("main").getByRole("alert")).toHaveText("Email o contraseña incorrectos");
   });
 

@@ -11,8 +11,8 @@ export interface CommentFormState {
 
 const INITIAL_STATE: CommentFormState = { status: "idle" };
 
-// Only for signed-in users. The author is shown but not sent: the server takes it from the session.
-// maxLength only helps the visitor; the real validation happens on the server (AddCommentUseCase).
+// Solo para usuarios con sesión. El autor se muestra pero no se envía: el servidor lo toma de la sesión.
+// maxLength solo ayuda al visitante; la validación de verdad está en el servidor (AddCommentUseCase).
 export function CommentForm({
   topicSlug,
   authorName,

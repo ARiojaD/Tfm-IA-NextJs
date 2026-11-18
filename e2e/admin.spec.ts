@@ -15,7 +15,7 @@ test.describe("Panel de administración", () => {
       const response = await page.goto("/admin");
 
       expect(response?.status()).toBe(404);
-      await expect(page).not.toHaveTitle(/Panel/); // not even in the browser tab
+      await expect(page).not.toHaveTitle(/Panel/); // ni siquiera en la pestaña del navegador
       await expect(page.getByRole("banner").getByRole("link", { name: "Panel" })).toHaveCount(0);
     });
   });
@@ -35,8 +35,8 @@ test.describe("Panel de administración", () => {
       await expect(page.getByRole("region", { name: "Hispania" }).getByText("Viriato")).toBeVisible();
     });
 
-    // The whole life of a topic, from the empty form to deleting it. It ends deleted, so other tests
-    // still see Antigua Grecia as it started.
+    // La vida entera de un tema, del formulario vacío a borrarlo. Acaba borrado, así que los demás tests
+    // siguen viendo Antigua Grecia como al principio.
     test("crea un tema, lo completa, lo publica, lo despublica y lo borra", async ({ page }) => {
       await page.goto("/admin/temas/nuevo?era=ANCIENT_GREECE");
       await page.getByLabel("Título").fill("Leónidas");
@@ -45,7 +45,7 @@ test.describe("Panel de administración", () => {
       await page.getByRole("button", { name: "Crear borrador" }).click();
 
       await expect(page.getByText("/grecia/personajes/leonidas")).toBeVisible();
-      expect((await page.request.get("/grecia/personajes/leonidas")).status()).toBe(404); // a draft is not public
+      expect((await page.request.get("/grecia/personajes/leonidas")).status()).toBe(404); // un borrador no es público
 
       await page.getByRole("button", { name: "Publicar" }).click();
       await expect(page.getByText("Escribe la introducción antes de publicar")).toBeVisible();
@@ -80,25 +80,25 @@ test.describe("Panel de administración", () => {
 
       await page.getByRole("button", { name: "Publicar" }).click();
       await expect(page.getByText("Visible para todo el mundo.")).toBeVisible();
-      // Without an image it is published anyway; the admin is only told.
+      // Sin imagen se publica igualmente; al administrador solo se le avisa.
       await expect(page.getByText("Publicado sin imagen. Puedes elegir una más adelante.")).toBeVisible();
       await page.goto("/admin");
       await expect(page.getByRole("region", { name: "Antigua Grecia" }).getByText("Sin imagen")).toBeVisible();
       await page.goto("/grecia");
-      // By its heading: the card of the Termópilas mentions Leónidas in its summary too.
+      // Por su título: la tarjeta de las Termópilas también nombra a Leónidas en su resumen.
       await page.getByRole("link").filter({ has: page.getByRole("heading", { name: "Leónidas", exact: true }) }).click();
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Leónidas");
       await expect(page.getByText("Murió en las Termópilas.")).toBeVisible();
       await expect(page.locator("#cronologia").getByText("Batalla de las Termópilas")).toBeVisible();
-      // The quiz written in the panel is played on the public page and corrected by the server.
+      // El quiz escrito en el panel se juega en la página pública y lo corrige el servidor.
       await page.locator("#quiz").getByRole("button", { name: "Termópilas" }).click();
       await expect(page.locator("#quiz").getByText("¡Correcto!")).toBeVisible();
 
-      await expect(page.locator("#introduccion figure")).toHaveCount(0); // published without image: none shown
+      await expect(page.locator("#introduccion figure")).toHaveCount(0); // publicado sin imagen: no se muestra ninguna
 
       await page.goto("/admin");
       await page.getByRole("link", { name: "Editar Leónidas" }).click();
-      // Later, a general image of its civilization from the catalog.
+      // Después, una imagen general de su civilización, del catálogo.
       const imageSection = page.getByRole("region", { name: "Imagen" });
       await imageSection.getByRole("img", { name: /La Acrópolis de Atenas/ }).click();
       await imageSection.getByRole("button", { name: "Guardar" }).click();
@@ -122,8 +122,8 @@ test.describe("Panel de administración", () => {
   test.describe("la imagen de un tema", () => {
     test.use({ storageState: ADMIN_STORAGE_STATE });
 
-    // Julio César starts with its bust. Without image, its page shows nothing in its place (no gap, no
-    // "no image" text); choosing it again from the catalog brings it back.
+    // Julio César empieza con su busto. Sin imagen, su página no muestra nada en su lugar (ni hueco ni un
+    // texto de «sin imagen»); al elegirla otra vez del catálogo, vuelve.
     test("se quita y se vuelve a elegir del catálogo", async ({ page }) => {
       const imageSection = page.getByRole("region", { name: "Imagen" });
       await page.goto("/admin/temas/topic-julius-caesar");
@@ -149,8 +149,8 @@ test.describe("Panel de administración", () => {
   test.describe("las propuestas de la IA", () => {
     test.use({ storageState: ADMIN_STORAGE_STATE });
 
-    // The proposal goes below the existing events and is not saved until the admin saves. By the last row,
-    // not its number: another test may have approved an event for this topic.
+    // La propuesta va debajo de los eventos existentes y no se guarda hasta que el administrador guarda.
+    // Por la última fila, no por su número: otro test puede haber aprobado un evento para este tema.
     test("añaden filas a la cronología sin guardar nada", async ({ page }) => {
       const timeline = page.getByRole("region", { name: "Cronología" });
       const lastTitle = timeline.getByLabel(/^Título del evento/).last();

@@ -1,7 +1,7 @@
 import { expect, type Page, test as setup } from "@playwright/test";
 import { ADMIN, ADMIN_STORAGE_STATE, AUTHOR, AUTHOR_STORAGE_STATE } from "./testUsers";
 
-// Signs each account in through the real form once, and saves its session cookies for the tests.
+// Inicia sesión con cada cuenta una vez, por el formulario real, y guarda sus cookies de sesión para los tests.
 async function signInAndSave(page: Page, account: typeof AUTHOR, path: string) {
   await page.goto("/iniciar-sesion");
   await page.getByLabel("Email").fill(account.email);

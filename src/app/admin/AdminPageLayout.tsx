@@ -27,7 +27,7 @@ export function AdminPageLayout({ title, intro, children }: { title: string; int
   );
 }
 
-// One section of the editor, with its own heading (and its own save button inside).
+// Una sección del editor, con su propio título (y su propio botón de guardar dentro).
 export function AdminSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   const id = `seccion-${title.toLowerCase().replace(/\s+/g, "-")}`;
 

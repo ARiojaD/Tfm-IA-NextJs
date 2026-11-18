@@ -11,7 +11,7 @@ export function generateMetadata(): Promise<Metadata> {
   return adminPageMetadata("Propuestas");
 }
 
-// What approving does, so the admin knows before clicking.
+// Qué hace aprobar, para que el administrador lo sepa antes de pulsar.
 const APPROVE_LABELS: Record<Proposal["kind"], string> = {
   EVENT: "Aprobar y añadir a la cronología",
   RECOMMENDATION: "Aprobar y añadir al tema",
@@ -19,7 +19,7 @@ const APPROVE_LABELS: Record<Proposal["kind"], string> = {
   NEW_TOPIC: "Aprobar y crear borrador",
 };
 
-// The inbox: the users' pending proposals, oldest first. The use case checks the ADMIN role itself.
+// La bandeja: las propuestas pendientes de los usuarios, de la más antigua a la más reciente. El caso de uso comprueba el rol ADMIN por su cuenta.
 export default async function ProposalsInboxPage() {
   const result = await getContainer().listPendingProposals.execute();
   if (!result.success) {

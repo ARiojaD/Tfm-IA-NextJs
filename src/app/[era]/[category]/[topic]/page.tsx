@@ -13,13 +13,13 @@ import { getContainer } from "@/composition/container";
 import { categoryFromRouteSlug, eraFromRouteSlug, topicPath } from "@/lib/routes";
 import { addComment, answerQuizQuestion } from "./actions";
 
-// One template for every topic (/roma/personajes/julio-cesar, /grecia/guerras-y-batallas/…): only the data changes.
+// Una sola plantilla para todos los temas (/roma/personajes/julio-cesar, /grecia/guerras-y-batallas/…): solo cambian los datos.
 
-// cache() dedupes the lookup between generateMetadata and the page within one request.
+// cache() evita repetir la búsqueda entre generateMetadata y la página dentro de una misma petición.
 const getTopicDetail = cache((topicSlug: string) => getContainer().getTopicDetail.execute(topicSlug));
 
-// The topic must exist, be published and match the era and category in the URL:
-// /grecia/personajes/julio-cesar and /roma/guerras-y-batallas/julio-cesar are 404s.
+// El tema tiene que existir, estar publicado y coincidir con la civilización y la categoría de la URL:
+// /grecia/personajes/julio-cesar y /roma/guerras-y-batallas/julio-cesar son 404.
 async function loadTopic(params: PageProps<"/[era]/[category]/[topic]">["params"]) {
   const { era, category, topic } = await params;
   const result = await getTopicDetail(topic);
@@ -63,7 +63,7 @@ export default async function TopicPage({ params }: PageProps<"/[era]/[category]
         actions={
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <SaveTopicButton topic={topic} status={libraryStatus} />
-            {/* Without a session, the proposals page asks to sign in and comes back with the topic chosen. */}
+            {/* Sin sesión, la página de propuestas pide iniciarla y vuelve con el tema elegido. */}
             <Link href={`/mi-biblioteca/propuestas?tema=${topic.slug}`} className="text-sm font-medium text-accent hover:underline">
               Proponer una mejora
             </Link>

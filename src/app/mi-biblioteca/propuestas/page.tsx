@@ -13,9 +13,9 @@ import { draftProposal, submitProposal } from "./actions";
 
 export const metadata: Metadata = { title: "Mis propuestas · MemnonHistory AI" };
 
-// "Mis propuestas": propose an event, a recommendation, a correction or a new topic, and follow how
-// each one was reviewed. ?tema=julio-cesar comes from a topic's "Proponer una mejora" link, and
-// ?tipo=tema-nuevo from the "Proponer un tema nuevo" of a question without an answer.
+// «Mis propuestas»: proponer un evento, una recomendación, una corrección o un tema nuevo, y seguir cómo se
+// revisó cada una. ?tema=julio-cesar llega desde el enlace «Proponer una mejora» de un tema, y
+// ?tipo=tema-nuevo desde el «Proponer un tema nuevo» de una pregunta sin respuesta.
 export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-biblioteca/propuestas">) {
   const { tema: rawTopic, tipo } = await searchParams;
   const tema = SlugSchema.safeParse(rawTopic);
@@ -27,7 +27,7 @@ export default async function MyProposalsPage({ searchParams }: PageProps<"/mi-b
     redirect(`/iniciar-sesion?volver=${encodeURIComponent(back)}`);
   }
 
-  // The topics a proposal can be about: the published ones.
+  // Los temas sobre los que se puede proponer algo: los publicados.
   const topics = (await Promise.all(HISTORICAL_ERAS.map((era) => container.listTopicsByEra.execute(era)))).flatMap(
     (overview) => overview.categories.flatMap((group) => group.topics.map(({ slug, title, era }) => ({ slug, title, era }))),
   );

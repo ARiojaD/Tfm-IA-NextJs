@@ -1,10 +1,10 @@
-// What every admin editor form shows after saving: a confirmation, or the errors next to each field and
-// the ones that belong to the whole form (e.g. what is missing to publish).
+// Lo que muestra cada formulario del panel tras guardar: una confirmación, o los errores junto a cada campo
+// y los que son del formulario entero (por ejemplo, lo que falta para publicar).
 export interface AdminFormState {
   status: "idle" | "success" | "error";
   fieldErrors?: Record<string, string[]>;
   formErrors?: string[];
-  // Information after a successful action that is worth knowing (e.g. "published without image").
+  // Información que conviene saber tras una acción correcta (por ejemplo, «publicado sin imagen»).
   notices?: string[];
 }
 

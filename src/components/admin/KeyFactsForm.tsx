@@ -10,8 +10,8 @@ import { useFormAction } from "./useFormAction";
 const INPUT_CLASS =
   "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent";
 
-// The fact sheet as editable rows. Each row sends a label and a value with the same names
-// (keyFactLabel / keyFactValue), in order; rows left empty are dropped by the server.
+// La ficha de datos clave como filas editables. Cada fila envía una etiqueta y un valor con los mismos
+// nombres (keyFactLabel / keyFactValue), en orden; el servidor descarta las filas vacías.
 export function KeyFactsForm({
   action,
   topicId,
@@ -21,8 +21,8 @@ export function KeyFactsForm({
   topicId: string;
   keyFacts: KeyFact[];
 }) {
-  // Each row keeps a stable key, so removing one row does not shift the text typed in the others. The
-  // initial rows use their position (the same on the server and in the browser); added rows a random one.
+  // Cada fila tiene una key estable, para que quitar una no desplace lo escrito en las demás. Las filas
+  // iniciales usan su posición (la misma en el servidor y en el navegador); las añadidas, una aleatoria.
   const [rows, setRows] = useState(() =>
     (keyFacts.length > 0 ? keyFacts : [{ label: "", value: "" }]).map((fact, index) => ({ ...fact, key: `row-${index}` })),
   );

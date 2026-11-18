@@ -29,7 +29,7 @@ const livia = { name: "Livia", email: "livia@example.com", password: "la batalla
 const marco = { name: "Marco", email: "marco@example.com", password: "el cruce del rubicon" };
 const LIBRARY_LIMIT = 3;
 
-// A clock that moves forward one minute on every call, so each saved topic gets a later date.
+// Un reloj que avanza un minuto en cada llamada, para que cada tema guardado tenga una fecha posterior.
 function steppingClock(): Clock {
   let minutes = 0;
   return { now: () => new Date(Date.UTC(2026, 9, 30, 10, minutes++)) };
@@ -52,7 +52,7 @@ describe("Mi biblioteca", () => {
     const registered = await auth.register(livia);
     user = registered.ok ? registered.user : { id: "", name: "" };
     const clock = steppingClock();
-    // Its own frozen clock: with the stepping one, every attempt would fall in a new window.
+    // Su propio reloj congelado: con el que avanza, cada intento caería en una ventana nueva.
     const frozenClock: Clock = { now: () => new Date("2026-10-30T10:00:00Z") };
     const rateLimiter = new InMemoryRateLimiter({ limit: LIBRARY_LIMIT, windowMs: 60_000 }, frozenClock);
     updateEraFollow = new UpdateEraFollowUseCase({ library, auth, rateLimiter });

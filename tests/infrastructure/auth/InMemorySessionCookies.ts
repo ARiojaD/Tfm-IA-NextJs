@@ -1,7 +1,7 @@
 import { parseSetCookieHeader } from "better-auth/cookies";
 import type { SessionCookies } from "@/infrastructure/auth/SessionCookies";
 
-// A browser's cookie jar, for the integration tests: keeps what the server sets and sends it back.
+// El tarro de cookies de un navegador, para los tests de integración: guarda lo que pone el servidor y lo devuelve.
 export class InMemorySessionCookies implements SessionCookies {
   private readonly jar = new Map<string, { value: string; httpOnly: boolean; sameSite: string | undefined }>();
 

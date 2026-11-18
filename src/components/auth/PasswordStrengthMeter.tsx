@@ -2,7 +2,7 @@ import { estimatePasswordStrength } from "@/lib/passwordStrength";
 
 const BAR_COLORS = ["bg-danger", "bg-danger", "bg-accent", "bg-success", "bg-success"] as const;
 
-// Four bars and a label under the password field. Only a hint: the server applies the real rules.
+// Cuatro barras y una etiqueta bajo el campo de contraseña. Solo orienta: las reglas de verdad las aplica el servidor.
 export function PasswordStrengthMeter({ password, id }: { password: string; id: string }) {
   const { score, label } = estimatePasswordStrength(password);
   if (!label) return null;

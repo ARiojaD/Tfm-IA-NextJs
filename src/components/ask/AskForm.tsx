@@ -14,8 +14,8 @@ export interface AskFormState {
 const INITIAL_STATE: AskFormState = { question: "" };
 const QUESTION_MAX_LENGTH = 300;
 
-// maxLength only helps the visitor; the real validation happens on the server (AskEncyclopediaUseCase).
-// After an action React resets the form to defaultValue, which is the question just asked.
+// maxLength solo ayuda al visitante; la validación de verdad está en el servidor (AskEncyclopediaUseCase).
+// Tras una acción, React resetea el formulario a defaultValue, que es la pregunta recién hecha.
 export function AskForm({
   action,
   initialQuestion = "",

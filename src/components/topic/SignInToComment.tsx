@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-// Shown instead of the comment form to anonymous visitors. Both links come back to the conversation.
+// Se muestra a los visitantes sin sesión en lugar del formulario de comentarios. Los dos enlaces vuelven a la conversación.
 export function SignInToComment({ returnTo }: { returnTo: string }) {
   const volver = encodeURIComponent(`${returnTo}#comunidad`);
 

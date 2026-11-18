@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: "/preguntar", label: "Preguntar" },
 ];
 
-// Shows who is signed in (their display name, never the email) or the links to sign in and sign up.
+// Muestra quién ha iniciado sesión (su nombre visible, nunca el correo) o los enlaces para entrar y registrarse.
 export async function SiteHeader() {
   const user = await getContainer().getCurrentUser.execute();
 
@@ -34,7 +34,7 @@ export async function SiteHeader() {
             <Link href="/mi-biblioteca" className="font-medium hover:text-accent">
               Mi biblioteca
             </Link>
-            {/* Only a shortcut: the panel's use cases check the role on their own. */}
+            {/* Solo es un atajo: los casos de uso del panel comprueban el rol por su cuenta. */}
             {user.isAdmin && (
               <Link href="/admin" className="font-medium hover:text-accent">
                 Panel

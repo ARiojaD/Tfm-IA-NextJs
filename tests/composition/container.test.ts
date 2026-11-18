@@ -8,15 +8,15 @@ const VISITOR = "visitante-1";
 const comment = { topicSlug: "julio-cesar", message: "Hola" };
 const livia = { name: "Livia", email: "livia@example.com", password: "la batalla de alesia" };
 
-// A container with Livia signed in (comments require a session).
+// Un container con Livia con sesión iniciada (los comentarios exigen sesión).
 async function containerWithLivia() {
   const container = createContainer();
   await container.registerUser.execute(livia, VISITOR);
   return container;
 }
 
-// createContainer(): the in-memory wiring the unit tests use. getContainer(), the one the app uses, runs
-// against PostgreSQL and is tested in container.integration.test.ts.
+// createContainer(): el montaje en memoria que usan los tests unitarios. getContainer(), el que usa la app,
+// funciona contra PostgreSQL y se prueba en container.integration.test.ts.
 describe("createContainer (en memoria)", () => {
   it("conecta GetTopicDetail con los datos de ejemplo de Julio César", async () => {
     const result = await createContainer().getTopicDetail.execute("julio-cesar");

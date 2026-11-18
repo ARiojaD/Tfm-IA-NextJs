@@ -14,9 +14,9 @@ import { RecommendationList } from "./RecommendationList";
 import { TopicCard } from "./TopicCard";
 import { TopicIntroduction } from "./TopicIntroduction";
 
-// The page of a topic, the same for every topic and for the admin preview: only the data and the
-// interactive parts change. The public page passes the save button, the playable quiz and the comment
-// form; the preview passes placeholders, so a draft looks exactly as it will once published.
+// La página de un tema, igual para todos los temas y para la vista previa del panel: solo cambian los datos
+// y las partes interactivas. La página pública pasa el botón de guardar, el quiz jugable y el formulario de
+// comentarios; la vista previa pasa marcadores, así que un borrador se ve tal como quedará al publicarse.
 export function TopicView({
   detail,
   notice,
@@ -31,7 +31,7 @@ export function TopicView({
   commentForm: ReactNode;
 }) {
   const { topic, events, comments, recommendations, relatedTopics } = detail;
-  // The introduction sits right below the header, so it needs no shortcut.
+  // La introducción va justo debajo de la cabecera, así que no necesita atajo.
   const sections = [
     { id: "cronologia", label: "Cronología", count: events.length },
     { id: "quiz", label: "Quiz", count: detail.quiz?.questions.length ?? 0 },

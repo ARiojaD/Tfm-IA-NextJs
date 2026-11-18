@@ -2,7 +2,7 @@ import type { Recommendation } from "@/domain/entities/Recommendation";
 import { RECOMMENDATION_TYPES } from "@/domain/value-objects/RecommendationType";
 import { RECOMMENDATION_TYPE_LABELS } from "@/lib/recommendationTypeLabels";
 
-// Expects recommendations already ordered by GetTopicDetailUseCase; groups them by type for display.
+// Recibe las recomendaciones ya ordenadas por GetTopicDetailUseCase; las agrupa por tipo para mostrarlas.
 export function RecommendationList({ recommendations }: { recommendations: Recommendation[] }) {
   const groups = RECOMMENDATION_TYPES.map((type) => ({
     type,

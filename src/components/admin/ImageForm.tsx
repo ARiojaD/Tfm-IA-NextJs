@@ -12,8 +12,8 @@ import { useFormAction } from "./useFormAction";
 const OPTION_CLASS =
   "flex cursor-pointer flex-col gap-2 rounded-2xl border border-border p-2 text-xs transition-colors has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent";
 
-// Choose the topic's image from the catalog, or none (then its page simply shows no image). Choosing an
-// image fills in its suggested alt text and caption, which the admin can rewrite. Nothing is uploaded.
+// Elegir la imagen del tema en el catálogo, o ninguna (entonces su página no muestra imagen). Al elegir una
+// se rellenan su texto alternativo y su pie sugeridos, que el administrador puede reescribir. No se sube nada.
 export function ImageForm({
   action,
   topicId,

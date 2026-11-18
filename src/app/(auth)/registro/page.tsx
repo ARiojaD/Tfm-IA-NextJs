@@ -9,7 +9,7 @@ import { registerUser } from "../actions";
 
 export const metadata: Metadata = { title: "Crear cuenta · MemnonHistory AI" };
 
-// What an account adds, so the sign-up page answers "why sign up?".
+// Lo que aporta tener cuenta, para que la página de registro responda a «¿para qué registrarme?».
 const ACCOUNT_BENEFITS = [
   "Seguir civilizaciones y tener todos sus temas, también los nuevos, en Mi biblioteca",
   "Guardar los temas que más te interesen",

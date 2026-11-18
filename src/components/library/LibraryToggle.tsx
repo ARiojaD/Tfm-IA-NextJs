@@ -9,9 +9,9 @@ export interface LibraryActionState {
 
 const INITIAL_STATE: LibraryActionState = { status: "idle" };
 
-// A small form with one button that adds something to "Mi biblioteca" or takes it out. It sends the state
-// wanted (`intent`), never a toggle, so a double click leaves the same result. After a change the action
-// refreshes the page, which redraws the button with its new state.
+// Un formulario pequeño con un botón que añade algo a «Mi biblioteca» o lo quita. Envía el estado deseado
+// (`intent`), nunca un «cambiar», así que un doble clic deja el mismo resultado. Tras un cambio, la acción
+// refresca la página, que vuelve a pintar el botón con su estado nuevo.
 export function LibraryToggle({
   action,
   fields,
@@ -29,7 +29,7 @@ export function LibraryToggle({
   inactiveIntent: string;
   activeLabel: string;
   inactiveLabel: string;
-  // Tooltip of the active button, telling what a click does (e.g. "Dejar de seguir").
+  // El texto emergente del botón activo, que dice qué hace un clic (por ejemplo, «Dejar de seguir»).
   activeTitle: string;
 }) {
   const [state, formAction, isPending] = useActionState(action, INITIAL_STATE);
@@ -39,7 +39,7 @@ export function LibraryToggle({
       {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      {/* Clicking asks for the opposite state: active → take it out, inactive → add it. */}
+      {/* Un clic pide el estado contrario: activo → quitarlo, inactivo → añadirlo. */}
       <input type="hidden" name="intent" value={active ? inactiveIntent : activeIntent} />
       <button
         type="submit"

@@ -4,8 +4,8 @@ import { TransformersEmbeddingService } from "@/infrastructure/ai/TransformersEm
 
 const cosine = (a: number[], b: number[]) => a.reduce((sum, value, i) => sum + value * b[i], 0);
 
-// The real model (downloaded to .cache/transformers the first time): checks that it understands meaning
-// in Spanish, beyond sharing words.
+// El modelo real (se descarga en .cache/transformers la primera vez): comprueba que entiende el significado
+// en castellano, más allá de compartir palabras.
 describe("TransformersEmbeddingService (multilingual-e5-small)", { timeout: 120_000 }, () => {
   const embeddings = new TransformersEmbeddingService();
 
@@ -38,7 +38,7 @@ describe("TransformersEmbeddingService (multilingual-e5-small)", { timeout: 120_
     const vectors = await embeddings.embedDocuments(texts);
 
     expect(vectors).toHaveLength(20);
-    // Not exactly equal: in a batch the shorter texts are padded, which moves the last decimals.
+    // No exactamente iguales: en un lote los textos más cortos se rellenan, y eso mueve los últimos decimales.
     const [alone] = await embeddings.embedDocuments([texts[19]]);
     expect(cosine(vectors[19], alone)).toBeGreaterThan(0.99);
     expect(cosine(vectors[0], alone)).toBeLessThan(0.95);

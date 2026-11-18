@@ -12,7 +12,7 @@ import { SaveBar, SelectField, TextAreaField } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { useFormAction } from "./useFormAction";
 
-// The form values: what the inputs hold, all strings (years without sign, plus a.C./d.C.).
+// Los valores del formulario: lo que tienen los campos, todo texto (años sin signo, más a.C./d.C.).
 export interface TopicBasicsValues {
   title: string;
   era: string;
@@ -27,9 +27,9 @@ export interface TopicBasicsValues {
 }
 
 
-// Title, civilization, category, summary and period: to create a topic and later to edit them. The inputs
-// are controlled, so a failed save never wipes what the admin typed. maxLength only helps: the server
-// (TopicEditorInputs) validates everything again.
+// Título, civilización, categoría, resumen y periodo: para crear un tema y después para editarlos. Los
+// campos son controlados, así que un guardado fallido nunca borra lo escrito. maxLength solo ayuda: el
+// servidor (TopicEditorInputs) lo valida todo otra vez.
 export function TopicBasicsForm({
   action,
   initialValues,

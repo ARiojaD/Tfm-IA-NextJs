@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-// Integration tests against a real PostgreSQL (npm run test:integration). Kept apart from the unit tests
-// so `npm run test` never needs Docker. They share one test database, so files run one at a time.
+// Tests de integración contra un PostgreSQL real (npm run test:integration). Separados de los unitarios
+// para que `npm run test` nunca necesite Docker. Comparten una base de datos de test, así que los archivos van de uno en uno.
 export default defineConfig({
   resolve: {
     alias: {

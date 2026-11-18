@@ -20,7 +20,7 @@ const pericles = aTopic({ id: "topic-pericles", slug: "pericles", title: "Pericl
 const viriato = aTopic({ id: "topic-viriato", slug: "viriato", title: "Viriato", status: "DRAFT" });
 const rubicon = anEvent({ id: "event-rubicon", topicId: "topic-caesar", title: "Cruce del Rubicón" });
 
-// Every text gets the same vector: these tests check what is indexed, not how similar it is.
+// Todos los textos reciben el mismo vector: estos tests comprueban qué se indexa, no cuánto se parece.
 class RecordingEmbeddings implements EmbeddingService {
   readonly batches: string[][] = [];
 

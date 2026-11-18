@@ -10,8 +10,8 @@ import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState"
 import { ListErrors } from "./listEditing";
 import { useFormAction } from "./useFormAction";
 
-// "Sigue explorando": the other topics, by civilization, to tick. The link is saved in both directions.
-// Drafts can be ticked; the public page shows a related topic only once it is published.
+// «Sigue explorando»: los demás temas, por civilización, para marcar. El enlace se guarda en los dos
+// sentidos. Se pueden marcar borradores; la página pública solo muestra un relacionado cuando se publica.
 export function RelatedTopicsForm({
   action,
   topicId,

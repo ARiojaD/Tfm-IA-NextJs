@@ -3,7 +3,7 @@ import type { TopicRepository } from "@/application/ports/TopicRepository";
 import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import { aTopic } from "../../fixtures/historicalTopics";
 
-// Contract every TopicRepository implementation must pass. The public side: only PUBLISHED topics.
+// Contrato que tiene que cumplir cada implementación de TopicRepository. La parte pública: solo temas PUBLISHED.
 export function describeTopicRepositoryContract(
   name: string,
   createRepository: (topics: HistoricalTopic[]) => TopicRepository | Promise<TopicRepository>,

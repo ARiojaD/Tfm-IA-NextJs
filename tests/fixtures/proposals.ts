@@ -1,6 +1,6 @@
 import type { Proposal, ProposalKind } from "@/domain/entities/Proposal";
 
-// A valid pending proposal of each kind; tests override only what matters to them.
+// Una propuesta pendiente válida de cada tipo; los tests cambian solo lo que les importa.
 export function aProposal(overrides: Partial<Proposal> & { kind: ProposalKind }): Proposal {
   const base = {
     id: "proposal-1",

@@ -2,8 +2,8 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Each token is light-dark(<light>, <dark>). The active value follows color-scheme:
-   the system preference by default, or the user's choice stored in data-theme. */
+/* Cada color es light-dark(<claro>, <oscuro>). El valor activo sigue a color-scheme: la preferencia del
+   sistema por defecto, o la elección del usuario guardada en data-theme. */
 :root {
   color-scheme: light dark;
   --background: light-dark(#f7f3ec, #140f1c);

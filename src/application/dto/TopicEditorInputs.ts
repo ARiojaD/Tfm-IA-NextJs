@@ -20,11 +20,13 @@ export const KEY_FACTS_MAX = 20;
 
 const topicId = EntityIdSchema;
 
+// Un año vacío se corta en la primera comprobación (abort): si no, Zod seguiría y añadiría también «con
+// números», dos mensajes para un solo fallo.
 export const year = (missing: string) =>
   z
     .string({ error: missing })
     .trim()
-    .min(1, { error: missing })
+    .min(1, { error: missing, abort: true })
     .regex(/^\d{1,4}$/, { error: "Escribe el año con números (hasta 4 cifras)" })
     .transform(Number)
     .refine((value) => value !== 0, { error: "El año 0 no existe: al 1 a.C. le sigue el 1 d.C." });

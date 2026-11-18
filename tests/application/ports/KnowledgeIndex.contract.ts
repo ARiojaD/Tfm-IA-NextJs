@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { IndexedChunk, KnowledgeIndex } from "@/application/ports/KnowledgeIndex";
 import type { KnowledgeChunk } from "@/domain/entities/KnowledgeChunk";
 
-// `dimensions` is the size the implementation stores (pgvector's column has a fixed one).
+// `dimensions` es el tamaño que guarda la implementación (la columna de pgvector tiene uno fijo).
 export function describeKnowledgeIndexContract(
   name: string,
   createIndex: () => KnowledgeIndex | Promise<KnowledgeIndex>,
   dimensions: number,
 ) {
-  // A unit vector along one axis, plus a little of a second one: similarity with each axis is known.
+  // Un vector unitario sobre un eje, con un poco de un segundo: la similitud con cada eje se conoce.
   const vector = (axis: number, lean: { axis: number; amount: number } | null = null): number[] => {
     const values = Array.from({ length: dimensions }, () => 0);
     values[axis] = 1;

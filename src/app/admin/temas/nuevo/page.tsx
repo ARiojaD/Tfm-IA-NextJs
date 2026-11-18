@@ -11,14 +11,14 @@ export function generateMetadata(): Promise<Metadata> {
   return adminPageMetadata("Nuevo tema");
 }
 
-// Step one of a new topic: its basic data. It is saved as a draft and the editor opens for the rest.
+// Primer paso de un tema nuevo: sus datos básicos. Se guarda como borrador y se abre el editor para el resto.
 export default async function NewTopicPage({ searchParams }: PageProps<"/admin/temas/nuevo">) {
   const access = await getContainer().getAdminAccess.execute();
   if (!access.success) {
     denyAdminPage(access.error, "/admin/temas/nuevo");
   }
 
-  // ?era=HISPANIA preselects the civilization ("Añadir tema a Hispania"); anything else is ignored.
+  // ?era=HISPANIA preselecciona la civilización («Añadir tema a Hispania»); cualquier otro valor se ignora.
   const era = HistoricalEraSchema.safeParse((await searchParams).era);
 
   return (

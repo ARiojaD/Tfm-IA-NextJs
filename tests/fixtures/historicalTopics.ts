@@ -4,7 +4,7 @@ import type { HistoricalTopic } from "@/domain/entities/HistoricalTopic";
 import type { Quiz } from "@/domain/entities/Quiz";
 import type { Recommendation } from "@/domain/entities/Recommendation";
 
-// Test data builders: valid defaults that each test overrides only where it matters.
+// Constructores de datos de prueba: valores válidos por defecto que cada test cambia solo donde importa.
 
 export function aTopic(overrides: Partial<HistoricalTopic> = {}): HistoricalTopic {
   return {

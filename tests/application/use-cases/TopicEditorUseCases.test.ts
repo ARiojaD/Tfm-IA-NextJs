@@ -29,7 +29,7 @@ import { aTopic, anEvent } from "../../fixtures/historicalTopics";
 const caesar = aTopic({ id: "topic-caesar", slug: "julio-cesar", title: "Julio César", period: { start: { year: -100 } } });
 const ADMIN_LIMIT = 50;
 
-// What the "new topic" form sends: every value is a string, as in a real form.
+// Lo que envía el formulario de «tema nuevo»: todos los valores son texto, como en un formulario real.
 const viriato = {
   title: "Viriato",
   era: "HISPANIA",
@@ -153,6 +153,14 @@ describe("Editor de temas", () => {
       expect(!result.success && result.error).toBeInstanceOf(InvalidTopicError);
       expect(!result.success && result.error instanceof InvalidTopicError && result.error.fieldErrors).toHaveProperty(field);
       expect(await topics.listAll()).toHaveLength(1);
+    });
+
+    it("un año de inicio vacío da un solo mensaje", async () => {
+      const result = await new CreateTopicUseCase(deps()).execute({ ...viriato, startYear: "" });
+
+      expect(!result.success && result.error instanceof InvalidTopicError && result.error.fieldErrors.startYear).toEqual([
+        "Escribe el año de inicio",
+      ]);
     });
 
     it.each([

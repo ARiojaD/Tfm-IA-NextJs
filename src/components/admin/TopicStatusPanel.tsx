@@ -8,8 +8,8 @@ import { TopicStatusBadge } from "./TopicStatusBadge";
 
 type Action = (state: AdminFormState, formData: FormData) => Promise<AdminFormState>;
 
-// The top of the editor: the state of the topic and what can be done with it. Publishing an incomplete
-// topic lists what is missing; deleting is only offered for drafts, and asks for confirmation.
+// La cabecera del editor: el estado del tema y lo que se puede hacer con él. Publicar un tema incompleto
+// enumera lo que falta; borrar solo se ofrece para los borradores, y pide confirmación.
 export function TopicStatusPanel({
   topicId,
   status,

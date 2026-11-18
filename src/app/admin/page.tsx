@@ -17,8 +17,8 @@ export function generateMetadata(): Promise<Metadata> {
   return adminPageMetadata("Panel de administración");
 }
 
-// The admin panel's home: every civilization with its topics, drafts included. The use case checks the
-// ADMIN role itself.
+// La portada del panel: cada civilización con sus temas, borradores incluidos. El caso de uso comprueba
+// el rol ADMIN por su cuenta.
 export default async function AdminPage() {
   const container = getContainer();
   const [result, pending] = await Promise.all([
@@ -30,7 +30,7 @@ export default async function AdminPage() {
   }
   const pendingCount = pending.success ? pending.data.length : 0;
 
-  // A reminder for the admins only: the public pages never say "no image", they just show none.
+  // Un aviso solo para los administradores: las páginas públicas nunca dicen «sin imagen», simplemente no la muestran.
   const withoutImage = result.data.flatMap(({ topics }) => topics).filter((topic) => !topic.image).length;
 
   return (

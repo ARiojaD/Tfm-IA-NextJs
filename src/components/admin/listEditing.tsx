@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-// Shared pieces of the editor sections that edit a list (timeline, quiz, recommendations). Each row has
-// a stable `key` for React, so removing one row never shifts what was typed in the others; the key is
-// dropped before sending.
+// Piezas comunes de las secciones del editor que editan una lista (cronología, quiz, recomendaciones).
+// Cada fila tiene una `key` estable para React, así que quitar una nunca desplaza lo escrito en las demás;
+// la key se quita antes de enviar.
 
 export const ROW_INPUT_CLASS =
   "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent";
@@ -12,19 +12,19 @@ export const ROW_INPUT_CLASS =
 type Keyed<Row> = Row & { key: string };
 
 export function useRows<Row extends object>(initial: Row[]) {
-  // The initial rows are rendered on the server too: their keys must be the same there and in the browser
-  // (a random one would differ and break hydration), so they use their position. Rows added later exist
-  // only in the browser and get a random key.
+  // Las filas iniciales también se renderizan en el servidor: su key tiene que ser la misma allí y en el
+  // navegador (una aleatoria sería distinta y rompería la hidratación), así que usan su posición. Las
+  // filas añadidas después solo existen en el navegador y reciben una key aleatoria.
   const [rows, setRows] = useState<Keyed<Row>[]>(() => initial.map((row, index) => ({ ...row, key: `row-${index}` })));
 
   return {
     rows,
     add: (row: Row) => setRows([...rows, { ...row, key: crypto.randomUUID() }]),
-    // From the current rows, not this render's: the AI takes seconds and the admin may keep typing meanwhile.
+    // Sobre las filas actuales, no las de este render: la IA tarda segundos y el administrador puede seguir escribiendo.
     addMany: (newRows: Row[]) => setRows((current) => [...current, ...newRows.map((row) => ({ ...row, key: crypto.randomUUID() }))]),
     remove: (key: string) => setRows(rows.filter((row) => row.key !== key)),
     update: (key: string, change: Partial<Row>) => setRows(rows.map((row) => (row.key === key ? { ...row, ...change } : row))),
-    // What the hidden field sends: the rows without their React keys.
+    // Lo que envía el campo oculto: las filas sin sus keys de React.
     json: JSON.stringify(rows, (name, value: unknown) => (name === "key" ? undefined : value)),
   };
 }

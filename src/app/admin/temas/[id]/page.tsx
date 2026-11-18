@@ -32,8 +32,8 @@ export function generateMetadata(): Promise<Metadata> {
   return adminPageMetadata("Editar tema");
 }
 
-// The topic editor: its state on top, then one section per part of the topic, each saved on its own.
-// The basics form is keyed by the saved data, so after a save it starts again from what is stored.
+// El editor de un tema: su estado arriba y después una sección por cada parte del tema, cada una con su
+// propio guardado. El formulario básico usa los datos guardados como key: tras guardar, parte de lo almacenado.
 export default async function EditTopicPage({ params }: PageProps<"/admin/temas/[id]">) {
   const { id } = await params;
   const result = await getContainer().getTopicForEditing.execute(id);

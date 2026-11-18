@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { HaveIBeenPwnedChecker } from "@/infrastructure/auth/HaveIBeenPwnedChecker";
 
-// SHA-1("password") = 5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8 → prefix 5BAA6, the rest is the suffix.
+// SHA-1("password") = 5BAA61E4C9B93F3F0682250B6CF8331B7EE68FD8 → prefijo 5BAA6; el resto es el sufijo.
 const PASSWORD = "password";
 const PREFIX = "5BAA6";
 const SUFFIX = "1E4C9B93F3F0682250B6CF8331B7EE68FD8";
@@ -18,7 +18,7 @@ function fakeFetch(body: string, status = 200) {
 
 describe("HaveIBeenPwnedChecker", () => {
   it("solo envía los 5 primeros caracteres del hash: nunca la contraseña ni el hash completo (k-anonimato)", async () => {
-    // Not "password" here: that word is part of the service's own domain (api.pwnedpasswords.com).
+    // Aquí no vale "password": esa palabra forma parte del dominio del propio servicio (api.pwnedpasswords.com).
     const secret = "la batalla de alesia";
     const hash = createHash("sha1").update(secret).digest("hex").toUpperCase();
     const { fetchFn, calls } = fakeFetch("");

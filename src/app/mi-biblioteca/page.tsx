@@ -17,8 +17,8 @@ export const metadata: Metadata = { title: "Mi biblioteca · MemnonHistory AI" }
 
 const LIBRARY_PATH = "/mi-biblioteca";
 
-// The signed-in user's library: the civilizations they follow (with all their topics) and the topics
-// they saved. Without a session, the sign-in page and back here.
+// La biblioteca del usuario con sesión: las civilizaciones que sigue (con todos sus temas) y los temas que
+// guardó. Sin sesión, a iniciar sesión y de vuelta aquí.
 export default async function MyLibraryPage() {
   const container = getContainer();
   const [library, status] = await Promise.all([container.getMyLibrary.execute(), container.getLibraryStatus.execute()]);

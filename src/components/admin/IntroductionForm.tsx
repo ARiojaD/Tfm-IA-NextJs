@@ -6,7 +6,7 @@ import { SaveBar, TextAreaField } from "./AdminFields";
 import { type AdminFormState, INITIAL_ADMIN_FORM_STATE } from "./adminFormState";
 import { useFormAction } from "./useFormAction";
 
-// The topic's main text. Paragraphs are separated by a blank line, as the server splits them.
+// El texto principal del tema. Los párrafos se separan con una línea en blanco, igual que los separa el servidor.
 export function IntroductionForm({
   action,
   topicId,

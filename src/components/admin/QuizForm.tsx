@@ -19,8 +19,8 @@ interface QuestionRow {
 
 const EMPTY_QUESTION: QuestionRow = { id: "", question: "", options: ["", ""], correctOptionIndex: 0, explanation: "" };
 
-// The topic's quiz: questions in order, each with 2–4 options and the correct one marked. The correct
-// answers stay on the server: the public page only gets the questions (PublicQuiz).
+// El quiz del tema: preguntas en orden, cada una con 2–4 opciones y la correcta marcada. Las respuestas
+// correctas se quedan en el servidor: la página pública solo recibe las preguntas (PublicQuiz).
 export function QuizForm({
   action,
   draftAction,
@@ -52,7 +52,7 @@ export function QuizForm({
           const removeOption = (optionIndex: number) =>
             update(row.key, {
               options: row.options.filter((_, i) => i !== optionIndex),
-              // The marked answer follows its option; if it was the removed one, the first is marked.
+              // La respuesta marcada sigue a su opción; si era la que se quitó, se marca la primera.
               correctOptionIndex:
                 row.correctOptionIndex === optionIndex ? 0 : row.correctOptionIndex - (row.correctOptionIndex > optionIndex ? 1 : 0),
             });

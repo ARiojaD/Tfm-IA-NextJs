@@ -6,8 +6,8 @@ import { eraPath } from "@/lib/routes";
 import { LibraryToggle } from "./LibraryToggle";
 import { SignInToSave } from "./SignInToSave";
 
-// "Seguir Roma": every topic of the civilization, also the ones added later, in "Mi biblioteca".
-// `status` is null without a session.
+// «Seguir Roma»: todos los temas de la civilización, también los que se añadan después, en «Mi biblioteca».
+// `status` es null sin sesión.
 export function FollowEraButton({ era, status }: { era: HistoricalEra; status: LibraryStatus | null }) {
   if (!status) {
     return (

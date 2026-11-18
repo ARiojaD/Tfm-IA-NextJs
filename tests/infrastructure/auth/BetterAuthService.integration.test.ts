@@ -16,7 +16,7 @@ async function createService() {
   return { service: new BetterAuthService(createBetterAuth(testDb, TEST_AUTH_ENV), cookies), cookies };
 }
 
-// The same contract as the in-memory double, now with Better Auth writing to the test PostgreSQL.
+// El mismo contrato que el doble en memoria, ahora con Better Auth escribiendo en el PostgreSQL de test.
 describeAuthServiceContract("BetterAuthService", async () => (await createService()).service);
 
 describe("BetterAuthService (seguridad)", () => {

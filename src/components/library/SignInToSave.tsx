@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-// What anonymous visitors see instead of the "Seguir" / "Guardar" buttons: the same button, leading to the
-// sign-in page and back here, with a line on what an account gives them.
+// Lo que ven los visitantes sin sesión en lugar de los botones «Seguir» / «Guardar»: el mismo botón, que
+// lleva a iniciar sesión y de vuelta aquí, con una línea sobre lo que aporta tener cuenta.
 export function SignInToSave({ label, hint, returnTo }: { label: string; hint: string; returnTo: string }) {
   return (
     <div className="flex flex-wrap items-center gap-3">

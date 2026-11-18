@@ -9,7 +9,7 @@ export function describeQuizRepositoryContract(
 ) {
   describe(`${name} cumple el contrato de QuizRepository`, () => {
     const caesarQuiz = aQuiz({ id: "quiz-caesar", topicId: "topic-caesar" });
-    // Its own question id: question ids are unique across quizzes (a primary key in PostgreSQL).
+    // Su propio id de pregunta: los ids de pregunta son únicos entre quizzes (una clave primaria en PostgreSQL).
     const periclesQuiz = aQuiz({
       id: "quiz-pericles",
       topicId: "topic-pericles",
