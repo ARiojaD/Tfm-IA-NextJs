@@ -87,7 +87,7 @@ flowchart TB
         Q[AskEncyclopediaUseCase] --> EM2[EmbeddingService.embedQuery]
         EM2 --> S["KnowledgeIndex.search<br/>los 8 fragmentos más cercanos"]
         S --> PUB["solo los de temas publicados<br/>(TopicRepository)"]
-        PUB --> G["AnswerGenerator<br/>Ollama local · Groq o Gemini al desplegar"]
+        PUB --> G["AnswerGenerator<br/>Ollama local · Groq en producción"]
         G --> PC["parseCitations<br/>borra las citas inventadas"]
         PC --> V["AnswerView<br/>texto y enlaces al párrafo exacto"]
     end
@@ -153,7 +153,8 @@ El proyecto se ha desarrollado con TDD: primero el test que falla y después el 
 
 Se dejan escritas para que no parezcan descuidos:
 
-- **Los límites de peticiones viven en memoria.** Solo valen para un proceso del servidor. Con varias instancias tendrán que pasar a un almacén compartido, como PostgreSQL o Redis.
+- **Sin correo electrónico.** No hay verificación de la cuenta ni recuperación de la contraseña: haría falta un proveedor de correo y un dominio propio.
+- **El cupo de la IA en producción es el gratuito de Groq.** Un tope diario para toda la web (`LLM_DAILY_LIMIT`, 50) lo protege; al agotarse, preguntar muestra los fragmentos sin redactar.
 - **La inyección de prompts no se elimina del todo.** El relleno de propuestas resistió 7 de 8 intentos en las pruebas manuales. Por eso el resultado nunca se guarda solo: lo revisa el usuario y lo aprueba un administrador.
 - **El contexto del modelo local es limitado.** `qwen2.5:7b` trabaja con unos 4.000 tokens, y una introducción muy larga se puede quedar corta para pedir propuestas.
-- **El primer arranque es lento.** El modelo de embeddings se descarga la primera vez, unos 130 MB, y Ollama tarda en cargar. Por eso el tiempo máximo de respuesta es de 90 segundos.
+- **El primer arranque es lento.** En local, el modelo de embeddings se descarga la primera vez (unos 130 MB) y Ollama tarda en cargar; en producción, la primera petición tras un rato sin uso arranca la función y carga el modelo. Por eso el tiempo máximo de respuesta es de 90 segundos.

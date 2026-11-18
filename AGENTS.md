@@ -17,7 +17,7 @@ El proyecto sigue una arquitectura limpia orientada al dominio para garantizar u
 ```
 src/
 ├── domain/                 # 🔴 DOMINIO: reglas del negocio. No depende de nada
-│   ├── entities/           # Entidades (HistoricalTopic, HistoricalEvent, Quiz, Comment, Recommendation)
+│   ├── entities/           # Entidades (HistoricalTopic, HistoricalEvent, TimelineMilestone, Quiz, Comment, Recommendation, Proposal, KnowledgeChunk)
 │   └── value-objects/      # Valores con reglas propias (HistoricalDate, HistoricalPeriod, HistoricalEra, TopicCategory, KeyFact, TopicImage, Slug, EntityId)
 ├── application/            # 🟠 APLICACIÓN: organiza el trabajo. Depende solo de domain y shared
 │   ├── use-cases/          # Casos de uso (GetTopicDetailUseCase, AddCommentUseCase, AskEncyclopediaUseCase)
@@ -30,17 +30,23 @@ src/
 │   │   │   └── seed/       # Datos iniciales por tema, validados con los esquemas del dominio
 │   │   └── postgres/       # Cliente PostgreSQL + pgvector, esquemas ORM, migraciones y repositorios
 │   ├── system/             # Reloj del sistema y generador de UUID (implementan Clock e IdGenerator)
-│   ├── rate-limiting/      # Limitadores de frecuencia (implementan RateLimiter)
+│   ├── rate-limiting/      # Limitador en memoria (tests unitarios); el de la app es postgres/PostgresRateLimiter
+│   ├── auth/               # Better Auth, cookies de sesión y contraseñas filtradas (Have I Been Pwned)
+│   ├── images/             # Catálogo de imágenes de los temas
 │   └── ai/                 # Adaptadores del modelo de lenguaje (protocolo OpenAI, Vercel AI SDK) y de embeddings (Transformers.js)
 ├── composition/            # 🟢 COMPOSICIÓN: conecta casos de uso con implementaciones reales
 │                           #    (container) y valida la configuración/entorno con Zod
 ├── shared/                 # 🟤 COMPARTIDO: utilidades transversales sin lógica de negocio (p. ej. Result)
 ├── app/                    # ⚪ PRESENTACIÓN (Next.js App Router; el nombre lo impone Next.js)
-│   ├── api/                # Route Handlers: entrada HTTP. Validan, llaman al caso de uso y responden
-│   ├── (dashboard)/        # Vistas de la aplicación protegida
-│   └── layout.tsx
+│   ├── (auth)/             # Registro e inicio de sesión
+│   ├── [era]/              # Civilización, su cronología y cada tema ([category]/[topic]), con sus Server Actions
+│   ├── admin/              # Panel de administración (temas, cronologías, propuestas)
+│   ├── mi-biblioteca/      # Biblioteca y propuestas del usuario
+│   ├── preguntar/          # Preguntar a la enciclopedia (RAG)
+│   └── layout.tsx          # Layout raíz (lee el nonce de la CSP para el script del tema)
 ├── components/             # ⚪ PRESENTACIÓN: componentes de UI (React + Tailwind CSS)
-└── lib/                    # ⚪ PRESENTACIÓN: utilidades de la interfaz (formato de fechas, rutas, tema, escala de la portada)
+├── lib/                    # ⚪ PRESENTACIÓN: utilidades de la interfaz (formato de fechas, rutas, tema, escala de la portada, cabeceras de seguridad)
+└── proxy.ts                # Genera el nonce y la CSP de cada petición
 
 tests/                      # Tests, fuera de src/, replicando su estructura
 ├── domain/                 # Unitarios del dominio
@@ -58,9 +64,9 @@ tests/                      # Tests, fuera de src/, replicando su estructura
 * **Entradas no confiables:** los casos de uso que reciben datos del usuario aceptan `unknown` y lo validan con su DTO de `application/dto/` (esquema estricto) antes de hacer nada. Los datos que decide el servidor (ids, fechas, propietario) nunca vienen en la entrada: los aportan los ports `IdGenerator`, `Clock` y `AuthService` (el usuario de la sesión).
 * **Salidas sin datos privados:** los casos de uso nunca devuelven a la presentación datos que el usuario no debe ver. Se mapean a un DTO de salida con una lista explícita de campos permitidos (*allowlist*), como `PublicQuiz` (el quiz sin respuestas correctas ni explicaciones). Las respuestas se comprueban en el servidor (`AnswerQuizQuestionUseCase`).
 * **Server Actions finas:** son endpoints POST públicos. No contienen lógica: identifican al visitante para el rate limiting cuando hace falta (`lib/currentRequesterId.ts`; el usuario con sesión lo obtiene el propio caso de uso), pasan la entrada sin confiar en ella (`unknown`) al caso de uso y traducen su `Result` a lo que muestra la interfaz, sin filtrar detalles internos en los mensajes de error.
-* **Rate limiting (OWASP API4):** todo caso de uso invocado desde una Server Action que escriba datos o consuma recursos recibe un `requesterId` y un port `RateLimiter`, y comprueba el límite **antes** de validar (los intentos inválidos también cuentan). Las políticas (`COMMENT_RATE_LIMIT`, `QUIZ_ANSWER_RATE_LIMIT`, `SIGN_IN_RATE_LIMIT`, `SIGN_UP_RATE_LIMIT`, `LIBRARY_RATE_LIMIT`, `ADMIN_RATE_LIMIT`, `PROPOSAL_RATE_LIMIT`) viven en `composition/container.ts`. Las acciones con sesión limitan por usuario (`user:<id>`); las anónimas, por visitante (IP); el inicio de sesión, por visitante **y** por cuenta (`email:<email>`). La implementación en memoria solo vale para un proceso; en un despliegue con varias instancias debe sustituirse por un almacén compartido (Redis, PostgreSQL). Las cabeceras de IP solo son fiables detrás de un proxy de confianza.
+* **Rate limiting (OWASP API4):** todo caso de uso invocado desde una Server Action que escriba datos o consuma recursos recibe un `requesterId` y un port `RateLimiter`, y comprueba el límite **antes** de validar (los intentos inválidos también cuentan). Las políticas (`COMMENT_RATE_LIMIT`, `QUIZ_ANSWER_RATE_LIMIT`, `SIGN_IN_RATE_LIMIT`, `SIGN_UP_RATE_LIMIT`, `LIBRARY_RATE_LIMIT`, `ADMIN_RATE_LIMIT`, `PROPOSAL_RATE_LIMIT`, `QUESTION_RATE_LIMIT`, `AI_DRAFT_RATE_LIMIT`, `PROPOSAL_DRAFT_RATE_LIMIT`) viven en `composition/container.ts`, y cada límite tiene un nombre. Las acciones con sesión limitan por usuario (`user:<id>`); las anónimas, por visitante (IP); el inicio de sesión, por visitante **y** por cuenta (`email:<email>`). En la aplicación los límites viven en PostgreSQL (`PostgresRateLimiter`, tabla `rate_limit_hits`): en Vercel hay varias instancias y todas comparten la cuenta. Un cerrojo por clave (`pg_advisory_xact_lock`) hace atómico «contar y apuntar», y la clave se guarda como hash SHA-256. `InMemoryRateLimiter` queda para los tests unitarios; los dos cumplen el mismo contrato. Las cabeceras de IP solo son fiables detrás de un proxy de confianza.
 * **Autenticación (Better Auth):** detrás del port `AuthService` (`register`, `signIn`, `signOut`, `getCurrentUser`), que solo expone `AuthenticatedUser = { id, name }` (nunca el email). `BetterAuthService` lo implementa sobre Better Auth y PostgreSQL, y lee y escribe las cookies a través de `SessionCookies` (`NextSessionCookies` en la app, un tarro en memoria en los tests); `InMemoryAuthService` es el doble de los tests unitarios. Reglas: el usuario de una acción sale **siempre** de `AuthService.getCurrentUser()` dentro del caso de uso (nunca del formulario; los DTO estrictos rechazan `author` o `userId`); contraseña 12–128 caracteres sin reglas de composición (OWASP ASVS / NIST), y el registro rechaza las filtradas a través del port `BreachedPasswordChecker` (`HaveIBeenPwnedChecker` con k-anonimato en la app; si el servicio falla, el registro continúa: *fail open*); errores genéricos que no revelan qué emails existen (`InvalidCredentialsError`, `RegistrationRejectedError`); tras iniciar sesión solo se redirige a rutas internas (`lib/safeRedirectPath.ts`). No se monta la ruta HTTP de Better Auth (`/api/auth/...`): todo pasa por Server Actions (su rate limiting no se aplica a las llamadas desde el servidor, por eso usamos el nuestro).
-* **Container:** `getContainer()` (la aplicación) usa los repositorios PostgreSQL; `createContainer()` (tests unitarios) usa los de memoria con el seed. `getContainer()` comparte en `globalThis` una única conexión a la base de datos y el estado (repositorios y contadores del rate limiting), y crea los casos de uso en cada llamada, para que la recarga en caliente de Next.js aplique el código editado sin abrir conexiones nuevas. Si una recarga redefine una clase de infraestructura (se detecta con `instanceof`), el estado se reconstruye reutilizando la conexión. `DATABASE_URL` se valida con `parseDatabaseEnv()` y `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL` con `parseAuthEnv()` en el primer uso; la instancia de Better Auth también se comparte en `globalThis`, y `BetterAuthService` se crea en cada petición (lee las cookies de esa petición). Las páginas que leen de la base de datos se renderizan en cada petición (la portada lleva `dynamic = "force-dynamic"`), así que `npm run build` no necesita la base de datos.
+* **Container:** `getContainer()` (la aplicación) usa los repositorios PostgreSQL; `createContainer()` (tests unitarios) usa los de memoria con el seed. `getContainer()` comparte en `globalThis` una única conexión a la base de datos y el estado (repositorios y modelos de IA), y crea los casos de uso en cada llamada, para que la recarga en caliente de Next.js aplique el código editado sin abrir conexiones nuevas. Si una recarga redefine una clase de infraestructura (se detecta con `instanceof`), el estado se reconstruye reutilizando la conexión. `DATABASE_URL` se valida con `parseDatabaseEnv()` y `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL` con `parseAuthEnv()` en el primer uso; la instancia de Better Auth también se comparte en `globalThis`, y `BetterAuthService` se crea en cada petición (lee las cookies de esa petición). Las páginas que leen de la base de datos se renderizan en cada petición (la portada lleva `dynamic = "force-dynamic"`), así que `npm run build` no necesita la base de datos.
 * **Administradores:** rol `USER`/`ADMIN` (`domain/value-objects/UserRole.ts`) en la columna `users.role`, detrás del port `UserRoleRepository` (separado de `AuthService`, que solo sabe quién ha iniciado sesión). Solo se cambia con `npm run admin:grant -- email` / `admin:revoke` (nunca desde la web) y se lee de la base de datos en cada petición, así que nombrar o quitar un admin surte efecto al momento. Todo caso de uso del panel empieza con `authorizeAdmin()` (sesión → `AuthenticationRequiredError`; sin rol → `AdminRequiredError`): ocultar el enlace "Panel" es solo comodidad. Las páginas de `/admin` traducen el rechazo con `denyAdminPage()`: sin sesión, a iniciar sesión; con una cuenta normal, 404 (también en el título de la pestaña), para no delatar que el panel existe. El seed solo inserta lo que falta: no pisa lo editado desde el panel.
 * **Editor de temas (borrador → publicado):**
   - **Estado:** cada tema tiene `status` (`DRAFT`/`PUBLISHED`, `domain/value-objects/TopicStatus.ts`). Un borrador puede estar incompleto. Para publicarse necesita introducción y al menos un dato clave; esa regla vive en `HistoricalTopicSchema` y se repite como `CHECK` en PostgreSQL.
@@ -119,14 +125,14 @@ tests/                      # Tests, fuera de src/, replicando su estructura
 Cualquier código generado o modificado debe cumplir estrictamente las directrices OWASP aplicables:
 
 ### 🛡️ A. OWASP Web Security Top 10
-1. **A01: Broken Access Control:** Validación obligatoria de sesión y permisos en cada Server Action y Route Handler. Un usuario solo puede acceder a sus propios eventos y notas.
+1. **A01: Broken Access Control:** Validación obligatoria de sesión y permisos en cada caso de uso invocado desde una Server Action. Un usuario solo puede acceder a lo suyo (biblioteca, propuestas) y el rol de administrador se comprueba en el servidor.
 2. **A03: Injection (SQLi / XSS):** Uso exclusivo de ORM/Query Builders parametrizados para PostgreSQL. Renderizado seguro mediante React para evitar XSS.
-3. **A05: Security Misconfiguration:** Configuración estricta de variables de entorno mediante esquemas de Zod al arrancar la aplicación.
+3. **A05: Security Misconfiguration:** Configuración estricta de variables de entorno mediante esquemas de Zod. Cabeceras de seguridad en todas las respuestas (`lib/securityHeaders.ts`): CSP con un nonce por petición generado en `proxy.ts` (scripts solo con nonce y `'strict-dynamic'`; estilos con `'unsafe-inline'` porque la interfaz usa atributos `style`), `frame-ancestors 'none'`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` y sin `X-Powered-By`. Un script inline nuevo debe llevar el nonce (`headers().get("x-nonce")`).
 
 ### 🛡️ B. OWASP API Security Top 10
-1. **API1: Broken Object Level Authorization (BOLA):** Verificar la propiedad del recurso (`userId`) en cada petición en los endpoints `/api/*`.
+1. **API1: Broken Object Level Authorization (BOLA):** Verificar la propiedad del recurso en cada petición: el usuario sale de la sesión y los ids que llegan del formulario se comprueban contra lo que es suyo (`keepOwnId`).
 2. **API3: Broken Object Property Level Authorization:** Prevenir *Mass Assignment* validando el cuerpo (*body*) de la petición únicamente mediante esquemas de **Zod**.
-3. **API4: Unrestricted Resource Consumption:** Aplicar Rate Limiting en la API para controlar las llamadas a la base de datos y evitar gastos imprevistos de tokens de IA.
+3. **API4: Unrestricted Resource Consumption:** Aplicar Rate Limiting en cada Server Action que escriba o consuma recursos, con los contadores compartidos en PostgreSQL.
 
 ### 🛡️ C. OWASP Top 10 for LLM / GenAI Applications
 1. **LLM01: Prompt Injection:**
@@ -141,6 +147,7 @@ Cualquier código generado o modificado debe cumplir estrictamente las directric
    - Un fallo del modelo se registra solo por su tipo: el mensaje de un error de validación puede llevar el texto del usuario o la respuesta del modelo.
 4. **LLM10: Model Denial of Service:**
    - Establecer límites de tokens por petición (`maxOutputTokens`), *timeouts* y límite de longitud de la entrada en todas las llamadas al modelo, con un *rate limit* propio por usuario para cada uso (preguntas, borradores del panel, relleno de propuestas).
+   - Un tope diario global para toda la web (`withDailyAiLimit`, `LLM_DAILY_LIMIT`, 50 por defecto) envuelve los ports del modelo: al agotarse falla sin llamar al modelo y los casos de uso responden como con un modelo caído.
 
 ---
 
@@ -155,8 +162,8 @@ Toda la lógica de negocio en `domain/` y `application/` se desarrollará bajo T
 ### Estrategia de Testing:
 - **Ubicación:** los tests viven en `tests/`, fuera de `src/`, replicando su estructura (`src/domain/entities/HistoricalEvent.ts` → `tests/domain/entities/HistoricalEvent.test.ts`). Importan el código con el alias `@/`.
 - **Unidades (`tests/domain/` y `tests/application/`):** Cobertura del 100% en dominio y casos de uso mediante repositorios in-memory, Mocks y Stubs con Vitest.
-- **Integración (`tests/**/*.integration.test.ts` y endpoints de `app/api/`):** Pruebas contra PostgreSQL real con `npm run test:integration` (requiere `npm run db:up`). Usan una base de datos aparte cuyo nombre termina obligatoriamente en `_test`, que se crea y migra sola antes de empezar y se vacía antes de cada caso. Los repositorios PostgreSQL ejecutan los mismos tests de contrato que los de memoria. `npm run test` (unitarios) nunca necesita Docker.
-- **End-to-end (`e2e/`, Playwright):** recorren la web real en un navegador sobre una compilación de producción en el puerto 3100 (nunca contra el servidor de desarrollo) conectada a la base de datos de test, que `e2e/globalSetup.ts` deja con el seed exacto antes de cada ejecución (lo que publican los tests nunca llega a la base de datos de desarrollo). Requieren `npm run db:up`. `globalSetup` crea además tres cuentas de prueba (`e2e/testUsers.ts`, una de ellas administradora) y el proyecto `setup` (`e2e/auth.setup.ts`) inicia sesión una vez con la autora y con la administradora y guarda sus cookies (`e2e/.auth/`, ignorado por Git) para los tests que necesitan sesión. Cubren los flujos clave: navegación hasta un tema, quiz corregido en el servidor, registro, inicio y cierre de sesión, redirección abierta, comentarios con y sin sesión, Mi biblioteca, panel de administración (acceso y vida completa de un tema) y propuestas (proponer, aprobar o rechazar, con dos cuentas a la vez). Se ejecutan con `npm run test:e2e` antes de cambios que afecten a toda la aplicación.
+- **Integración (`tests/**/*.integration.test.ts`):** Pruebas contra PostgreSQL real con `npm run test:integration` (requiere `npm run db:up`). Usan una base de datos aparte cuyo nombre termina obligatoriamente en `_test`, que se crea y migra sola antes de empezar y se vacía antes de cada caso. Los repositorios PostgreSQL ejecutan los mismos tests de contrato que los de memoria. `npm run test` (unitarios) nunca necesita Docker.
+- **End-to-end (`e2e/`, Playwright):** recorren la web real en un navegador sobre una compilación de producción en el puerto 3100 (nunca contra el servidor de desarrollo) conectada a la base de datos de test, que `e2e/globalSetup.ts` deja con el seed exacto antes de cada ejecución (lo que publican los tests nunca llega a la base de datos de desarrollo). Requieren `npm run db:up`. `globalSetup` crea además tres cuentas de prueba (`e2e/testUsers.ts`, una de ellas administradora) y el proyecto `setup` (`e2e/auth.setup.ts`) inicia sesión una vez con la autora y con la administradora y guarda sus cookies (`e2e/.auth/`, ignorado por Git) para los tests que necesitan sesión. Cubren los flujos clave: navegación hasta un tema, quiz corregido en el servidor, registro, inicio y cierre de sesión, redirección abierta, comentarios con y sin sesión, Mi biblioteca, preguntar, cronología y su editor, panel de administración (acceso y vida completa de un tema), propuestas (proponer, aprobar o rechazar, con dos cuentas a la vez) y cabeceras de seguridad (la CSP no bloquea nada). Se ejecutan con `npm run test:e2e` antes de cambios que afecten a toda la aplicación.
 - **Lint:** la regla `require-await` está activa; los adaptadores síncronos que implementan ports asíncronos devuelven `Promise.resolve(...)` en lugar de declarar `async` sin `await`.
 
 ---
@@ -166,13 +173,14 @@ Toda la lógica de negocio en `domain/` y `application/` se desarrollará bajo T
 - **Lenguaje:** TypeScript (Tipado estricto, `strict: true`, prohibido el uso de `any`)
 - **Estilos:** Tailwind CSS
 - **Base de Datos:** PostgreSQL + extensión `pgvector`
-- **Modelos de IA:** Ollama (`qwen2.5:7b`) en local mediante Vercel AI SDK y protocolo OpenAI; embeddings con Transformers.js (`multilingual-e5-small`)
+- **Modelos de IA:** Ollama (`qwen2.5:7b`) en local y Groq (`openai/gpt-oss-120b`) en producción, mediante Vercel AI SDK y protocolo OpenAI; embeddings con Transformers.js (`multilingual-e5-small`) dentro de la propia aplicación
+- **Despliegue:** Vercel (Hobby, `fra1`) + Neon (PostgreSQL 17 + pgvector, Frankfurt); ver la sección «Despliegue» del README
 - **Test Framework:** Vitest
 
 ---
 
 ## 6. Estándares de Código y Calidad
-- **Manejo de Errores:** Bloques `try/catch` centralizados en endpoints de la API devolviendo respuestas estructuradas (`{ success: false, error: string }`).
+- **Manejo de Errores:** los casos de uso devuelven `Result` (`{ success: false, error }`) para lo previsto, y las Server Actions lo traducen a mensajes para la interfaz sin filtrar detalles internos.
 - **Nomenclatura:** Inglés técnico para el código fuente (`getHistoricalEvents`, `HistoryRepository`), interfaz e idioma del producto final en español.
 - **Comentarios (en castellano):** el código dice *qué* hace; los comentarios cuentan *por qué* está hecho así.
   - **Cabecera:** cada entidad, port, caso de uso, adaptador y módulo de composición empieza con un comentario breve (una a tres líneas) sobre qué representa o hace y por qué existe. Se omite solo cuando el archivo es trivial y su nombre lo dice todo (un error con un mensaje, un reexport).
