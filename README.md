@@ -8,7 +8,7 @@ Plataforma web *fullstack* que ordena el conocimiento histórico de la Antigüed
 | --- | --- |
 | 🌐 **Aplicación desplegada** | **[memnonhistory.vercel.app](https://memnonhistory.vercel.app)** |
 | 🔑 **Usuario de prueba** | Ver [sección 12](#12-usuario-y-contraseña-de-prueba) |
-| 🖼️ **Slides** | _Por completar_ |
+| 🖼️ **Slides** | [docs/slides/MemnonHistory-AI.pdf](docs/slides/MemnonHistory-AI.pdf) (13 diapositivas) |
 | 🎬 **Vídeo** | _Por completar_ |
 | 📂 **Repositorio** | [github.com/ARiojaD/Tfm-IA-NextJs](https://github.com/ARiojaD/Tfm-IA-NextJs) |
 
@@ -194,7 +194,9 @@ Las normas completas de arquitectura, seguridad y metodología están en [`AGENT
 ├── e2e/                          # Tests end-to-end con Playwright y su servidor falso del modelo
 ├── scripts/                      # Seed, índice del RAG, roles de administrador y descarga del modelo
 ├── public/images/                # Imágenes del catálogo y de los temas, con licencia revisada
-├── docs/ARQUITECTURA.md          # Guía para leer el código
+├── docs/
+│   ├── ARQUITECTURA.md           # Guía para leer el código
+│   └── slides/                   # Presentación del TFM en PDF
 ├── AGENTS.md                     # Reglas de arquitectura, seguridad OWASP y TDD
 ├── CLAUDE.md                     # Instrucciones para el asistente de IA
 ├── .env.example                  # Plantilla de variables de entorno (sin valores reales)
