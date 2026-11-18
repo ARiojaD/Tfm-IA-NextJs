@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Cinzel, Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -42,14 +41,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       // difieren a propósito.
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col overflow-x-clip font-sans">
-        {/* beforeInteractive: Next lo coloca en el <head> y lo ejecuta antes del primer pintado. Con una
-            etiqueta <script> escrita a mano, React avisa de que no la ejecutará al renderizar en el cliente. */}
-        <Script id="theme-init" strategy="beforeInteractive">
-          {THEME_INIT_SCRIPT}
-        </Script>
-        {children}
-      </body>
+      <head>
+        {/* Una etiqueta <script> normal: el navegador la ejecuta al leerla, antes del primer pintado.
+            next/script con beforeInteractive no sirve aquí: en producción lo encola y lo ejecuta cuando carga
+            el JavaScript de Next, y se vería un instante el tema contrario. En desarrollo, React puede avisar
+            («Encountered a script tag…») si rehace la página en el navegador; para entonces el script ya se
+            ejecutó desde el HTML del servidor, así que el aviso es inofensivo. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-full flex flex-col overflow-x-clip font-sans">{children}</body>
     </html>
   );
 }
