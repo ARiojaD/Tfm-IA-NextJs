@@ -384,3 +384,17 @@ export const knowledgeChunks = pgTable(
     check("knowledge_chunks_event_matches_source", sql`(${table.source} = 'EVENT') = (${table.eventId} IS NOT NULL)`),
   ],
 );
+
+// --- Límites de peticiones ---
+// Una fila por petición permitida, para la ventana deslizante de los límites (OWASP API4). En la base de
+// datos y no en memoria: en Vercel hay varias instancias a la vez, y cada una llevaría su propia cuenta. La
+// clave (un usuario, una IP, un correo) se guarda como hash: aquí no hace falta saber de quién es.
+export const rateLimitHits = pgTable(
+  "rate_limit_hits",
+  {
+    limiter: text("limiter").notNull(),
+    keyHash: text("key_hash").notNull(),
+    at: timestamp("at", { withTimezone: true, mode: "date" }).notNull(),
+  },
+  (table) => [index("rate_limit_hits_lookup_idx").on(table.limiter, table.keyHash, table.at)],
+);

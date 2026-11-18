@@ -57,6 +57,13 @@
       "when": 1794481195204,
       "tag": "0007_timeline_milestones",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794997877094,
+      "tag": "0008_rate_limit_hits",
+      "breakpoints": true
     }
   ]
 }

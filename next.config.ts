@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { SECURITY_HEADERS } from "./src/lib/securityHeaders";
 
 // El motor de ONNX para Linux x64, que es lo que ejecuta Vercel. Los binarios de otros sistemas y los de GPU
 // (CUDA) no se usan y harían pasar a las funciones del límite de tamaño. onnxruntime-node carga la versión
@@ -12,6 +13,10 @@ const ONNX_RUNTIME_FILES = [
 ];
 
 const nextConfig: NextConfig = {
+  // Sin «X-Powered-By: Next.js»: no hace falta anunciar con qué está hecha la web.
+  poweredByHeader: false,
+  // Las cabeceras de seguridad fijas en todas las respuestas; la CSP, con su nonce, la pone src/proxy.ts.
+  headers: () => Promise.resolve([{ source: "/:path*", headers: SECURITY_HEADERS }]),
   // Transformers.js ejecuta el modelo de embeddings con binarios nativos de ONNX: Node los carga de
   // node_modules al ejecutarse, en lugar de que el empaquetador intente meterlos en el bundle.
   serverExternalPackages: ["@huggingface/transformers", "onnxruntime-node"],

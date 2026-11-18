@@ -89,13 +89,13 @@ describe("parseAuthEnv", () => {
 
 describe("parseLlmEnv", () => {
   it("sin variables usa el Ollama local y no necesita clave", () => {
-    expect(parseLlmEnv({})).toEqual({ LLM_BASE_URL: "http://127.0.0.1:11434/v1", LLM_MODEL: "qwen2.5:7b" });
+    expect(parseLlmEnv({})).toEqual({ LLM_BASE_URL: "http://127.0.0.1:11434/v1", LLM_MODEL: "qwen2.5:7b", LLM_DAILY_LIMIT: 50 });
   });
 
   it("acepta otro servidor con su clave", () => {
     const env = { LLM_BASE_URL: "https://api.groq.com/openai/v1", LLM_MODEL: "modelo", LLM_API_KEY: "clave" };
 
-    expect(parseLlmEnv(env)).toEqual(env);
+    expect(parseLlmEnv(env)).toEqual({ ...env, LLM_DAILY_LIMIT: 50 });
   });
 
   it("rechaza una dirección que no sea http o https y no muestra su valor", () => {
@@ -109,5 +109,14 @@ describe("parseLlmEnv", () => {
 
   it("rechaza un nivel de razonamiento desconocido", () => {
     expect(() => parseLlmEnv({ LLM_REASONING_EFFORT: "máximo" })).toThrow(/LLM_REASONING_EFFORT/);
+  });
+
+  it("el tope diario de llamadas a la IA es 50 si no se indica otro", () => {
+    expect(parseLlmEnv({}).LLM_DAILY_LIMIT).toBe(50);
+    expect(parseLlmEnv({ LLM_DAILY_LIMIT: "120" }).LLM_DAILY_LIMIT).toBe(120);
+  });
+
+  it.each(["0", "-5", "muchas", "2.5"])("rechaza un tope diario no válido (%s)", (value) => {
+    expect(() => parseLlmEnv({ LLM_DAILY_LIMIT: value })).toThrow(/LLM_DAILY_LIMIT/);
   });
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -32,7 +33,10 @@ export const metadata: Metadata = {
     "Enciclopedia histórica ordenada, con contribuciones verificadas y una IA que responde citando de dónde sale cada dato.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // El nonce de esta petición (src/proxy.ts): sin él, la política de seguridad bloquearía el script del tema.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="es"
@@ -47,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             el JavaScript de Next, y se vería un instante el tema contrario. En desarrollo, React puede avisar
             («Encountered a script tag…») si rehace la página en el navegador; para entonces el script ya se
             ejecutó desde el HTML del servidor, así que el aviso es inofensivo. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col overflow-x-clip font-sans">{children}</body>
     </html>

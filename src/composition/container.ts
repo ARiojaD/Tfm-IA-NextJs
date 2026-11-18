@@ -16,7 +16,8 @@ import type { LibraryRepository } from "@/application/ports/LibraryRepository";
 import type { ProposalDrafter } from "@/application/ports/ProposalDrafter";
 import type { ProposalRepository } from "@/application/ports/ProposalRepository";
 import type { QuizRepository } from "@/application/ports/QuizRepository";
-import type { RateLimitPolicy } from "@/application/ports/RateLimiter";
+import type { Clock } from "@/application/ports/Clock";
+import type { RateLimiter, RateLimitPolicy } from "@/application/ports/RateLimiter";
 import type { RecommendationRepository } from "@/application/ports/RecommendationRepository";
 import type { TopicEditorRepository } from "@/application/ports/TopicEditorRepository";
 import type { TopicRepository } from "@/application/ports/TopicRepository";
@@ -27,6 +28,7 @@ import { AskEncyclopediaUseCase } from "@/application/use-cases/AskEncyclopediaU
 import { ChangeTopicStatusUseCase } from "@/application/use-cases/ChangeTopicStatusUseCase";
 import { CreateTopicUseCase } from "@/application/use-cases/CreateTopicUseCase";
 import { DeleteTopicUseCase } from "@/application/use-cases/DeleteTopicUseCase";
+import { withDailyAiLimit } from "@/application/use-cases/dailyAiLimit";
 import { DraftProposalUseCase } from "@/application/use-cases/DraftProposalUseCase";
 import { DraftTopicEventsUseCase } from "@/application/use-cases/DraftTopicEventsUseCase";
 import { DraftTopicQuizUseCase } from "@/application/use-cases/DraftTopicQuizUseCase";
@@ -99,6 +101,7 @@ import { PostgresProposalRepository } from "@/infrastructure/persistence/postgre
 import { PostgresQuizRepository } from "@/infrastructure/persistence/postgres/PostgresQuizRepository";
 import { PostgresRecommendationRepository } from "@/infrastructure/persistence/postgres/PostgresRecommendationRepository";
 import { PostgresTopicRepository } from "@/infrastructure/persistence/postgres/PostgresTopicRepository";
+import { PostgresRateLimiter } from "@/infrastructure/persistence/postgres/PostgresRateLimiter";
 import { PostgresUserRoleRepository } from "@/infrastructure/persistence/postgres/PostgresUserRoleRepository";
 import { InMemoryRateLimiter } from "@/infrastructure/rate-limiting/InMemoryRateLimiter";
 import { RandomUuidGenerator } from "@/infrastructure/system/RandomUuidGenerator";
@@ -201,31 +204,48 @@ interface Ai {
   answers: AnswerGenerator;
   drafter: ContentDrafter & ProposalDrafter;
   minSimilarity: number;
+  // Tope diario de llamadas al modelo para toda la web. Sin él (tests unitarios), no hay tope global.
+  dailyLimit?: number;
 }
 
+const ONE_DAY_MS = 24 * 60 * 60_000;
+
+// Crea un límite con su nombre. En la aplicación, en PostgreSQL: en Vercel hay varias instancias a la vez y
+// todas tienen que compartir la cuenta. En los tests unitarios, en memoria.
+type RateLimiterFactory = (name: string, policy: RateLimitPolicy, clock: Clock) => RateLimiter;
+
+const inMemoryRateLimiters: RateLimiterFactory = (_name, policy, clock) => new InMemoryRateLimiter(policy, clock);
+
 // El estado que vive todo el proceso. El modelo de embeddings forma parte de él: se carga una vez por
-// proceso, no una vez por petición. Los contadores de los límites se quedan en memoria: solo valen para un
-// proceso del servidor, y con varias instancias tendrán que pasar a un almacén compartido (PostgreSQL o
-// Redis).
-function createState(repositories: Repositories, breachedPasswords: BreachedPasswordChecker, ai: Ai) {
+// proceso, no una vez por petición.
+function createState(
+  repositories: Repositories,
+  breachedPasswords: BreachedPasswordChecker,
+  ai: Ai,
+  rateLimiter: RateLimiterFactory,
+) {
   const clock = new SystemClock();
+  const models =
+    ai.dailyLimit === undefined
+      ? ai
+      : { ...ai, ...withDailyAiLimit(ai, rateLimiter("ia-global", { limit: ai.dailyLimit, windowMs: ONE_DAY_MS }, clock)) };
 
   return {
     clock,
     repositories,
     breachedPasswords,
-    ai,
+    ai: models,
     rateLimiters: {
-      comments: new InMemoryRateLimiter(COMMENT_RATE_LIMIT, clock),
-      quizAnswers: new InMemoryRateLimiter(QUIZ_ANSWER_RATE_LIMIT, clock),
-      signIn: new InMemoryRateLimiter(SIGN_IN_RATE_LIMIT, clock),
-      signUp: new InMemoryRateLimiter(SIGN_UP_RATE_LIMIT, clock),
-      library: new InMemoryRateLimiter(LIBRARY_RATE_LIMIT, clock),
-      admin: new InMemoryRateLimiter(ADMIN_RATE_LIMIT, clock),
-      proposals: new InMemoryRateLimiter(PROPOSAL_RATE_LIMIT, clock),
-      questions: new InMemoryRateLimiter(QUESTION_RATE_LIMIT, clock),
-      aiDrafts: new InMemoryRateLimiter(AI_DRAFT_RATE_LIMIT, clock),
-      proposalDrafts: new InMemoryRateLimiter(PROPOSAL_DRAFT_RATE_LIMIT, clock),
+      comments: rateLimiter("comentarios", COMMENT_RATE_LIMIT, clock),
+      quizAnswers: rateLimiter("quiz", QUIZ_ANSWER_RATE_LIMIT, clock),
+      signIn: rateLimiter("inicio-sesion", SIGN_IN_RATE_LIMIT, clock),
+      signUp: rateLimiter("registro", SIGN_UP_RATE_LIMIT, clock),
+      library: rateLimiter("biblioteca", LIBRARY_RATE_LIMIT, clock),
+      admin: rateLimiter("panel", ADMIN_RATE_LIMIT, clock),
+      proposals: rateLimiter("propuestas", PROPOSAL_RATE_LIMIT, clock),
+      questions: rateLimiter("preguntas", QUESTION_RATE_LIMIT, clock),
+      aiDrafts: rateLimiter("ia-panel", AI_DRAFT_RATE_LIMIT, clock),
+      proposalDrafts: rateLimiter("ia-propuestas", PROPOSAL_DRAFT_RATE_LIMIT, clock),
     },
   };
 }
@@ -329,21 +349,26 @@ export type Container = ReturnType<typeof createUseCases>;
 // base de datos).
 export function createContainer(seed: Seed = SEED): Container {
   return createUseCases(
-    createState(inMemoryRepositories(seed), new InMemoryBreachedPasswordChecker(), {
-      embeddings: new HashingEmbeddingService(EMBEDDING_DIMENSIONS),
-      answers: new EchoAnswerGenerator(),
-      drafter: new EmptyContentDrafter(),
-      // El recuento de palabras da similitudes bajas: aquí cualquier fragmento es candidato.
-      minSimilarity: 0,
-    }),
+    createState(
+      inMemoryRepositories(seed),
+      new InMemoryBreachedPasswordChecker(),
+      {
+        embeddings: new HashingEmbeddingService(EMBEDDING_DIMENSIONS),
+        answers: new EchoAnswerGenerator(),
+        drafter: new EmptyContentDrafter(),
+        // El recuento de palabras da similitudes bajas: aquí cualquier fragmento es candidato.
+        minSimilarity: 0,
+      },
+      inMemoryRateLimiters,
+    ),
     new InMemoryAuthService(),
   );
 }
 
 // El container de la aplicación, sobre PostgreSQL. Next.js vuelve a evaluar los módulos en cada recarga en
 // caliente y puede cargar este archivo desde varios bundles, así que el pool de conexiones y el estado
-// (repositorios y contadores de los límites) se comparten en `globalThis`: un pool para todo el proceso,
-// nunca uno por recarga. Los casos de uso se reconstruyen en cada llamada (son baratos), así el código
+// (repositorios y modelos) se comparten en `globalThis`: un pool para todo el proceso, nunca uno por
+// recarga. Los casos de uso se reconstruyen en cada llamada (son baratos), así el código
 // editado de un caso de uso se aplica al momento.
 const globalForApp = globalThis as typeof globalThis & {
   __memnonState?: State;
@@ -361,7 +386,9 @@ export function getContainer(): Container {
         answers: new OpenAiCompatibleAnswerGenerator(llmConfig()),
         drafter: new OpenAiCompatibleContentDrafter(llmConfig()),
         minSimilarity: MIN_RELEVANT_SIMILARITY,
+        dailyLimit: parseLlmEnv(process.env).LLM_DAILY_LIMIT,
       },
+      (name, policy, clock) => new PostgresRateLimiter(getDatabase(), name, policy, clock),
     );
   }
   return createUseCases(globalForApp.__memnonState, new BetterAuthService(getBetterAuth(), new NextSessionCookies()));

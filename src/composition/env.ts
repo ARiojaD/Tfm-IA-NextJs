@@ -28,6 +28,9 @@ export const LlmEnvSchema = z.object({
   // Solo para los modelos que razonan antes de responder (gpt-oss en Groq): cuánto pensar. Sin la variable
   // no se envía nada, que es lo que espera Ollama.
   LLM_REASONING_EFFORT: z.enum(REASONING_EFFORTS).optional(),
+  // Tope diario de llamadas a la IA para toda la web (preguntas y propuestas con IA juntas). Por defecto,
+  // 50: por debajo del cupo diario de tokens del plan gratuito de Groq.
+  LLM_DAILY_LIMIT: z.coerce.number().int().positive().max(100_000).default(50),
 });
 
 export type DatabaseEnv = z.infer<typeof DatabaseEnvSchema>;
