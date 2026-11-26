@@ -9,7 +9,7 @@ Plataforma web *fullstack* que ordena el conocimiento histórico de la Antigüed
 | 🌐 **Aplicación desplegada** | **[memnonhistory.vercel.app](https://memnonhistory.vercel.app)** |
 | 🔑 **Usuario de prueba** | Ver [sección 12](#12-usuario-y-contraseña-de-prueba) |
 | 🖼️ **Slides** | [docs/slides/MemnonHistory-AI.pdf](docs/slides/MemnonHistory-AI.pdf) (13 diapositivas) |
-| 🎬 **Vídeo** | _Por completar_ |
+| 🎬 **Vídeo** | [youtube.com/watch?v=v6odn_MrryI](https://www.youtube.com/watch?v=v6odn_MrryI) (22 min, con capítulos: slides, demo de la web, código y cierre) |
 | 📂 **Repositorio** | [github.com/ARiojaD/Tfm-IA-NextJs](https://github.com/ARiojaD/Tfm-IA-NextJs) |
 
 > Trabajo Fin de Máster · Máster en Desarrollo con IA · BigSchool
